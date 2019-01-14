@@ -10,6 +10,7 @@ log/
 database*
 dump*
 fnlf-database*
+*.pem
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
