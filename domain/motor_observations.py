@@ -11,12 +11,12 @@
     @todo: Add workflow by default in pre hook
     @todo: add schema for organisation or club + location
 """
-from _base import workflow_schema, comments_schema, watchers_schema, audit_schema, acl_item_schema, ask_schema
-from f_observation_components import components_schema
+from _base import workflow_schema, comments_schema, watchers_schema, acl_item_schema, ask_schema
+# from f_observation_components import components_schema
 from datetime import datetime
 
 RESOURCE_COLLECTION = 'g_observations'
-BASE_URL = 'g/observations'
+BASE_URL = 'motor/observations'
 
 _schema = {'id': {'type': 'integer',
                   'required': False,
@@ -96,7 +96,6 @@ _schema = {'id': {'type': 'integer',
            'comments': comments_schema,
            'workflow': workflow_schema,
            'watchers': watchers_schema,
-           'audit': audit_schema,
            'acl': acl_item_schema,
            '_model': {'type': 'dict',
                       'schema': {'version': {'type': 'integer', 'default': 1},

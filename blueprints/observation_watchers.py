@@ -31,10 +31,10 @@ from eve.methods.patch import patch_internal
 # Need custom decorators
 from ext.app.decorators import *
 
-ObsWatchers = Blueprint('Observation Watchers', __name__,)
+OrsWatchers = Blueprint('Observation Watchers', __name__, )
 
-@ObsWatchers.route("/<objectid:observation_id>/", methods=['GET'])
-@ObsWatchers.route("/<objectid:observation_id>/watchers", methods=['GET'])
+@OrsWatchers.route("/<objectid:observation_id>/", methods=['GET'])
+@OrsWatchers.route("/<objectid:observation_id>/watchers", methods=['GET'])
 @require_token()
 def watchers(observation_id):
     
@@ -42,7 +42,7 @@ def watchers(observation_id):
     
     return jsonify(**{'watchers': w})
 
-@ObsWatchers.route("/<objectid:observation_id>/watching", methods=['GET'])
+@OrsWatchers.route("/<objectid:observation_id>/watching", methods=['GET'])
 @require_token()
 def is_watching(observation_id):
     
@@ -51,7 +51,7 @@ def is_watching(observation_id):
     
     return jsonify(**{'watching': False})
 
-@ObsWatchers.route("/<objectid:observation_id>/start", methods=['POST'])
+@OrsWatchers.route("/<objectid:observation_id>/start", methods=['POST'])
 @require_token()
 def start(observation_id):
     """ Start watching an observation """
@@ -70,7 +70,7 @@ def start(observation_id):
     
     return jsonify(**{'watching': False})
 
-@ObsWatchers.route("/<objectid:observation_id>/stop", methods=['POST'])
+@OrsWatchers.route("/<objectid:observation_id>/stop", methods=['POST'])
 @require_token()
 def stop(observation_id):
     
@@ -89,7 +89,7 @@ def stop(observation_id):
 
 def get_watchers(observation_id):
     
-    col = app.data.driver.db['f_observations']
+    col = app.data.driver.db['fallskjerm_observations']
     
     r = col.find_one({'_id': ObjectId(observation_id)}, {'watchers': 1})
    
@@ -98,7 +98,7 @@ def get_watchers(observation_id):
 def update_watchers(observation_id, watchers):
     """ Wrapper to keep update segregated """
     
-    col = app.data.driver.db['f_observations']
+    col = app.data.driver.db['fallskjerm_observations']
 
     r = col.update({'_id': ObjectId(observation_id)}, {"$set": {"watchers": watchers}})
     

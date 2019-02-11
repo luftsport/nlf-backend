@@ -73,7 +73,7 @@ class Anon(object):
         return self.assign_x(x)
 
 
-def anonymize_obs(item):
+def anonymize_ors(item):
     """ Anonymizes based on a simple scheme
     Only for after_get_observation
     Should see if solution to have association of user id to a fixed (negative) number for that id to be sorted as "jumper 1", "jumper 2" etc in frontend
@@ -93,87 +93,96 @@ def anonymize_obs(item):
                 app.logger.info("Unexpected error 1: %s" % sys.exc_info()[0])
                 pass
     """
+    # try:
+    anon = Anon()
+
+    # Remove keys
+    item.pop('acl', None)
+
+    if 'audit' not in item.get('workflow', {}):
+        item['workflow']['audit'] = []
+
+    if 'involved' not in item:
+        item['involved'] = []
+
+    if 'components' not in item:
+        item['components'] = []
+
+    # Involved
+    for key, val in enumerate(item.get('involved', [])):
+
+        if item['involved'][key] == None or item['involved'][key] == '' or not item['involved'][key]:
+            item['involved'][key] = None
+
+        else:
+            item['involved'][key] = anon.assign_pair(item['involved'][key])
+
+            # Involved.gear -> rigger
+            if 'gear' in item['involved'][key]:  # ".get('gear', False):
+                if 'rigger' in item['involved'][key]['gear']:  # .get('rigger', False):
+                    item['involved'][key]['gear']['rigger'] = anon.assign_pair(
+                        item['involved'][key]['gear'].get('rigger', 0))
+
+    # Involved in components
+    for key, val in enumerate(item.get('components', [])):
+
+        if item['components'][key] == None or item['components'][key] == '' or not item['components'][key]:
+            item['components'][key] = None
+        else:
+            for k, v in enumerate(item['components'][key]['involved']):
+                item['components'][key]['involved'][k] = anon.assign_pair(item['components'][key]['involved'][k])
+
+    # Organization
+    if 'organization' in item:
+
+        if 'hl' in item['organization']:  # .get('hl', False):
+            for k, hl in enumerate(item['organization']['hl']):
+                item['organization']['hl'][k] = anon.assign_pair(item['organization']['hl'][k])
+
+        if 'hfl' in item['organization']:  # if item['organization'].get('hfl', False):
+            for k, hfl in enumerate(item['organization']['hfl']):
+                item['organization']['hfl'][k] = anon.assign_pair(item['organization']['hfl'][k])
+
+        if 'hm' in item['organization']:  # if item['organization'].get('hm', False):
+            for k, hm in enumerate(item['organization']['hm']):
+                item['organization']['hm'][k] = anon.assign_pair(item['organization']['hm'][k])
+
+        if 'pilot' in item['organization']:  # if item['organization'].get('pilot', False):
+            for k, pilot in enumerate(item['organization']['pilot']):
+                item['organization']['pilot'][k] = anon.assign_pair(item['organization']['pilot'][k])
+
+    # Files
     try:
-        anon = Anon()
+        item['files'][:] = [d for d in item['files'] if d.get('r') != True]
+    except Exception as e:
+        item['files'] = None
+        app.logger.info("File error: {}".format(e))
+        pass
 
-        if 'audit' not in item['workflow']:
-            item['workflow']['audit'] = []
+    # Workflow audit trail
+    if item.get('workflow', False):
+        if item['workflow'].get('audit', False):
+            for key, val in enumerate(item['workflow']['audit']):
 
-        if 'involved' not in item:
-            item['involved'] = []
+                if item['workflow']['audit'][key]:
 
-        if 'components' not in item:
-            item['components'] = []
+                    if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'withdraw']:
+                        item['workflow']['audit'][key]['u'] = anon.assign(item['workflow']['audit'][key]['u'])
 
-        # Involved
-        for key, val in enumerate(item['involved']):
-
-            if item['involved'][key] == None or item['involved'][key] == '' or not item['involved'][key]:
-                item['involved'][key] = None
-
-            else:
-                item['involved'][key] = anon.assign_pair(item['involved'][key])
-
-                # Involved.gear -> rigger
-                if item['involved'][key].get('gear', False):
-                    if item['involved'][key]['gear'].get('rigger', False):
-                        item['involved'][key]['gear']['rigger'] = anon.assign_pair(item['involved'][key]['gear']['rigger'])
-
-        # Involved in components
-        for key, val in enumerate(item['components']):
-
-            if item['components'][key] == None or item['components'][key] == '' or not item['components'][key]:
-                item['components'][key] = None
-            else:
-                for k, v in enumerate(item['components'][key]['involved']):
-                    item['components'][key]['involved'][k] = anon.assign_pair(item['components'][key]['involved'][k])
-
-        # Organization
-        for key, val in enumerate(item['organization']):
-
-            if item['organization'].get('hl', False):
-                for k, hl in enumerate(item['organization']['hl']):
-                    item['organization']['hl'][k] = anon.assign_pair(item['organization']['hl'][k])
-
-            if item['organization'].get('hfl', False):
-                for k, hfl in enumerate(item['organization']['hfl']):
-                    item['organization']['hfl'][k] = anon.assign_pair(item['organization']['hfl'][k])
-
-            if item['organization'].get('hm', False):
-                for k, hm in enumerate(item['organization']['hm']):
-                    item['organization']['hm'][k] = anon.assign_pair(item['organization']['hm'][k])
-
-            if item['organization'].get('pilot', False):
-                for k, pilot in enumerate(item['organization']['pilot']):
-                    item['organization']['pilot'][k] = anon.assign_pair(item['organization']['pilot'][k])
-
-        # Files
-        try:
-            item['files'][:] = [d for d in item['files'] if d.get('r') != True]
-        except:
-            item['files'] = None
-            app.logger.info("File error: %s" % sys.exec_info()[0])
-            pass
-
-        # Workflow audit trail
-        if item.get('workflow', False):
-            if item['workflow'].get('audit', False):
-                for key, val in enumerate(item['workflow']['audit']):
-
-                    if item['workflow']['audit'][key]:
-
-                        if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'withdraw']:
-                            item['workflow']['audit'][key]['u'] = anon.assign(item['workflow']['audit'][key]['u'])
-
-        # Reporter AND owner
+    # Reporter AND owner
+    if 'reporter' in item:
         item['reporter'] = anon.assign(item['reporter'])
+    if 'owner' in item:
         item['owner'] = anon.assign(item['owner'])
 
-        return item
+    return item
 
-    except:
-        eve_abort(500, 'Server experienced problems (Anon) anonymousing the observation and aborted as a safety measure')
-        return {}
+
+"""
+except:
+    eve_abort(500, 'Server experienced problems (Anon) anonymousing the observation and aborted as a safety measure')
+    return {}
+"""
 
 
 def has_permission_obs(id, type):

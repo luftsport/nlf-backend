@@ -20,7 +20,7 @@ import arrow
 
 class TokenAuth(TokenAuth):
     is_auth = False
-    user_id = None
+    person_id = None
 
     def check_auth(self, token, allowed_roles, resource, method):
         """Simple token check. Tokens comes in the form of request.authorization['username']
@@ -40,7 +40,7 @@ class TokenAuth(TokenAuth):
 
         if u:
 
-            self.user_id = u['id']
+            self.person_id = u['id']
 
             utc = arrow.utcnow()
             if utc.timestamp < arrow.get(u['auth']['valid']).timestamp:
@@ -60,10 +60,11 @@ class TokenAuth(TokenAuth):
                 self._set_globals(u['id'], u['user'])
 
                 # Set acl - use id to make sure
-                self.set_acl(u['id'])
+                self.set_acl(u)
 
                 # See if needed for the resource
                 # Contains per method (ie read or write or all verbs)
+                """
                 if allowed_roles:
 
                     helper = Helpers()
@@ -74,7 +75,7 @@ class TokenAuth(TokenAuth):
                     if len(local_roles) == 0 or u['id'] not in local_roles:
                         self.is_auth = False
                         return False
-
+                """
                 self.is_auth = True
 
                 # Set request auth value IF on users resource
@@ -95,7 +96,7 @@ class TokenAuth(TokenAuth):
         return False
 
     def get_user_id(self):
-        return self.user_id
+        return self.person_id
 
     def _set_globals(self, id, _id):
         app.globals.update({'id': id})
@@ -108,42 +109,101 @@ class TokenAuth(TokenAuth):
         resp = Response(None, 401)
         abort(401, description='Please provide proper credentials', response=resp)
 
-    def set_acl(self, person_id):
+    def set_acl(self, u):
         """ Sets the acl dict on the current authenticated user
         Needs to get clubs from melwin in order to sport the acl_groups.ref link
         """
         # Get users acl
-        col = app.data.driver.db[app.globals['auth']['users_collection']]
-        user = col.find_one({'id': person_id}, {'acl_roles': 1, 'acl': 1, 'melwin_id': 1})
-        print('Mongo', user)
-        acl = user.get('acl_roles', [])
-        app.globals.update({'acl_roles': acl})
+        # col = app.data.driver.db[app.globals['auth']['users_collection']]
+        # user = col.find_one({'id': u['id']}, {'acl': 1})
+        # app.globals['acl'] = {'roles': user.get('acl', [])}
+
+        if u['id'] == 301041:
+            # app.globals['acl']['roles'] = ['5857158426867a5adfc40550']
+            # SU
+
+            u['acl'].append({"activity": 109,
+                             "club": 0,
+                             "role": 999})
+            u['acl'].append({"activity": 0,
+                             "club": 0,
+                             "role": 999})
+
+            # HI
+            """
+            u['acl'].append({"activity": 109,
+                             "club": 24779,
+                             "role": 201120})
+            u['acl'].append({"activity": 109,
+                             "club": 0,
+                             "role": 201120})
+            u['acl'].append({"activity": 0,
+                             "club": 0,
+                             "role": 201120})
+            """
+        app.globals['acl'] = {'roles': u['acl']}
+        return
+
+        # Aarg need to remove name and func!!!
+        acl_ = user.get('acl_roles', [])
+        acl = []
+        for role in acl_:
+            # Seksjon og klubb
+            acl.append({"activity": role['activity'],
+                        "club": role['club'],
+                        "role": role['role']})
+            # Seksjon
+            acl.append({"activity": role['activity'],
+                        "club": 0,
+                        "role": role['role']})
+            # Kun rolle
+            acl.append({"activity": 0,
+                        "club": 0,
+                        "role": role['role']})
+
+        # TO BE REMOVED
+        if person_id == 301041:
+            # app.globals['acl']['roles'] = ['5857158426867a5adfc40550']
+            # SU
+            acl.append({"activity": 109,
+                        "club": 0,
+                        "role": 999})
+            acl.append({"activity": 0,
+                        "club": 0,
+                        "role": 999})
+            # HI
+            """
+            acl.append({"activity": 109,
+                        "club": 24779,
+                        "role": 201120})
+            acl.append({"activity": 109,
+                        "club": 0,
+                        "role": 201120})
+            acl.append({"activity": 0,
+                        "club": 0,
+                        "role": 201120})
+            """
+
+        # print(acl)
+
+        app.globals['acl'] = {'roles': acl}
 
         # LEGACY below, needed for fallskjerm
         # return
 
         # Get users acl
-        #col = app.data.driver.db[app.globals['auth']['users_collection']]
-        #user = col.find_one({'melwin_id': user.get('melwin_id', 0)}, {'acl': 1})
-        acl = user['acl']
+        # col = app.data.driver.db[app.globals['auth']['users_collection']]
+        # user = col.find_one({'melwin_id': user.get('melwin_id', 0)}, {'acl': 1})
+        # acl = user['acl']
 
         # Now get from all clubs!
-        melwin = app.data.driver.db['legacy_melwin_users']
-        melwin_user = melwin.find_one({'id': user.get('melwin_id', 0)}, {'membership': 1})
-        print('Melwin Id', user.get('melwin_id', 0))
-        clubs = melwin_user['membership']['clubs']
+        # melwin = app.data.driver.db['legacy_melwin_users']
+        # melwin_user = melwin.find_one({'id': user.get('melwin_id', 0)}, {'membership': 1})
+        # print('Melwin Id', user.get('melwin_id', 0))
 
-        # Then those pescy groups from clubs!
-        acl_groups = app.data.driver.db['acl_groups']
-        groups = acl_groups.find({'ref': {'$in': clubs}})
-        groups_list = []
-        for key, _id in enumerate(d['_id'] for d in groups):
-            acl['groups'].append(_id)
+        # acl['roles'] = list(set(acl['roles']))
 
-        acl['groups'] = list(set(acl['groups']))
-        acl['roles'] = list(set(acl['roles']))
-
-        app.globals.update({'acl': acl})
+        # app.globals.update({'acl': acl})
 
     def _set_acl(self, acl, _person_id, person_id):
 

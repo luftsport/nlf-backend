@@ -11,9 +11,9 @@ from datetime import datetime
 from ext.auth.helpers import Helpers
 from ext.notifications.email import Email  # , Sms
 
-ObsShare = Blueprint('Observation Share', __name__,)
+OrsShare = Blueprint('Observation Share', __name__, )
 
-@ObsShare.route("/<int:observation_id>", methods=['POST'])
+@OrsShare.route("/<int:observation_id>", methods=['POST'])
 @require_token()
 def share_observation(observation_id):
     

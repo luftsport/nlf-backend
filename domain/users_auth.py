@@ -17,7 +17,7 @@ _schema = {  # Medlemsnummer
            },
 
     # Acl list of groups and roles
-    'acl': {'type': 'dict', },
+    'acl': {'type': 'list', 'default': []},
 
     'auth': {'type': 'dict',
              'schema': {'token': {'type': 'string'},

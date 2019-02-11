@@ -1,2 +1,2 @@
 
-from . import observation
+from . import fallskjerm_observations

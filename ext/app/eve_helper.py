@@ -20,6 +20,7 @@ def eve_abort(status=500, message='', sysinfo=None):
     """Abort processing and logging
     @Param: code http code
     @Param: message string representation"""
+    app.logger.error(status, message)
     try:
         status = int(status)
         if sysinfo == None:
@@ -46,11 +47,10 @@ def eve_abort(status=500, message='', sysinfo=None):
             # 503 Service Unavailable
             if status in CRITICAL_ERROR_CODES:
                 if not is_mongo_alive(status):
-                    app.logger.critical("MongoDB is down [%s]" % sysinfo)
+                    app.logger.critical("MongoDB is down")
                     send_sms(status, "MongoDB is down (%s)" % app.config['APP_INSTANCE'])
                 else:
-                    app.logger.critical("%s [%s]" % (message, sysinfo))
-                    message = message
+                    app.logger.critical(message)
                     send_sms(status, "%s (%s)" % (message, app.config['APP_INSTANCE']))
 
         else:

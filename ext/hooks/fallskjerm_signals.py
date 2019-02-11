@@ -25,15 +25,17 @@ from ext.notifications.email import Email  # , Sms
 
 # TIME & DATE - better with arrow only?
 import arrow
+from ext.scf import ACL_FALLSKJERM_HI
+import ext.app.lungo as lungo
 
 _signals = Namespace()
 
 # Define signals
-signal_activity_log     = _signals.signal('user-activity-logger')
-signal_insert_workflow  = _signals.signal('insert-workflow')
-signal_change_owner     = _signals.signal('change-owner')
-signal_change_acl       = _signals.signal('change-acl')
-signal_init_acl         = _signals.signal('init-acl')
+signal_activity_log = _signals.signal('user-activity-logger')
+signal_insert_workflow = _signals.signal('insert-workflow')
+signal_change_owner = _signals.signal('change-owner')
+signal_change_acl = _signals.signal('change-acl')
+signal_init_acl = _signals.signal('init-acl')
 
 
 @signal_insert_workflow.connect
@@ -75,11 +77,12 @@ def insert_workflow(dict_app, **extra):
 
         # Make a integer increment from seq collection
         seq = c_app.data.driver.db['seq']
-        seq.update_one({'f': 'observations'}, {'$inc': {'i': int(1)}}, True)  # ,fields={'i': 1, '_id': 0},new=True).get('i')
+        seq.update_one({'f': 'observations'}, {'$inc': {'i': int(1)}},
+                       True)  # ,fields={'i': 1, '_id': 0},new=True).get('i')
         seq_r = seq.find_one({'f': 'observations'}, {'i': 1, '_id': 0})
         number = int(seq_r.get('i'))
 
-        observation = c_app.data.driver.db['f_observations']
+        observation = c_app.data.driver.db['fallskjerm_observations']
 
         content = {"workflow": workflow,
                    "id": number,
@@ -90,20 +93,21 @@ def insert_workflow(dict_app, **extra):
 
         result = observation.update_one({'_id': ObjectId(_id), '_etag': _etag}, {"$set": content})
 
-        if c_app.config['LUNGO']['fallskjerm']['ors']['send_email_on_create'] is True:
+        if c_app.config['LUNGO']['fallskjerm']['ors']['send_email_on_create'] is True and 1==2:
+
             mail = Email()
-            helper = Helpers()
-            recepients = helper.get_melwin_users_email(helper.collect_users(users=[app.globals['user_id']], roles=[helper.get_role_hi(club)]))
+            # helper = Helpers()
+            # recepients = helper.get_melwin_users_email(helper.collect_users(users=[app.globals['user_id']], roles=[helper.get_role_hi(club)]))
 
             message = {}
 
             subject = 'Observasjon #%s ble opprettet' % number
 
             message.update({'observation_id': number})
-            message.update({'action_by': helper.get_user_name(app.globals['user_id'])})
+            # message.update({'action_by': helper.get_user_name(app.globals['user_id'])})
             message.update({'action': 'opprettet'})
             message.update({'title': '%s ble opprettet' % number})
-            message.update({'club': helper.get_melwin_club_name(club)})
+            # message.update({'club': helper.get_melwin_club_name(club)})
             message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
             message.update({'url': 'app/obs/#!/observation/%i\n' % number})
             message.update({'url_root': request.url_root})
@@ -115,7 +119,6 @@ def insert_workflow(dict_app, **extra):
             mail.send(recepients, subject, prefix='ORS')
 
 
-@signal_init_acl.connect
 def init_acl(dict_app, **extra):
     """ Set user as read, write and execute!
     Only the current user since this is the POST to DRAFT
@@ -130,49 +133,24 @@ def init_acl(dict_app, **extra):
 
         _id = r.get('_id')
 
-        obs = c_app.data.driver.db['f_observations']
+        obs = c_app.data.driver.db['g_observations']
 
         # Add hi to the mix!
-        groups = app.data.driver.db['acl_groups']
-        group = groups.find_one({'ref': club})
-
-        if group and group.get('_id', False):
-            roles = app.data.driver.db['acl_roles']
-            role = roles.find_one({'group': ObjectId(group['_id']), 'ref': 'hi'})
-
-            if role and role.get('_id', False):
-                users = app.data.driver.db['users']
-                hi = list(users.find({'acl.roles': {'$in': [ObjectId(role['_id'])]}}))
-
-                his = []
-                if isinstance(hi, list):
-                    for user in hi:
-                        his.append(user['id'])
-                elif hi.get('id', False):
-                    his.append(hi['id'])
-                else:
-                    his = []
-
-                roles = [role.get('_id')]
-
-            else:
-                eve_abort(400, 'No HI for club %s' % club)
-
-        else:
-            eve_abort(400, 'No group for club %s' % club)
-
+        # groups = app.data.driver.db['acl_groups']
 
         # Adds user and hi!
         try:
-            acl = {'read': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': roles},
-                   'write': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': []},
-                   'execute': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': []}
+            acl = {'read': {'users': [app.globals.get('user_id')], 'roles': [ACL_FALLSKJERM_HI]},
+                   'write': {'users': [app.globals.get('user_id')], 'roles': []},
+                   'execute': {'users': [app.globals.get('user_id')], 'roles': []}
                    }
 
-            test = obs.update_one({'_id': ObjectId(_id)}, {'$set': {'acl': acl}})
-            obs.update_one({'_id': ObjectId(_id)}, {'$set': {'organization.hi': his}})
+            test = obs.update_one({'_id': ObjectId(_id)}, {'$set': {
+                'acl': acl,
+                'organization.hi': lungo.get_person_from_role(ACL_FALLSKJERM_HI)
+            }})
         except:
-            eve_abort(503, 'THe database would not comply with our demands')
+            eve_abort(503, 'The database would not comply with our demands')
 
 
 @signal_change_owner.connect
@@ -186,17 +164,17 @@ def change_owner(c_app, response, **extra):
     _id = r.get('_id')  # ObjectId(r['_id'])
 
     try:
-        observation = c_app.data.driver.db['f_observations']
+        observation = c_app.data.driver.db['fallskjerm_observations']
         u = observation.update_one({'_id': ObjectId(_id)},
-                               {"$set": {"owner": c_app.globals.get('user_id')}
-                                })
+                                   {"$set": {"owner": c_app.globals.get('user_id')}
+                                    })
     except:
         pass
 
 
 @signal_change_acl.connect
 def change_obs_acl(c_app, acl, **extra):
-    # observation = c_app.data.driver.db['f_observations']
+    # observation = c_app.data.driver.db['fallskjerm_observations']
     # u = observation.update({})
     pass
 

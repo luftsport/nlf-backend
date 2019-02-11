@@ -4,29 +4,11 @@
     ============
     
     Reusable schemas for resource definitions
-    
-    'schema': {
-              {'groups': {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'roles':  {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'users':  {'type': 'list', 'default': [],'schema': {'type': 'integer'}}},
-              },
-    'schema': {
-              {'groups': {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'roles':  {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'users':  {'type': 'list', 'default': [],'schema': {'type': 'integer'}}},
-              },
-    'schema': {
-              {'groups': {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'roles':  {'type': 'list', 'default': [],'schema': {'type': 'objectid'}}},
-              {'users':  {'type': 'list', 'default': [],'schema': {'type': 'integer'}}},
-              },
-    
-           
+
 """
 
 workflow_schema = {'type': 'dict',
                    'readonly': True,
-                   'default': {}
                    }
 
 watchers_schema = {'type': 'list',
@@ -48,23 +30,27 @@ comments_schema = {'type': 'list',
                    }
 
 ask_schema = {'type': 'dict',
-              'schema': {'attitude': {'type': 'integer', 'default': 0},
-                         'skills': {'type': 'integer', 'default': 0},
-                         'knowledge': {'type': 'integer', 'default': 0},
-                         'text': {'type': 'dict', 'default': {}}
-                         }
+              'schema': {'attitude': {'type': 'integer'},
+                         'skills': {'type': 'integer'},
+                         'knowledge': {'type': 'integer'},
+                         'text': {'type': 'dict'}
+                         },
+              'default': {'attitude': 0,
+                          'skills': 0,
+                          'knowledge': 0,
+                          'text': {}}
               }
 
-audit_schema = {'type': 'list',
-                'readonly': True,
-                'default': []
-                }
-
+acl_type_schema = {'type': 'dict',
+                   'schema': {'users': {'type': 'list'},
+                              'roles': {'type': 'list'}}
+                   }
 acl_item_schema = {'type': 'dict',
                    'readonly': True,
-                   'schema': {'read': {'type': 'dict'},
-                              'write': {'type': 'dict'},
-                              'execute': {'type': 'dict'}
+                   'schema': {'read': {'type': 'dict', 'schema': acl_type_schema},
+                              'write': {'type': 'dict', 'schema': acl_type_schema},
+                              'execute': {'type': 'dict', 'schema': acl_type_schema},
+                              'delete': {'type': 'dict', 'schema': acl_type_schema},
                               }
                    }
 

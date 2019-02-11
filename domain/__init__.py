@@ -13,8 +13,8 @@ import users, users_auth
 import acl_groups, acl_roles, users_acl
 
 # FALLSKJERM
-import f_observations
-import g_observations
+import fallskjerm_observations
+import motor_observations
 # import observation_components
 # import observation_comments
 # Files - just a test collection
@@ -27,12 +27,17 @@ import content, content_aggregations
 
 # A custom endpoint for developement flexibility!
 import dev
-import test
 
 # LEGACY
 import legacy_melwin_clubs, legacy_melwin_licenses, legacy_melwin_membership, legacy_melwin_users
 import legacy_licenses
 import legacy_clubs
+
+# Airports
+import airports
+import airspaces
+# Eve testing
+import test
 
 # Build the Domain to be presented
 DOMAIN = {
@@ -47,11 +52,11 @@ DOMAIN = {
     "acl_roles": acl_roles.definition,
 
     # Fallskjerm
-    "f_observations": f_observations.definition,
-    "f_observations_agg": test.definition,
+    "fallskjerm_observations": fallskjerm_observations.definition,
+    "fallskjerm_observations_agg": fallskjerm_observations.aggregate_observation_types,
 
     # Motor
-    "g_observations": g_observations.definition,
+    "motor_observations": motor_observations.definition,
 
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
@@ -77,4 +82,10 @@ DOMAIN = {
     # Help system
     "help": help.definition,
 
+    # Airports and stuff
+    "airports": airports.definition,
+    "airspaces": airspaces.definition,
+
+    # Testing Eve
+    "test": test.definition
 }

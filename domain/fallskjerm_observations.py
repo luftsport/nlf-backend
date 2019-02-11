@@ -11,26 +11,32 @@
     @todo: Add workflow by default in pre hook
     @todo: add schema for organisation or club + location
 """
-from _base import workflow_schema, comments_schema, watchers_schema, audit_schema, acl_item_schema, ask_schema
-from f_observation_components import components_schema
+from _base import workflow_schema, comments_schema, watchers_schema, acl_item_schema, ask_schema
+#from fallskjerm_observation_components import components_schema
 from datetime import datetime
+from bson import SON
 
-RESOURCE_COLLECTION = 'f_observations'
-BASE_URL = 'f/observations'
+RESOURCE_COLLECTION = 'fallskjerm_observations'
+BASE_URL = 'fallskjerm/observations'
+
+ORS_MODEL_TYPE = 'fallskjerm'
+ORS_MODEL_VERSION = 3
 
 _schema = {'id': {'type': 'integer',
-                  'required': False,
                   'readonly': True
                   },
 
            'type': {'type': 'string',
-                    'allowed': ['sharing', 'unsafe_act', 'near_miss', 'incident', 'accident']
+                    'allowed': ['sharing', 'unwanted_act', 'unsafe_act', 'near_miss', 'incident', 'accident'],
+                    'default': 'near_miss'
                     },
 
            'flags': {'type': 'dict',
-                     'schema': {'aviation': {'type': 'boolean', 'default': False},
-                                'insurance': {'type': 'boolean', 'default': False}
-                                }
+                     'schema': {'aviation': {'type': 'boolean'},
+                                'insurance': {'type': 'boolean'}
+                                },
+                     'default': {'aviation': False,
+                                 'insurance': False}
                      },
            'ask': ask_schema,
 
@@ -38,7 +44,7 @@ _schema = {'id': {'type': 'integer',
                     'default': []
                     },
 
-           'club': {'type': 'string',
+           'club': {'type': 'integer',
                     'required': True
                     },
 
@@ -59,14 +65,16 @@ _schema = {'id': {'type': 'integer',
                             },
 
            'rating': {'type': 'dict',
-                      'schema': {'actual': {'type': 'integer', 'default': 1},
-                                 'potential': {'type': 'integer', 'default': 1}
-                                 }
+                      'schema': {'actual': {'type': 'integer'},
+                                 'potential': {'type': 'integer'}
+                                 },
+                      'default': {'actual': 1, 'potential': 1}
                       },
            'weather': {'type': 'dict',
                        'schema': {'auto': {'type': 'dict'},
                                   'manual': {'type': 'dict'}
-                                  }
+                                  },
+                       'default': {'auto': {}, 'manual': {}}
                        },
 
            'components': {'type': 'list',
@@ -90,12 +98,12 @@ _schema = {'id': {'type': 'integer',
            'comments': comments_schema,
            'workflow': workflow_schema,
            'watchers': watchers_schema,
-           'audit': audit_schema,
            'acl': acl_item_schema,
            '_model': {'type': 'dict',
-                      'schema': {'version': {'type': 'integer', 'default': 1},
-                                 'type': {'type': 'string', 'default': 'fallskjerm'}
-                                 }
+                      'schema': {'version': {'type': 'integer'},
+                                 'type': {'type': 'string'}
+                                 },
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
                       }
 
            }
@@ -104,7 +112,7 @@ definition = {
     'item_title': 'Fallskjerm Observations',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
-                   'projection': {'acl': 0}  # 'files': 0,
+                   #'projection': {'acl': 0}  # 'files': 0,
                    },
     # Make a counter so we can have a lookup for #455
     'additional_lookup': {
@@ -123,9 +131,26 @@ definition = {
                       'when': ([('when', 1)], {'background': True}),
                       'type': ([('type', 1)], {'background': True}),
                       'rating': ([('rating', 1)], {'background': True}),
-                      'title': ([('tags', 'text')], {'background': True})
+                      'title': ([('tags', 'text'), ('ask', 'text')], {'background': True, 'default_language': 'norwegian', 'weights': {'tags': 10, 'ask': 2}})
 
                       },
     'schema': _schema
 
+}
+
+
+aggregate_observation_types = {
+    'item_title': 'Observation Aggregations',
+    'url': '{}/aggregate'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$unwind": "$type"},
+                {"$match": {"when": { "$gte": "$from", "$lte": "$to"}, "workflow.state": "$state" } },
+                {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+                {"$sort": SON([("count", -1)])}
+            ]
+        }
+    }
 }

@@ -14,6 +14,8 @@ _schema = {
     'tag': {'type': 'string',
             'required': True,
             },
+    'activity': {'type': 'string',
+                 'required': True},
     'group': {'type': 'string',
               'required': True},
 
@@ -44,6 +46,7 @@ definition = {
     },
 
     'mongo_indexes': {
+        'activities': ([('activity', 1)]),
         'tags group': ([('tag', 'text'), ('group', 'text')], {'background': True}),
     },
     'schema': _schema,

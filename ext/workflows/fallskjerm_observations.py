@@ -12,6 +12,53 @@ import re
 from ext.auth.helpers import Helpers
 from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.email import Email  # , Sms
+from ext.scf import ACL_CLOSED_ALL, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU
+import arrow
+
+RESOURCE_COLLECTION = 'fallskjerm_observations'
+
+
+def get_wf_init(person_id):
+    utc = arrow.utcnow()
+
+    return {'name': 'ObservationWorkflow',
+            'comment': 'Initialized workflow',
+            'state': 'draft',
+            'last_transition': utc.datetime,
+            'expires': utc.replace(days=+7).datetime,
+            'audit': [{'a': 'init',
+                       'r': 'init',
+                       'u': person_id,
+                       's': None,
+                       'd': 'draft',
+                       'v': 1,
+                       't': utc.datetime,
+                       'c': 'Initialized workflow'}]
+            }
+
+
+def get_acl_init(person_id, club_id):
+    hi_role = ACL_FALLSKJERM_HI.copy()
+    hi_role['club'] = club_id
+    acl = {
+        'read': {
+            'users': [person_id],
+            'roles': [hi_role]
+        },
+        'execute': {
+            'users': [person_id],
+            'roles': []
+        },
+        'write': {
+            'users': [person_id],
+            'roles': []
+        },
+        'delete': {
+            'users': [],
+            'roles': []
+        }
+    }
+    return acl
 
 
 class ObservationWorkflow(Machine):
@@ -27,12 +74,13 @@ class ObservationWorkflow(Machine):
         self.user_id = user_id
         # The states
         # states 'name', 'on_enter', 'on_exit'
-        self._states = ['draft', 'ready', 'pending_review_hi', 'pending_review_fs', 'pending_review_su', 'closed', 'withdrawn']
+        self._states = ['draft', 'ready', 'pending_review_hi', 'pending_review_fs', 'pending_review_su', 'closed',
+                        'withdrawn']
 
         self._state_attrs = {'draft': {'title': 'Utkast', 'description': 'Utkast'},
-                             'ready': {'title': 'Klar', 'description': 'Klar for å sendes HI'},
                              'pending_review_hi': {'title': 'Avventer HI', 'description': 'Avventer vurdering HI'},
-                             'pending_review_fs': {'title': 'Avventer Fagsjef', 'description': 'Avventer vurdering Fagsjef'},
+                             'pending_review_fs': {'title': 'Avventer Fagsjef',
+                                                   'description': 'Avventer vurdering Fagsjef'},
                              'pending_review_su': {'title': 'Avventer SU', 'description': 'Avventer vurdering SU'},
                              'closed': {'title': 'Lukket', 'description': 'Observasjonen er lukket'},
                              'withdrawn': {'title': 'Trukket', 'description': 'Observasjonen er trekt tilbake'},
@@ -78,19 +126,29 @@ class ObservationWorkflow(Machine):
         """
         self._transitions = [
             # { 'trigger': 'set_ready', 'source': 'draft', 'dest': 'ready', 'after': 'save_workflow', 'conditions':['has_permission']},
-            {'trigger': 'send_to_hi', 'source': 'draft', 'dest': 'pending_review_hi', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'send_to_hi', 'source': 'draft', 'dest': 'pending_review_hi', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
+            {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
+            {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
 
-            {'trigger': 'reject_hi', 'source': 'pending_review_hi', 'dest': 'draft', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'approve_hi', 'source': 'pending_review_hi', 'dest': 'pending_review_fs', 'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'reject_hi', 'source': 'pending_review_hi', 'dest': 'draft', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
+            {'trigger': 'approve_hi', 'source': 'pending_review_hi', 'dest': 'pending_review_fs',
+             'after': 'save_workflow', 'conditions': ['has_permission']},
 
-            {'trigger': 'reject_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_hi', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'approve_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_su', 'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'reject_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_hi',
+             'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'approve_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_su',
+             'after': 'save_workflow', 'conditions': ['has_permission']},
 
-            {'trigger': 'reject_su', 'source': 'pending_review_su', 'dest': 'pending_review_fs', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'approve_su', 'source': 'pending_review_su', 'dest': 'closed', 'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'reopen_su', 'source': 'closed', 'dest': 'pending_review_su', 'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'reject_su', 'source': 'pending_review_su', 'dest': 'pending_review_fs',
+             'after': 'save_workflow', 'conditions': ['has_permission']},
+            {'trigger': 'approve_su', 'source': 'pending_review_su', 'dest': 'closed', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
+            {'trigger': 'reopen_su', 'source': 'closed', 'dest': 'pending_review_su', 'after': 'save_workflow',
+             'conditions': ['has_permission']},
 
             # {'trigger': '*', 'source': '*', 'dest': '*', 'after': 'save_workflow'},
         ]
@@ -110,37 +168,58 @@ class ObservationWorkflow(Machine):
 
 
         """
-        self._trigger_attrs = {  # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
-            'send_to_hi': {'title': 'Send til HI', 'action': 'Send til HI', 'resource': 'approve', 'comment': True, 'descr': 'Sendt til HI'},
-            'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw', 'comment': True, 'descr': 'Trekt tilbake'},
-            'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True, 'descr': 'Gjenåpnet'},
-            'reject_hi': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True, 'descr': 'Avslått av HI'},
-            'approve_hi': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve', 'comment': True, 'descr': 'Godkjent av HI'},
-            'reject_fs': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True, 'descr': 'Avslått av Fagsjef'},
-            'approve_fs': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve', 'comment': True, 'descr': 'Godkjent av Fagsjef'},
-            'reject_su': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True, 'descr': 'Avslått av SU'},
-            'approve_su': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve', 'comment': True, 'descr': 'Godkjent av SU'},
-            'reopen_su': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True, 'descr': 'Gjenåpnet av SU'},
+        self._trigger_attrs = {
+            # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
+            'send_to_hi': {'title': 'Send til HI', 'action': 'Send til HI', 'resource': 'approve', 'comment': True,
+                           'descr': 'Sendt til HI'},
+            'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw',
+                         'comment': True, 'descr': 'Trekt tilbake'},
+            'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
+                       'descr': 'Gjenåpnet'},
+            'reject_hi': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                          'descr': 'Avslått av HI'},
+            'approve_hi': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                           'comment': True, 'descr': 'Godkjent av HI'},
+            'reject_fs': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                          'descr': 'Avslått av Fagsjef'},
+            'approve_fs': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                           'comment': True, 'descr': 'Godkjent av Fagsjef'},
+            'reject_su': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                          'descr': 'Avslått av SU'},
+            'approve_su': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                           'comment': True, 'descr': 'Godkjent av SU'},
+            'reopen_su': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
+                          'descr': 'Gjenåpnet av SU'},
         }
 
         """ Make sure to start with a defined state!
         """
-        col = app.data.driver.db['f_observations']
+        col = app.data.driver.db[RESOURCE_COLLECTION]
 
-        self.db_wf = col.find_one({'_id': ObjectId(object_id)}, {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, '_etag': 1, '_version': 1, 'owner': 1, 'reporter': 1, 'tags': 1, 'watchers': 1})
+        self.db_wf = col.find_one({'_id': ObjectId(object_id)},
+                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, '_etag': 1, '_version': 1, 'owner': 1,
+                                   'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
 
-        initial_state = self.db_wf.get('workflow').get('state')
+        initial_state = self.db_wf.get('workflow', {}).get('state', None)
 
         if initial_state == None or initial_state not in self._states:
             self.initial_state = 'draft'
         else:
             self.initial_state = initial_state
 
-        self.comment = comment
+        # Set defaults from 
+        self.hi = self.db_wf.get('organization', {}).get('hi', None)
+        self.reporter = self.db_wf.get('reporter', None)
+        self.owner = self.db_wf.get('owner', None)
+        self.club = self.db_wf.get('club', None)
+        self.acl_hi = ACL_FALLSKJERM_HI.copy()
+        self.acl_hi['club'] = self.club
+        self.acl = self.db_wf.get('acl', {})
 
-        self.helper = Helpers()
+        self.comment = '' if comment is None else '{}'.format(comment).strip()
 
-        Machine.__init__(self, states=self._states, send_event=True, transitions=self._transitions, initial=self.initial_state)
+        Machine.__init__(self, states=self._states, send_event=True, transitions=self._transitions,
+                         initial=self.initial_state)
 
     def get_actions(self):
 
@@ -195,8 +274,13 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
+        if len([i for i in app.globals['acl']['roles'] if i in self.acl['execute']['roles']]) > 0 \
+                or app.globals['user_id'] in self.acl['execute']['users']:
+            return True
 
-        return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
+        return False
+
+        # return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
 
     def condition_completed_tasks(self):
 
@@ -238,13 +322,9 @@ class ObservationWorkflow(Machine):
 
             acl['read']['users'] += [reporter]
             acl['write']['users'] += [reporter]
-
             acl['execute']['users'] = [reporter]
 
-            acl['write']['groups'] = []
-            acl['execute']['groups'] = []
-
-            acl['read']['roles'] += [self.helper.get_role_hi(club)]
+            acl['read']['roles'] += [self.acl_hi]
             acl['write']['roles'] = []
             acl['execute']['roles'] = []
 
@@ -267,80 +347,43 @@ class ObservationWorkflow(Machine):
         elif self.state == 'pending_review_hi':
             """ Owner, reporter read, fsj read, hi read, write, execute """
 
-            hi = self.helper.get_role_hi(club)
-            fs = self.helper.get_role_fs()
-            su = self.helper.get_group_su()
-
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['groups'] = []
-            acl['read']['groups'] = [su]
-            acl['execute']['groups'] = []
-
-            acl['write']['roles'] = [hi]
-            acl['read']['roles'] = [hi, fs]
-            acl['execute']['roles'] = [hi]
+            acl['write']['roles'] = [self.acl_hi]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ]
+            acl['execute']['roles'] = [self.acl_hi]
 
         elif self.state == 'pending_review_fs':
             """ Owner, reporter, hi read, fsj read, write, execute """
 
-            fs = self.helper.get_role_fs()
-            su = self.helper.get_group_su()
-            hi = self.helper.get_role_hi(club)
-
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['groups'] = []
-            acl['read']['groups'] += [su]
-            acl['execute']['groups'] = []
-
-            acl['write']['roles'] = [fs]
-            acl['read']['roles'] = [hi, fs]
-            acl['execute']['roles'] = [fs]
+            acl['write']['roles'] = [ACL_FALLSKJERM_FSJ]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_FSJ]
 
         elif self.state == 'pending_review_su':
             """ Owner, reporter, hi, fs read, su read, write, execute """
 
-            su = self.helper.get_group_su()
-            fs = self.helper.get_role_fs()
-            hi = self.helper.get_role_hi(club)
-
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['groups'] = [su]
-            acl['read']['groups'] = [su]
-            acl['execute']['groups'] = [su]
-
-            acl['read']['roles'] = [hi, fs]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ]
             acl['write']['roles'] = []
-            acl['execute']['roles'] = []
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU]
 
         elif self.state == 'closed':
             """ everybody read, su execute """
-
-            group_list = []
-
-            initial_group_list = acl['read']['groups']
-
-            for v in self.helper.get_all_groups():
-                if 'ref' in v:
-                    if re.match("[\d{3}\-\w{1}]+", v['ref']):
-                        group_list.extend([v['_id']])
 
             # acl['read']['users'] = [] #Should let users still see??
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['groups'] = []
-            acl['read']['groups'] += group_list
-            acl['execute']['groups'] = [self.helper.get_group_su()]
-
-            acl['read']['roles'] = []
+            acl['read']['roles'] = [ACL_CLOSED_ALL]
             acl['write']['roles'] = []
-            acl['execute']['roles'] = []
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU]
 
             # Fjernet hele f fallskjermnorge her! Kanskje egen klubb bare?
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
@@ -352,27 +395,15 @@ class ObservationWorkflow(Machine):
         acl['write']['users'] = list(set(acl['write']['users']))
         acl['execute']['users'] = list(set(acl['execute']['users']))
 
-        acl['write']['groups'] = list(set(acl['write']['groups']))
-        acl['read']['groups'] = list(set(acl['read']['groups']))
-        acl['execute']['groups'] = list(set(acl['execute']['groups']))
-
-        acl['read']['roles'] = list(set(acl['read']['roles']))
-        acl['write']['roles'] = list(set(acl['write']['roles']))
-        acl['execute']['roles'] = list(set(acl['execute']['roles']))
+        acl['read']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['read']['roles'])]
+        acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
+        acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
         if self.state != 'closed':
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['read']['groups'] + acl['write']['groups'] + acl['execute']['groups'],
                               acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
         return acl
-
-    def _get_role_group(self, ref, type):
-
-        if type == 'group':
-            col = app.data.driver.db['acl_groups']
-        elif type == 'role':
-            pass
 
     def save_workflow(self, event):
         """ Will only trigger when it actually IS changed, so save every time this is called!
@@ -415,7 +446,10 @@ class ObservationWorkflow(Machine):
         # Should really supply the e-tag here, will work! , '_etag': _etag
         # Can also use test_client to do this but it's rubbish or?
         # This will ignore the readonly field skip_validation AND you do not need another domain file for it!!
-        result = patch_internal("observations", payload=new, concurrency_check=False, skip_validation=True, **{'_id': "%s" % _id, '_etag': "%s" % _etag})
+        result = patch_internal(RESOURCE_COLLECTION, payload=new,
+                                concurrency_check=False,
+                                skip_validation=True,
+                                **{'_id': "%s" % _id, '_etag': "%s" % _etag})
         # test_client().post('/add', data = {'input1': 'a'}}
         # app.test_client().patch('/observations/%s' % _id, data=new, headers=[('If-Match', _etag)])
 
@@ -429,9 +463,15 @@ class ObservationWorkflow(Machine):
     def notification(self, users=[], groups=[], roles=[]):
         """ A wrapper around notifications
         """
+        return
+        
         mail = Email()
-        recepients = self.helper.get_melwin_users_email(self.helper.collect_users(users=users, roles=roles, groups=groups))
 
+        """
+        recepients = self.helper.get_melwin_users_email(
+            self.helper.collect_users(users=users, roles=roles, groups=groups))
+        """
+        recepients = [{'name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
         message = {}
 
         subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), self._trigger_attrs[self.action]['descr'])

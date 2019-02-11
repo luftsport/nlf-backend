@@ -25,6 +25,7 @@ from ext.notifications.email import Email  # , Sms
 
 # TIME & DATE - better with arrow only?
 import arrow
+from ext.scf import ACL_FALLSKJERM_HI
 
 _signals = Namespace()
 
@@ -115,9 +116,9 @@ def init_acl(dict_app, **extra):
 
         # Adds user and hi!
         try:
-            acl = {'read': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': []},
-                   'write': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': []},
-                   'execute': {'users': [app.globals.get('user_id')], 'groups': [], 'roles': []}
+            acl = {'read': {'users': [app.globals.get('user_id')], 'roles': [ACL_FALLSKJERM_HI]},
+                   'write': {'users': [app.globals.get('user_id')], 'roles': []},
+                   'execute': {'users': [app.globals.get('user_id')], 'roles': []}
                    }
 
             test = obs.update_one({'_id': ObjectId(_id)}, {'$set': {'acl': acl}})
@@ -137,7 +138,7 @@ def change_owner(c_app, response, **extra):
     _id = r.get('_id')  # ObjectId(r['_id'])
 
     try:
-        observation = c_app.data.driver.db['f_observations']
+        observation = c_app.data.driver.db['fallskjerm_observations']
         u = observation.update_one({'_id': ObjectId(_id)},
                                {"$set": {"owner": c_app.globals.get('user_id')}
                                 })
@@ -147,7 +148,7 @@ def change_owner(c_app, response, **extra):
 
 @signal_change_acl.connect
 def change_obs_acl(c_app, acl, **extra):
-    # observation = c_app.data.driver.db['f_observations']
+    # observation = c_app.data.driver.db['fallskjerm_observations']
     # u = observation.update({})
     pass
 

@@ -16,15 +16,18 @@ _schema = {
            'required': True,
            'readonly': True
            },
-
-    'avatar': {'type': 'media', },
-
+    'acl': {'type': 'list',
+            'readonly': True,
+            'schema': {'activity': {'type': 'integer'},
+                       'club': {'type': 'integer'},
+                       'role': {'type': 'integer'},
+                       },
+            'default': []
+            },
     # Settings for user
     'settings': {'type': 'dict',
                  'default': {}},
-
-    #
-    'custom': {'type': 'dict', },
+    'avatar': {'type': 'media', },
 
     # Extra info, worktype, material status, interests...
     'info': {'type': 'dict', },
@@ -38,15 +41,7 @@ _schema = {
     # 'flags': {'type': 'dict',},
     # 'verdicts': {'type': 'dict',},
 
-    'acl': {'type': 'dict',
-            'readonly': True,
-            'schema': {'groups': {'type': 'list', 'default': [], 'schema': {'type': 'objectid'}},
-                       'roles': {'type': 'list', 'default': [], 'schema': {'type': 'objectid'}},
-                       },
-            'default': {'groups': [], 'roles': []}
-            },
-    'acl_roles': {'type': 'list'},
-    'melwin_id': {'type': 'integer'}
+    # 'melwin_id': {'type': 'integer'}
 
 }
 
@@ -68,6 +63,7 @@ definition = {
     },
 
     'mongo_indexes': {'person id': ([('id', 1)], {'background': True}),
+                      'merged_from': ([('merged_from', 1)], {'background': True}),
                       'acl': ([('acl', 1)], {'background': True}),
                       },
 

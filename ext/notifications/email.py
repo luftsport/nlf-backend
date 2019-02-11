@@ -84,8 +84,9 @@ class Email():
         @todo: check recepients as list and length > 0
         @todo: check that list of dicts with keys name, email
         """
-        for i, r in enumerate(recepients):
-            self.send_async(recepient=r, prefix=prefix, subject=subject, instance = app.config.get('APP_INSTANCE'))
+        if Scf.NOTIFICATION_SEND_EMAIL is True:
+            for i, r in enumerate(recepients):
+                self.send_async(recepient=r, prefix=prefix, subject=subject, instance = app.config.get('APP_INSTANCE'))
             
             
             

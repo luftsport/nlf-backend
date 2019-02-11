@@ -1,12 +1,41 @@
 from bson import SON
 from datetime import datetime
 
-RESOURCE_COLLECTION = 'f_observations'
-BASE_URL = 'f/observations'
+RESOURCE_COLLECTION = 'test'
+BASE_URL = 'test'
+
+_schema = {'id': {'type': 'integer',
+                  'required': True,
+                  },
+           'name': {'type': 'string'},
+           }
 
 definition = {
-    'item_title': 'Observation Aggregations',
-    'url': '{}/aggregate'.format(BASE_URL),
+    'item_title': 'Eve testing',
+    'url': BASE_URL,
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   # 'projection': {'acl': 0} # Not for this?
+                   },
+
+    'additional_lookup': {
+        'url': 'regex("[A-Za-z]+")',
+        'field': 'id',
+    },
+    'extra_response_fields': ['id'],
+    'versioning': False,
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+
+    'mongo_indexes': {'id': ([('id', 1)], {'background': True}),
+                      'name': ([('name', 'text')], {'background': True})
+                      },
+
+    'schema': _schema
+
+}
+
+"""
+
     'datasource': {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
@@ -18,9 +47,9 @@ definition = {
             ]
         }
     }
-}
-
-"""
+    
+    
+    
     $collStats (aggregation)
     $project (aggregation)
     $match (aggregation)

@@ -32,9 +32,9 @@ from eve_swagger import swagger
 from blueprints.authentication import Authenticate
 from blueprints.acl import ACL
 # Observation blueprints
-from blueprints.observation_workflow import OrsWorkflow
-from blueprints.observation_watchers import ObsWatchers
-from blueprints.observation_share import ObsShare
+from blueprints.fallskjerm_observation_workflow import OrsWorkflow as FallskjermOrsWF
+from blueprints.observation_watchers import OrsWatchers
+from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
 # Misc blueprints
 from blueprints.weather import Weather
@@ -88,17 +88,18 @@ app.register_blueprint(Authenticate, url_prefix="%s/user" % app.globals.get('pre
 app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'))
 
 # ORS NEEDS TO??
-app.register_blueprint(OrsWorkflow, url_prefix="%s/f/observations/workflow" % app.globals.get('prefix'))
-app.register_blueprint(ObsWatchers, url_prefix="%s/f/observations/watchers" % app.globals.get('prefix'))
+app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
 app.register_blueprint(Tags, url_prefix="%s/tags" % app.globals.get('prefix'))
-app.register_blueprint(ObsShare, url_prefix="%s/f/observations/share" % app.globals.get('prefix'))
+app.register_blueprint(OrsShare, url_prefix="%s/f/observations/share" % app.globals.get('prefix'))
 
 app.register_blueprint(Weather, url_prefix="%s/weather" % app.globals.get('prefix'))
 app.register_blueprint(Info, url_prefix="%s/info" % app.globals.get('prefix'))
 app.register_blueprint(Files, url_prefix="%s/download" % app.globals.get('prefix'))
 
+# Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
 
 """
@@ -110,27 +111,49 @@ app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('pre
 # Import hooks
 import ext.hooks as hook
 
+
+def dump_request(request):
+    print(app.config['SOURCES'])
+
+# ORS
+# Fallskjerm
+# POST
+app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
+# BEFORE GET
+app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.before_get
+# AFTER FETCHED (GET)
+app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.after_fetched
+app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_diffs
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
+
+
+
+# Motor
+
+app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
+#app.on_pre_POST_fallskjerm_observations += dump_request
+
+#app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
+
+#app.on_post_PATCH_fallskjerm_observations += hook.fallskjerm.after_patch
+
 # app.on_insert_oplog += hook.oplog.before_insert
 
 # app.on_pre_GET_observations += observations_before_get
 # app.on_pre_POST_observations += observations_before_post
 # app.on_pre_PATCH_observations += observations_before_patch
-app.on_post_POST_f_observations += hook.observations.after_post
-app.on_post_POST_g_observations += hook.observations.after_g_post
-# app.on_pre_POST_observations += observations_before_post
 
-app.on_pre_PATCH_f_observations += hook.observations.before_patch
-
-app.on_post_PATCH_f_observations += hook.observations.after_patch
 
 # app.on_insert += hook.observations.before_post_comments
-app.on_insert_f_observation_comments += hook.observations.before_post_comments
+app.on_insert_f_observation_comments += hook.fallskjerm.before_post_comments
 
-app.on_post_GET_f_observations += hook.observations.after_get
+# app.on_post_GET_fallskjerm_observations += hook.observations.after_get
+# app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
 
-app.on_pre_GET_f_observations += hook.observations.before_get
 
-app.on_pre_PATCH_f_observations += hook.observations.before_patch
+
+
 
 # Help hooks
 app.on_pre_PATCH_help += hook.help.before_patch

@@ -1,4 +1,4 @@
 
-__all__ = ['observations', 'users', 'help', 'content']
+__all__ = ['fallskjerm.py', 'users', 'help', 'content']
 
-from . import observations, users, help, content
+from . import fallskjerm, users, help, content
