@@ -15,8 +15,72 @@ from ext.app.decorators import *
 
 from yr.libyr import Yr  # This should not be here
 from ext.weather.aeromet import Aeromet
+from ext.app.eve_helper import eve_abort, eve_response
+
+import requests
+from metar import Metar
+import pytaf
+import datetime
+
+MET_URL = 'https://api.met.no/weatherapi'
+TAFMETAR_URL = '{}/tafmetar/1.0/'.format(MET_URL)
 
 Weather = Blueprint('Weather', __name__, )
+
+
+def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+    resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
+    if resp.status_code == 200:
+        try:
+            tmp = resp.text.rstrip('=\n\n').replace('///', '').split('\n\n')
+            m = tmp[0]
+            t = tmp[1]
+            taf = [_t for _t in t.replace('\n', '').strip().split('=') if len(_t) > 4]
+            metar = [_m.lstrip('\n') for _m in m.split('=') if len(_m) > 4]
+            return True, taf, metar
+        except:
+            pass
+    return False, [], []
+
+
+def get_metar_as_dict(metar):
+    if 'metar.Metar.Metar' in '{}'.format(type(metar)):
+        m = {}
+        for k in metar.__dict__.keys():
+            if k == 'sky':
+                tmp = []
+                for sky in metar.__dict__[k]:
+                    if 'metar.Datatypes' in '{}'.format(type(sky[1])):
+                        tmp.append([sky[0], sky[1].__dict__, sky[2]])
+                    else:
+                        tmp.append([sky[0], sky[1], sky[2]])
+                m[k] = tmp
+            elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
+                m[k] = metar.__dict__[k].__dict__
+            else:
+                m[k] = metar.__dict__[k]
+
+        return m
+
+
+def parse_metar(metar):
+    try:
+        return Metar.Metar(metar)
+    except:
+        pass
+
+    return None
+
+
+def parse_taf(taf):
+    try:
+        msg = pytaf.TAF(taf)
+        decoder = pytaf.Decoder(msg)
+        return decoder.decode_taf()
+    except:
+        pass
+
+    return None
 
 
 @require_token()
@@ -26,7 +90,8 @@ def index():
 
 
 @require_token()
-@Weather.route("/yr/<string:county>/<string:municipality>/<string:name>/<regex('(now|forecast|wind)'):what>", methods=['GET'])
+@Weather.route("/yr/<string:county>/<string:municipality>/<string:name>/<regex('(now|forecast|wind)'):what>",
+               methods=['GET'])
 def yr(what, county, municipality, name):
     """ Downloads data from yr.no
     @todo: Should fix units
@@ -45,7 +110,9 @@ def yr(what, county, municipality, name):
 
     elif what == 'wind':
         wind_speed = dict()
-        wind_speed['wind_forecast'] = [{'from': forecast['@from'], 'to': forecast['@to'], '@unit': 'knots', 'speed': round(float(forecast['windSpeed']['@mps']) * 1.943844, 2)} for forecast in
+        wind_speed['wind_forecast'] = [{'from': forecast['@from'], 'to': forecast['@to'], '@unit': 'knots',
+                                        'speed': round(float(forecast['windSpeed']['@mps']) * 1.943844, 2)} for forecast
+                                       in
                                        weather.forecast()]
         return jsonify(**wind_speed)
 
@@ -67,6 +134,7 @@ def aero(what, icao):
     elif what == 'shorttaf':
         return jsonify(**{'shorttaf': w.shorttaf()})
 
+
 @require_token()
 @Weather.route("/tafmetar/<regex('[aA-zZ]{4}'):icao>/<regex('(metar|taf|tafmetar)'):what>", methods=['GET'])
 def tafmetar(what, icao):
@@ -85,3 +153,44 @@ def tafmetar(what, icao):
         return jsonify(**{'metar': metar, 'taf': taf})
 
 
+"""
+New metar methods using api.met.no
+"""
+
+
+@require_token()
+@Weather.route("/met/<regex('[aA-zZ]{4}'):icao>/<string:date>", methods=['GET'])
+def met_tafmetar(icao, date):
+    try:
+        status, taf, metar = get_taf_metar(icao, date)
+
+        if status is True:
+            return eve_response({'taf': taf, 'metar': metar}, 200)
+    except:
+        return eve_abort(404, 'Could not process')
+
+
+@require_token()
+@Weather.route("/met/parse/<regex('(metar|taf)'):what>/<string:msg>", methods=['GET'])
+def met_parse(what, msg):
+    try:
+        if what == 'metar':
+            resp = parse_metar(msg)
+        elif what == 'taf':
+            resp = parse_taf(msg)
+
+        return eve_response({'decoded': resp, 'msg': msg}, 200)
+    except:
+        return eve_abort(404, 'Could not process')
+
+
+@require_token()
+@Weather.route("/met/metar/<regex('[aA-zZ]{4}'):icao>", methods=['GET'])
+def met_get_metar_dict(icao):
+    try:
+        status, taf, metar = get_taf_metar()
+        resp = get_metar_as_dict(metar)
+
+        return eve_response({'icao': icao, 'metar': resp})
+    except:
+        return eve_abort(404, 'Could not process')
