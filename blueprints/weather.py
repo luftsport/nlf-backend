@@ -8,7 +8,7 @@
 """
 from flask import Blueprint, current_app as app, request, Response, abort, jsonify
 from bson import json_util
-import json
+import simplejson as json
 
 # Need custom decorators
 from ext.app.decorators import *
@@ -55,6 +55,10 @@ def get_metar_as_dict(metar):
                     else:
                         tmp.append([sky[0], sky[1], sky[2]])
                 m[k] = tmp
+            elif k == '_utcdelta':
+                m[k] = '{}'.format(metar.__dict__[k])
+            elif k == 'time' or k == '_now':
+                m[k] = metar.__dict__[k].isoformat()
             elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
                 m[k] = metar.__dict__[k].__dict__
             else:
@@ -62,7 +66,17 @@ def get_metar_as_dict(metar):
 
         return m
 
+def get_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+    resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
+    if resp.status_code == 200:
+        return True, resp.text.strip().rstrip('=').split('=\n')
 
+def get_taf(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+    resp = requests.get('{}taf.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
+    if resp.status_code == 200:
+        
+        return True,  [t for t in resp.text.strip().replace('\n','').split('=') if len(t)>4] #[m for m in resp.text.lstrip('\n').split('=\n')]
+    
 def parse_metar(metar):
     try:
         return Metar.Metar(metar)
@@ -188,9 +202,17 @@ def met_parse(what, msg):
 @Weather.route("/met/metar/<regex('[aA-zZ]{4}'):icao>", methods=['GET'])
 def met_get_metar_dict(icao):
     try:
-        status, taf, metar = get_taf_metar()
-        resp = get_metar_as_dict(metar)
+        status, taf, metar = get_taf_metar(icao)
+        if len(metar)>0:
+            resp = get_metar_as_dict(Metar.Metar(metar[-1]))
+        else:
+            status, metar = get_metar(icao)
+            if len(metar)>0:
+                resp = get_metar_as_dict(Metar.Metar(metar[-1]))
+            else:
+                resp = {}
 
         return eve_response({'icao': icao, 'metar': resp})
-    except:
+    except Exception as e:
+        print(e)
         return eve_abort(404, 'Could not process')

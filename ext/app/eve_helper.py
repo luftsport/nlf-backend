@@ -6,7 +6,8 @@
 """
 
 from flask import jsonify, abort, Response, current_app as app
-import sys, json
+import sys
+import simplejson as json
 import bson.json_util as json_util
 from ..scf import Scf
 
