@@ -97,6 +97,18 @@ def parse_taf(taf):
     return None
 
 
+def get_nearest_metar(metars, target_time):
+    target_stamp = target_time.timestamp()
+    mint = None
+    index = 0
+    for idx, m in enumerate(metars):
+        mtime = target_stamp - datetime.datetime(target_time.year, target_time.month, target_time.day, int(m[7:9]), int(m[9:11])).timestamp()
+        if mint is None or mint > abs(mtime):
+            mint = abs(mtime)
+            index = idx
+
+    return metars[index]
+
 @require_token()
 @Weather.route("/", methods=['GET'])
 def index():
@@ -124,7 +136,7 @@ def yr(what, county, municipality, name):
 
     elif what == 'wind':
         wind_speed = dict()
-        wind_speed['wind_forecast'] = [{'from': forecast['@from'], 'to': forecast['@to'], '@unit': 'knots',
+        wind_speed['wind_forecast'] = [{'from': forecast['@from'], 'to': forecast['@to'], 'unit': 'knots',
                                         'speed': round(float(forecast['windSpeed']['@mps']) * 1.943844, 2)} for forecast
                                        in
                                        weather.forecast()]
@@ -173,7 +185,7 @@ New metar methods using api.met.no
 
 
 @require_token()
-@Weather.route("/met/<regex('[aA-zZ]{4}'):icao>/<string:date>", methods=['GET'])
+@Weather.route("/met/<regex('[aA-zZ]{4}'):icao>/<regex('[0-9]{4}-[0-9]{2}-[0-9]{2}'):date>", methods=['GET'])
 def met_tafmetar(icao, date):
     try:
         status, taf, metar = get_taf_metar(icao, date)
@@ -216,3 +228,16 @@ def met_get_metar_dict(icao):
     except Exception as e:
         print(e)
         return eve_abort(404, 'Could not process')
+
+@require_token()
+@Weather.route("/met/metar/nearest/<regex('[aA-zZ]{4}'):icao>/<string:date>", methods=['GET'])
+def met_nearest_metar(icao, date):
+    try:
+        target_time = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M')
+        status, tafs, metars = get_taf_metar(icao, target_time.strftime('%Y-%m-%d'))
+        metar = get_nearest_metar(metars, target_time)
+        parsed = parse_metar(metar)
+        return eve_response({'metar': metar, 'parsed': '{}'.format(parsed)}, 200)
+    except Exception as e:
+        print(e)
+        return eve_abort(404, 'Could not process {}'.format(e))
