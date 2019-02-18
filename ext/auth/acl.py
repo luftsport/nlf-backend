@@ -44,6 +44,45 @@ def has_permission(id, type, collection):
     return False
 
 
+def get_user_acl_mapping(acl) -> dict:
+    """Input acl object"""
+
+    x = False
+    w = False
+    r = False
+    d = False
+
+    try:
+        if len([i for i in app.globals['acl']['roles'] if i in acl['execute']['roles']]) > 0 \
+                or app.globals['user_id'] in acl['execute']['users']:
+            x = True
+    except:
+        pass
+
+    try:
+        if len([i for i in app.globals['acl']['roles'] if i in acl['read']['roles']]) > 0 \
+                or app.globals['user_id'] in acl['read']['users']:
+            r = True
+    except:
+        pass
+
+    try:
+        if len([i for i in app.globals['acl']['roles'] if i in acl['write']['roles']]) > 0 \
+                or app.globals['user_id'] in acl['write']['users']:
+            w = True
+    except:
+        pass
+
+    try:
+        if len([i for i in app.globals['acl']['roles'] if i in acl['delete']['roles']]) > 0 \
+                or app.globals['user_id'] in acl['delete']['users']:
+            d = True
+    except:
+        pass
+
+    return {'r': r, 'w': w, 'x': x, 'd': d}
+
+
 def get_user_permissions(id, collection):
     """
     len([pid for pid in app.globals[all_person_ids] if pid in ])
@@ -56,10 +95,6 @@ def get_user_permissions(id, collection):
     try:
         if collection not in ['observations', 'users']:
             collection = 'observations'
-
-        x = False
-        w = False
-        r = False
 
         col = app.data.driver.db[collection]
 
@@ -75,28 +110,13 @@ def get_user_permissions(id, collection):
             pass
 
         try:
-            if len([i for i in app.globals['acl']['roles'] if i in acl['acl']['execute']['roles']]) > 0 \
-                    or app.globals['user_id'] in acl['acl']['execute']['users']:
-                x = True
+            mapping = get_user_acl_mapping(acl['acl'])
         except:
-            pass
+            mapping = {'r': False, 'w': False, 'x': False, 'd': False}
 
-        try:
-            if len([i for i in app.globals['acl']['roles'] if i in acl['acl']['read']['roles']]) > 0 \
-                    or app.globals['user_id'] in acl['acl']['read']['users']:
-                r = True
-        except:
-            pass
+        return {'id': acl['id'], '_id': acl['_id'], 'resource': collection, 'u': app.globals['user_id'],
+                'r': mapping['r'], 'w': mapping['w'], 'x': mapping['x'], 'd': mapping['d']}
 
-        try:
-            if len([i for i in app.globals['acl']['roles'] if i in acl['acl']['write']['roles']]) > 0 \
-                    or app.globals['user_id'] in acl['acl']['write']['users']:
-                w = True
-        except:
-            pass
-
-        return {'id': acl['id'], '_id': acl['_id'], 'resource': collection, 'u': app.globals['user_id'], 'r': r, 'w': w,
-                'x': x}
 
     except:
         return {'_error': {'code': 404,
