@@ -29,7 +29,7 @@ def after_post(request, response):
         print('Error')
     if request.method == 'POST' and '_id' in payload and payload['_status'] == 'OK':
         superadmin = helper.get_role_by_ref(ref='superadmin')
-        acl = {'write': {'roles': [superadmin]}}
+        acl = {'write': {'user': [app.globals['user_id']]}}
         col = app.data.driver.db['help']
         col.update_one({'_id': ObjectId(payload.get('_id'))}, {"$set": {"acl": acl}})
 
@@ -37,12 +37,10 @@ def after_post(request, response):
 def before_patch(request, lookup):
     print(request)
     print(lookup)
-    lookup.update({'$or': [{"acl.write.groups": {'$in': app.globals['acl']['groups']}},
-                           {"acl.write.roles": {'$in': app.globals['acl']['roles']}},
+    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
 def before_delete(request, lookup):
-    lookup.update({'$or': [{"acl.write.groups": {'$in': app.globals['acl']['groups']}},
-                           {"acl.write.roles": {'$in': app.globals['acl']['roles']}},
+    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})

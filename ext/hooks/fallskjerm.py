@@ -23,6 +23,7 @@
 
 """
 import ext.auth.anonymizer as anon
+from ext.auth.acl import get_user_acl_mapping
 import ext.app.eve_helper as eve_helper
 from ext.app.decorators import *
 import json
@@ -225,7 +226,7 @@ def after_fetched(response):
                             app.logger.info("ERR Metar ", e)
                             pass
 
-
+        response['acl'] = get_user_acl_mapping(response['acl'])
     # except Exception as e:
     #    print('########### ERR: ', e)
     except KeyError as e:

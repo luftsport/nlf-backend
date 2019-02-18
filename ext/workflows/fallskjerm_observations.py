@@ -61,6 +61,70 @@ def get_acl_init(person_id, club_id):
     return acl
 
 
+WF_FALLSKJERM_STATES = ['draft', 'pending_review_hi', 'pending_review_fs', 'pending_review_su', 'closed', 'withdrawn']
+
+WF_FALLSKJERM_ATTR = {'draft': {'title': 'Utkast', 'description': 'Utkast'},
+                      'pending_review_hi': {'title': 'Avventer HI', 'description': 'Avventer vurdering HI'},
+                      'pending_review_fs': {'title': 'Avventer Fagsjef',
+                                            'description': 'Avventer vurdering Fagsjef'},
+                      'pending_review_su': {'title': 'Avventer SU', 'description': 'Avventer vurdering SU'},
+                      'closed': {'title': 'Lukket', 'description': 'Observasjonen er lukket'},
+                      'withdrawn': {'title': 'Trukket', 'description': 'Observasjonen er trekt tilbake'},
+                      }
+WF_FALLSKJERM_TRANSITIONS = [
+    # { 'trigger': 'set_ready', 'source': 'draft', 'dest': 'ready', 'after': 'save_workflow', 'conditions':['has_permission']},
+    {'trigger': 'send_to_hi', 'source': 'draft', 'dest': 'pending_review_hi', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+    {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+    {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+
+    {'trigger': 'reject_hi', 'source': 'pending_review_hi', 'dest': 'draft', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+    {'trigger': 'approve_hi', 'source': 'pending_review_hi', 'dest': 'pending_review_fs',
+     'after': 'save_workflow', 'conditions': ['has_permission']},
+
+    {'trigger': 'reject_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_hi',
+     'after': 'save_workflow', 'conditions': ['has_permission']},
+    {'trigger': 'approve_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_su',
+     'after': 'save_workflow', 'conditions': ['has_permission']},
+
+    {'trigger': 'reject_su', 'source': 'pending_review_su', 'dest': 'pending_review_fs',
+     'after': 'save_workflow', 'conditions': ['has_permission']},
+    {'trigger': 'approve_su', 'source': 'pending_review_su', 'dest': 'closed', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+    {'trigger': 'reopen_su', 'source': 'closed', 'dest': 'pending_review_su', 'after': 'save_workflow',
+     'conditions': ['has_permission']},
+
+    # {'trigger': '*', 'source': '*', 'dest': '*', 'after': 'save_workflow'},
+]
+
+WF_FALLSKJERM_TRANSITIONS_ATTR = {
+    # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
+    'send_to_hi': {'title': 'Send til HI', 'action': 'Send til HI', 'resource': 'approve', 'comment': True,
+                   'descr': 'Sendt til HI'},
+    'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw',
+                 'comment': True, 'descr': 'Trekt tilbake'},
+    'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
+               'descr': 'Gjenåpnet'},
+    'reject_hi': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                  'descr': 'Avslått av HI'},
+    'approve_hi': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                   'comment': True, 'descr': 'Godkjent av HI'},
+    'reject_fs': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                  'descr': 'Avslått av Fagsjef'},
+    'approve_fs': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                   'comment': True, 'descr': 'Godkjent av Fagsjef'},
+    'reject_su': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
+                  'descr': 'Avslått av SU'},
+    'approve_su': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
+                   'comment': True, 'descr': 'Godkjent av SU'},
+    'reopen_su': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
+                  'descr': 'Gjenåpnet av SU'},
+}
+
+
 class ObservationWorkflow(Machine):
     """ For further work, should use https://github.com/einarhuseby/transitions instead of https://github.com/tyarkoni/transitions
     This fork will support the requirements in this project and also keep track of origin
@@ -74,17 +138,9 @@ class ObservationWorkflow(Machine):
         self.user_id = user_id
         # The states
         # states 'name', 'on_enter', 'on_exit'
-        self._states = ['draft', 'ready', 'pending_review_hi', 'pending_review_fs', 'pending_review_su', 'closed',
-                        'withdrawn']
+        self._states = WF_FALLSKJERM_STATES
 
-        self._state_attrs = {'draft': {'title': 'Utkast', 'description': 'Utkast'},
-                             'pending_review_hi': {'title': 'Avventer HI', 'description': 'Avventer vurdering HI'},
-                             'pending_review_fs': {'title': 'Avventer Fagsjef',
-                                                   'description': 'Avventer vurdering Fagsjef'},
-                             'pending_review_su': {'title': 'Avventer SU', 'description': 'Avventer vurdering SU'},
-                             'closed': {'title': 'Lukket', 'description': 'Observasjonen er lukket'},
-                             'withdrawn': {'title': 'Trukket', 'description': 'Observasjonen er trekt tilbake'},
-                             }
+        self._state_attrs = WF_FALLSKJERM_ATTR
 
         """ And some transitions between states. We're lazy, so we'll leave out
         the inverse phase transitions (freezing, condensation, etc.).
@@ -124,34 +180,7 @@ class ObservationWorkflow(Machine):
 
         """ The transition definition
         """
-        self._transitions = [
-            # { 'trigger': 'set_ready', 'source': 'draft', 'dest': 'ready', 'after': 'save_workflow', 'conditions':['has_permission']},
-            {'trigger': 'send_to_hi', 'source': 'draft', 'dest': 'pending_review_hi', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-            {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-            {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-
-            {'trigger': 'reject_hi', 'source': 'pending_review_hi', 'dest': 'draft', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-            {'trigger': 'approve_hi', 'source': 'pending_review_hi', 'dest': 'pending_review_fs',
-             'after': 'save_workflow', 'conditions': ['has_permission']},
-
-            {'trigger': 'reject_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_hi',
-             'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'approve_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_su',
-             'after': 'save_workflow', 'conditions': ['has_permission']},
-
-            {'trigger': 'reject_su', 'source': 'pending_review_su', 'dest': 'pending_review_fs',
-             'after': 'save_workflow', 'conditions': ['has_permission']},
-            {'trigger': 'approve_su', 'source': 'pending_review_su', 'dest': 'closed', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-            {'trigger': 'reopen_su', 'source': 'closed', 'dest': 'pending_review_su', 'after': 'save_workflow',
-             'conditions': ['has_permission']},
-
-            # {'trigger': '*', 'source': '*', 'dest': '*', 'after': 'save_workflow'},
-        ]
+        self._transitions = WF_FALLSKJERM_TRANSITIONS
 
         self.action = None
         """ Extra attributes needed for sensible feedback from API to client
@@ -168,29 +197,7 @@ class ObservationWorkflow(Machine):
 
 
         """
-        self._trigger_attrs = {
-            # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
-            'send_to_hi': {'title': 'Send til HI', 'action': 'Send til HI', 'resource': 'approve', 'comment': True,
-                           'descr': 'Sendt til HI'},
-            'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw',
-                         'comment': True, 'descr': 'Trekt tilbake'},
-            'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-                       'descr': 'Gjenåpnet'},
-            'reject_hi': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                          'descr': 'Avslått av HI'},
-            'approve_hi': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                           'comment': True, 'descr': 'Godkjent av HI'},
-            'reject_fs': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                          'descr': 'Avslått av Fagsjef'},
-            'approve_fs': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                           'comment': True, 'descr': 'Godkjent av Fagsjef'},
-            'reject_su': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                          'descr': 'Avslått av SU'},
-            'approve_su': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                           'comment': True, 'descr': 'Godkjent av SU'},
-            'reopen_su': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-                          'descr': 'Gjenåpnet av SU'},
-        }
+        self._trigger_attrs = WF_FALLSKJERM_TRANSITIONS_ATTR
 
         """ Make sure to start with a defined state!
         """
@@ -274,7 +281,7 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
-        if len([i for i in app.globals['acl']['roles'] if i in self.acl['execute']['roles']]) > 0 \
+        if len([i for i in app.globals['acl'].get('roles', []) if i in self.acl['execute']['roles']]) > 0 \
                 or app.globals['user_id'] in self.acl['execute']['users']:
             return True
 
@@ -464,7 +471,7 @@ class ObservationWorkflow(Machine):
         """ A wrapper around notifications
         """
         return
-        
+
         mail = Email()
 
         """
