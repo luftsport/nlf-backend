@@ -18,15 +18,15 @@
 # sort=[("location.coordinates.2", -1)]&where={"iso_country": "NO","location.coordinates.2": {"$gte":0}}
 # ?sort=[("location.coordinates.2", -1)]&where={"location.coordinates.2": {"$gt": 12500}}
 
-RESOURCE_COLLECTION = 'airports'
-BASE_URL = 'airports'
+RESOURCE_COLLECTION = 'aip_airports'
+BASE_URL = 'aip/airports'
 
 _schema = {'id': {'type': 'integer',
                   'required': True,
                   'readonly': True,
                   'unique': True
                   },
-           'ident': {'type': 'string'},
+           'icao': {'type': 'string'},
            'type': {'type': 'string'},
            'name': {'type': 'string'},
            'continent': {'type': 'string'},
@@ -52,14 +52,14 @@ definition = {
 
     'additional_lookup': {
         'url': 'regex("[A-Za-z]+")',
-        'field': 'ident',
+        'field': 'icao',
     },
-    'extra_response_fields': ['ident'],
+    'extra_response_fields': ['icao'],
     'versioning': False,
     'resource_methods': ['GET'],
     'item_methods': ['GET'],
     'pagination_strategy': 'none',
-    'mongo_indexes': {'ident': ([('ident', 1)], {'background': True}),
+    'mongo_indexes': {'icao': ([('icao', 1)], {'background': True}),
                       'codes': ([('iata_code', 1), ('gps_code', 1)], {'background': True}),
                       'iso': ([('iso_country', 1), ('iso_continent', 1)], {'background': True}),
                       'location': ([('location', '2dsphere')], {'background': True}),

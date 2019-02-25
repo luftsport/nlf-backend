@@ -1,6 +1,6 @@
 
-RESOURCE_COLLECTION = 'airspace'
-BASE_URL = 'airspaces'
+RESOURCE_COLLECTION = 'aip_airspace'
+BASE_URL = 'aip/airspaces'
 
 _limit = {'altitude': {'type': 'integer'},
           'reference': {'type': 'string'},

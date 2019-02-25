@@ -33,9 +33,21 @@ import legacy_melwin_clubs, legacy_melwin_licenses, legacy_melwin_membership, le
 import legacy_licenses
 import legacy_clubs
 
-# Airports
-import airports
-import airspaces
+# Aircrafts
+import aircrafts
+# Airports OurAirports
+import aip_airports
+import aip_frequencies
+import aip_runways
+import aip_navaids
+import aip_countries
+import aip_regions
+#import openaip_airports
+import aip_airspaces
+
+# Geo
+import geo_countries
+
 # Eve testing
 import test
 
@@ -81,11 +93,21 @@ DOMAIN = {
 
     # Help system
     "help": help.definition,
+    # Aircrafts
+    "aircrafts": aircrafts.definition,
 
     # Airports and stuff
-    "airports": airports.definition,
-    "airspaces": airspaces.definition,
+    "aip_airports": aip_airports.definition,
+    "aip_airspaces": aip_airspaces.definition,
+    "aip_frequencies": aip_frequencies.definition,
+    "aip_runways": aip_runways.definition,
+    "aip_navaids": aip_navaids.definition,
+    "aip_countries": aip_countries.definition,
+    "aip_regions": aip_regions.definition,
+    #"openaip_airports": openaip_airports.definition,
 
+    # Geo
+    "geo_countries": geo_countries.definition,
     # Testing Eve
     "test": test.definition
 }
