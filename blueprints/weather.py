@@ -33,10 +33,15 @@ def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
     if resp.status_code == 200:
         try:
             tmp = resp.text.rstrip('=\n\n').replace('///', '').split('\n\n')
-            m = tmp[0]
-            t = tmp[1]
-            taf = [_t for _t in t.replace('\n', '').strip().split('=') if len(_t) > 4]
-            metar = [_m.lstrip('\n') for _m in m.split('=') if len(_m) > 4]
+            taf = metar = []
+            
+            if len(tmp) > 0:
+                m = tmp[0]
+                metar = [_m.lstrip('\n') for _m in m.split('=') if len(_m) > 4]
+            if len(tmp) > 1:
+                t = tmp[1]
+                taf = [_t for _t in t.replace('\n', '').strip().split('=') if len(_t) > 4]
+            
             return True, taf, metar
         except:
             pass
@@ -98,6 +103,8 @@ def parse_taf(taf):
 
 
 def get_nearest_metar(metars, target_time):
+    if len(metars) == 0:
+        return ''
     target_stamp = target_time.timestamp()
     mint = None
     index = 0
@@ -192,8 +199,12 @@ def met_tafmetar(icao, date):
 
         if status is True:
             return eve_response({'taf': taf, 'metar': metar}, 200)
+        else:
+            print(get_taf_metar(icao, date))
     except:
-        return eve_abort(404, 'Could not process')
+        pass
+    
+    return eve_abort(404, 'Could not process')
 
 
 @require_token()
