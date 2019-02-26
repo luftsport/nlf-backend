@@ -33,7 +33,8 @@ def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
     if resp.status_code == 200:
         try:
             tmp = resp.text.rstrip('=\n\n').replace('///', '').split('\n\n')
-            taf = metar = []
+            taf = []
+            metar = []
             
             if len(tmp) > 0:
                 m = tmp[0]
@@ -49,27 +50,31 @@ def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
 
 
 def get_metar_as_dict(metar):
+    m = {}
     if 'metar.Metar.Metar' in '{}'.format(type(metar)):
-        m = {}
-        for k in metar.__dict__.keys():
-            if k == 'sky':
-                tmp = []
-                for sky in metar.__dict__[k]:
-                    if 'metar.Datatypes' in '{}'.format(type(sky[1])):
-                        tmp.append([sky[0], sky[1].__dict__, sky[2]])
-                    else:
-                        tmp.append([sky[0], sky[1], sky[2]])
-                m[k] = tmp
-            elif k == '_utcdelta':
-                m[k] = '{}'.format(metar.__dict__[k])
-            elif k == 'time' or k == '_now':
-                m[k] = metar.__dict__[k].isoformat()
-            elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
-                m[k] = metar.__dict__[k].__dict__
-            else:
-                m[k] = metar.__dict__[k]
 
-        return m
+        try:
+            for k in metar.__dict__.keys():
+                if k == 'sky':
+                    tmp = []
+                    for sky in metar.__dict__[k]:
+                        if 'metar.Datatypes' in '{}'.format(type(sky[1])):
+                            tmp.append([sky[0], sky[1].__dict__, sky[2]])
+                        else:
+                            tmp.append([sky[0], sky[1], sky[2]])
+                    m[k] = tmp
+                elif k == '_utcdelta':
+                    m[k] = '{}'.format(metar.__dict__[k])
+                elif k == 'time' or k == '_now':
+                    m[k] = metar.__dict__[k].isoformat()
+                elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
+                    m[k] = metar.__dict__[k].__dict__
+                else:
+                    m[k] = metar.__dict__[k]
+        except:
+            pass
+
+    return m
 
 def get_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
