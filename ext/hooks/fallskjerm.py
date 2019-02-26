@@ -182,7 +182,8 @@ def after_fetched(response):
 
             for key, val in enumerate(response):
 
-                response[key]['acl_user'] = user_persmissions(response[key]['acl'], response[key]['workflow']['state'])
+                # response[key]['acl_user'] = user_persmissions(response[key]['acl'], response[key]['workflow']['state'])
+                response[key]['acl_user'] = get_user_acl_mapping(response[key]['acl'])
 
                 if response[key]['workflow']['state'] == 'closed':
 
@@ -192,7 +193,10 @@ def after_fetched(response):
 
 
         elif isinstance(response, dict):
-            response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
+            # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
+
+            response['acl_user'] = get_user_acl_mapping(response['acl'])
+
             """For item return nanon if roles match hi in club or fs"""
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
@@ -226,7 +230,7 @@ def after_fetched(response):
                             app.logger.info("ERR Metar ", e)
                             pass
 
-        response['acl_user'] = get_user_acl_mapping(response['acl'])
+
     # except Exception as e:
     #    print('########### ERR: ', e)
     except KeyError as e:
