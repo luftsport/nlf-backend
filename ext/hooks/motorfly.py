@@ -30,7 +30,7 @@ import json
 # import signals from hooks
 from ext.hooks.fallskjerm_signals import signal_activity_log, signal_insert_workflow, \
     signal_change_owner, signal_init_acl
-from ext.hooks.motor_signals import signal_g_init_acl, signal_g_insert_workflow
+from ext.hooks.motorfly_signals import signal_g_init_acl, signal_g_insert_workflow
 
 from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_SU, ACL_MOTORFLY_FSJ
 from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
