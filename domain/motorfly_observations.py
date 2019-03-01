@@ -14,6 +14,8 @@
 from _base import workflow_schema, comments_schema, watchers_schema, acl_item_schema, ask_schema
 # from f_observation_components import components_schema
 from datetime import datetime
+from bson import SON
+
 
 RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
