@@ -16,23 +16,28 @@ from _base import workflow_schema, comments_schema, watchers_schema, acl_item_sc
 from datetime import datetime
 from bson import SON
 
-
 RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
 
+ORS_MODEL_TYPE = 'motorfly'
+ORS_MODEL_VERSION = 1
+
 _schema = {'id': {'type': 'integer',
-                  'required': False,
+                  'required': True,
                   'readonly': True
                   },
 
            'type': {'type': 'string',
-                    'allowed': ['sharing', 'unsafe_act', 'near_miss', 'incident', 'accident']
+                    'allowed': ['sharing', 'unwanted_act', 'unsafe_act', 'near_miss', 'incident', 'accident'],
+                    'default': 'near_miss'
                     },
 
            'flags': {'type': 'dict',
-                     'schema': {'aviation': {'type': 'boolean', 'default': False},
-                                'insurance': {'type': 'boolean', 'default': False}
-                                }
+                     'schema': {'aviation': {'type': 'boolean'},
+                                'insurance': {'type': 'boolean'}
+                                },
+                     'default': {'aviation': False,
+                                 'insurance': False}
                      },
            'ask': ask_schema,
 
@@ -46,10 +51,7 @@ _schema = {'id': {'type': 'integer',
 
            'location': {'type': 'dict',
                         'default': {}},
-           'route': {'type': 'dict',
-                     'default': {}},
-           'flight_log': {'type': 'dict',
-                          'default': {}},
+
            'owner': {'type': 'integer', 'readonly': True},
            'reporter': {'type': 'integer', 'readonly': True},
 
@@ -64,14 +66,16 @@ _schema = {'id': {'type': 'integer',
                             },
 
            'rating': {'type': 'dict',
-                      'schema': {'actual': {'type': 'integer', 'default': 1},
-                                 'potential': {'type': 'integer', 'default': 1}
-                                 }
+                      'schema': {'actual': {'type': 'integer'},
+                                 'potential': {'type': 'integer'}
+                                 },
+                      'default': {'actual': 1, 'potential': 1}
                       },
            'weather': {'type': 'dict',
                        'schema': {'auto': {'type': 'dict'},
                                   'manual': {'type': 'dict'}
-                                  }
+                                  },
+                       'default': {'auto': {}, 'manual': {}}
                        },
 
            'components': {'type': 'list',
@@ -91,18 +95,16 @@ _schema = {'id': {'type': 'integer',
            'related': {'type': 'list',
                        'default': []
                        },
-           'media': {'type': 'list',
-                     'schema': {'type': 'string'}
-                     },
            'actions': {'type': 'dict'},
            'comments': comments_schema,
            'workflow': workflow_schema,
            'watchers': watchers_schema,
            'acl': acl_item_schema,
            '_model': {'type': 'dict',
-                      'schema': {'version': {'type': 'integer', 'default': 1},
-                                 'type': {'type': 'string', 'default': 'motorfly'}
-                                 }
+                      'schema': {'version': {'type': 'integer'},
+                                 'type': {'type': 'string'}
+                                 },
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
                       }
 
            }
@@ -145,11 +147,10 @@ aggregate_observation_types = {
         'aggregation': {
             'pipeline': [
                 {"$unwind": "$type"},
-                {"$match": {"when": { "$gte": "$from", "$lte": "$to"}, "workflow.state": "$state" } },
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "workflow.state": "$state"}},
                 {"$group": {"_id": "$type", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
             ]
         }
     }
 }
-
