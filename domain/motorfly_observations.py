@@ -120,7 +120,7 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
 
-    'versioning': True,
+    'versioning': False,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
     'mongo_indexes': {'id': ([('id', 1)], {'background': True}),
