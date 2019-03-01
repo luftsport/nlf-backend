@@ -188,7 +188,7 @@ def after_fetched(response):
                 if response[key]['workflow']['state'] == 'closed':
 
                     if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
-                        response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
+                        # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
                         response[key] = anon.anonymize_ors(response[key])
 
 
@@ -204,6 +204,7 @@ def after_fetched(response):
                         response = anon.anonymize_ors(response)
 
             ### REMOVE
+            """
             if response.get('weather', False):
 
                 if response['weather'].get('auto', False):
@@ -229,6 +230,7 @@ def after_fetched(response):
                         except Exception as e:
                             app.logger.info("ERR Metar ", e)
                             pass
+            """
 
 
     # except Exception as e:
