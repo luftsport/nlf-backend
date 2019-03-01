@@ -177,72 +177,73 @@ def after_fetched(response):
     """
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
-    try:
-        if isinstance(response, list):
+    if 1 == 2:
+        try:
+            if isinstance(response, list):
 
-            for key, val in enumerate(response):
+                for key, val in enumerate(response):
 
-                # response[key]['acl_user'] = user_persmissions(response[key]['acl'], response[key]['workflow']['state'])
-                response[key]['acl_user'] = get_user_acl_mapping(response[key]['acl'])
+                    # response[key]['acl_user'] = user_persmissions(response[key]['acl'], response[key]['workflow']['state'])
+                    response[key]['acl_user'] = get_user_acl_mapping(response[key]['acl'])
 
-                if response[key]['workflow']['state'] == 'closed':
+                    if response[key]['workflow']['state'] == 'closed':
 
-                    if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
-                        # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
-                        response[key] = anon.anonymize_ors(response[key])
-
-
-        elif isinstance(response, dict):
-            # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
-
-            response['acl_user'] = get_user_acl_mapping(response['acl'])
-
-            """For item return nanon if roles match hi in club or fs"""
-            if response.get('workflow', False) and 'state' in response['workflow']:
-                if response['workflow']['state'] == 'closed':
-                    if not has_nanon_permission(response['acl'], 'execute', 'closed'):
-                        response = anon.anonymize_ors(response)
-
-            ### REMOVE
-            """
-            if response.get('weather', False):
-
-                if response['weather'].get('auto', False):
-
-                    if response['weather']['auto'].get('taf', False):
-                        try:
-                            import pytaf
-                            taf_raw = response['weather']['auto'].get('taf')
-                            # print(taf_raw[17:])
-                            taf = pytaf.TAF(taf_raw[17:])
-                            decoder = pytaf.Decoder(taf)
-                            response['weather']['auto'].update({'taf_decoded': decoder.decode_taf()})
-                        except Exception as e:
-                            app.logger.info("ERR TAF ", e)
-                            pass
-
-                    if response['weather']['auto'].get('metar', False):
-                        try:
-                            from metar import Metar
-                            met = Metar.Metar("METAR %s" % response['weather']['auto']['metar'][17:])
-                            response['weather']['auto'].update({'metar_decoded': met.string()})
-
-                        except Exception as e:
-                            app.logger.info("ERR Metar ", e)
-                            pass
-            """
+                        if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
+                            # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
+                            response[key] = anon.anonymize_ors(response[key])
 
 
-    # except Exception as e:
-    #    print('########### ERR: ', e)
-    except KeyError as e:
-        app.logger.info("Keyerror in hook error: {}".format(e))
-        eve_helper.eve_abort(500,
-                             'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
-    except Exception as e:
-        app.logger.info("Unexpected error: {}".format(e))
-        eve_helper.eve_abort(500,
-                             'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+            elif isinstance(response, dict):
+                # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
+
+                response['acl_user'] = get_user_acl_mapping(response['acl'])
+
+                """For item return nanon if roles match hi in club or fs"""
+                if response.get('workflow', False) and 'state' in response['workflow']:
+                    if response['workflow']['state'] == 'closed':
+                        if not has_nanon_permission(response['acl'], 'execute', 'closed'):
+                            response = anon.anonymize_ors(response)
+
+                ### REMOVE
+                """
+                if response.get('weather', False):
+    
+                    if response['weather'].get('auto', False):
+    
+                        if response['weather']['auto'].get('taf', False):
+                            try:
+                                import pytaf
+                                taf_raw = response['weather']['auto'].get('taf')
+                                # print(taf_raw[17:])
+                                taf = pytaf.TAF(taf_raw[17:])
+                                decoder = pytaf.Decoder(taf)
+                                response['weather']['auto'].update({'taf_decoded': decoder.decode_taf()})
+                            except Exception as e:
+                                app.logger.info("ERR TAF ", e)
+                                pass
+    
+                        if response['weather']['auto'].get('metar', False):
+                            try:
+                                from metar import Metar
+                                met = Metar.Metar("METAR %s" % response['weather']['auto']['metar'][17:])
+                                response['weather']['auto'].update({'metar_decoded': met.string()})
+    
+                            except Exception as e:
+                                app.logger.info("ERR Metar ", e)
+                                pass
+                """
+
+
+        # except Exception as e:
+        #    print('########### ERR: ', e)
+        except KeyError as e:
+            app.logger.info("Keyerror in hook error: {}".format(e))
+            eve_helper.eve_abort(500,
+                                 'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
+        except Exception as e:
+            app.logger.info("Unexpected error: {}".format(e))
+            eve_helper.eve_abort(500,
+                                 'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
 
 
 @require_token()
