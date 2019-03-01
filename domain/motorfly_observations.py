@@ -23,7 +23,6 @@ ORS_MODEL_TYPE = 'motorfly'
 ORS_MODEL_VERSION = 1
 
 _schema = {'id': {'type': 'integer',
-                  'required': True,
                   'readonly': True
                   },
 

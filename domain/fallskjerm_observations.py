@@ -23,7 +23,6 @@ ORS_MODEL_TYPE = 'fallskjerm'
 ORS_MODEL_VERSION = 3
 
 _schema = {'id': {'type': 'integer',
-                  'required': True,
                   'readonly': True
                   },
 
