@@ -177,6 +177,8 @@ def after_fetched(response):
     """
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
+    if isinstance(response, dict):
+        print('ORS state', response.get('workflow', {}).get('state', 'NONE'))
     if 1 == 2:
         try:
             if isinstance(response, list):
