@@ -134,3 +134,20 @@ definition = {
     'schema': _schema
 
 }
+
+aggregate_observation_types = {
+    'item_title': 'Observation Aggregations',
+    'url': '{}/aggregate'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$unwind": "$type"},
+                {"$match": {"when": { "$gte": "$from", "$lte": "$to"}, "workflow.state": "$state" } },
+                {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+                {"$sort": SON([("count", -1)])}
+            ]
+        }
+    }
+}
+
