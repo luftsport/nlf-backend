@@ -178,6 +178,7 @@ def after_fetched(response):
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
     if isinstance(response, dict):
+        response['acl_user'] = get_user_acl_mapping(response['acl'])
         print('ORS state', response.get('workflow', {}).get('state', 'NONE'))
     if 1 == 2:
         try:
