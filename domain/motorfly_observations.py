@@ -16,7 +16,7 @@ from _base import workflow_schema, comments_schema, watchers_schema, acl_item_sc
 from datetime import datetime
 
 RESOURCE_COLLECTION = 'g_observations'
-BASE_URL = 'motor/observations'
+BASE_URL = 'motorfly/observations'
 
 _schema = {'id': {'type': 'integer',
                   'required': False,
@@ -99,7 +99,7 @@ _schema = {'id': {'type': 'integer',
            'acl': acl_item_schema,
            '_model': {'type': 'dict',
                       'schema': {'version': {'type': 'integer', 'default': 1},
-                                 'type': {'type': 'string', 'default': 'motor'}
+                                 'type': {'type': 'string', 'default': 'motorfly'}
                                  }
                       }
 

@@ -14,7 +14,7 @@ import acl_groups, acl_roles, users_acl
 
 # FALLSKJERM
 import fallskjerm_observations
-import motor_observations
+import motorfly_observations
 # import observation_components
 # import observation_comments
 # Files - just a test collection
@@ -68,7 +68,7 @@ DOMAIN = {
     "fallskjerm_observations_agg": fallskjerm_observations.aggregate_observation_types,
 
     # Motor
-    "motor_observations": motor_observations.definition,
+    "motor_observations": motorfly_observations.definition,
 
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
