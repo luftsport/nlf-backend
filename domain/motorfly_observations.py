@@ -15,7 +15,7 @@ from _base import workflow_schema, comments_schema, watchers_schema, acl_item_sc
 # from f_observation_components import components_schema
 from datetime import datetime
 
-RESOURCE_COLLECTION = 'g_observations'
+RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
 
 _schema = {'id': {'type': 'integer',
