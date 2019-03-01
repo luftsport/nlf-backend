@@ -33,6 +33,8 @@ from blueprints.authentication import Authenticate
 from blueprints.acl import ACL
 # Observation blueprints
 from blueprints.fallskjerm_observation_workflow import OrsWorkflow as FallskjermOrsWF
+from blueprints.fallskjerm_observation_workflow import OrsWorkflow as MotorflyOrsWF
+
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -89,11 +91,14 @@ app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'
 
 # ORS NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
+
+
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
 app.register_blueprint(Tags, url_prefix="%s/tags" % app.globals.get('prefix'))
-app.register_blueprint(OrsShare, url_prefix="%s/f/observations/share" % app.globals.get('prefix'))
+app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" % app.globals.get('prefix'))
 
 app.register_blueprint(Weather, url_prefix="%s/weather" % app.globals.get('prefix'))
 app.register_blueprint(Info, url_prefix="%s/info" % app.globals.get('prefix'))
@@ -127,11 +132,19 @@ app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_di
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 
-
+## MOTOR
+app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
+# BEFORE GET
+app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
+# AFTER FETCHED (GET)
+app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
+app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
 
 # Motor
 
-app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
+#app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
 #app.on_pre_POST_fallskjerm_observations += dump_request
 
 #app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
