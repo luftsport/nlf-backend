@@ -109,10 +109,10 @@ _schema = {'id': {'type': 'integer',
            }
 # 'schema': components_schema
 definition = {
-    'item_title': 'Motor Observations',
+    'item_title': 'Motorfly Observations',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
-                   'projection': {'acl': 0}  # 'files': 0,
+                   #'projection': {'acl': 0}  # 'files': 0,
                    },
     # Make a counter so we can have a lookup for #455
     'additional_lookup': {
@@ -123,7 +123,7 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
 
-    'versioning': False,
+    'versioning': True,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
     'mongo_indexes': {'id': ([('id', 1)], {'background': True}),
@@ -131,7 +131,7 @@ definition = {
                       'when': ([('when', 1)], {'background': True}),
                       'type': ([('type', 1)], {'background': True}),
                       'rating': ([('rating', 1)], {'background': True}),
-                      'title': ([('tags', 'text')], {'background': True})
+                      'title': ([('tags', 'text'), ('ask', 'text')], {'background': True, 'default_language': 'norwegian', 'weights': {'tags': 10, 'ask': 2}})
 
                       },
     'schema': _schema
