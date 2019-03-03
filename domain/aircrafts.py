@@ -32,6 +32,7 @@ definition = {
     'pagination_strategy': '',
     'mongo_indexes': {'callsign': ([('callsign', 1)], {'background': True}),
                       'misc': ([('manufacturer', 1), ('model', 1), ('type', 1), ('status', 1)], {'background': True}),
+                      'txt': ([('callsign', 'text'), ('manufacturer', 'text'), ('model', 'text')], {'background': True, 'default_language': 'norwegian', 'weights': {'callsign': 10, 'manufacturer': 4, , 'model': 2}})
                       },
 
     'schema': _schema
