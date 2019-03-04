@@ -49,7 +49,7 @@ definition = {
     'datasource': {'source': RESOURCE_COLLECTION,
                    # 'projection': {'acl': 0} # Not for this?
                    },
-
+    'allow_unknown': True, # For text search meta
     'additional_lookup': {
         'url': 'regex("[A-Za-z]+")',
         'field': 'icao',
@@ -63,7 +63,7 @@ definition = {
                       'codes': ([('iata_code', 1), ('gps_code', 1)], {'background': True}),
                       'iso': ([('iso_country', 1), ('iso_continent', 1)], {'background': True}),
                       'location': ([('location', '2dsphere')], {'background': True}),
-                      'name': ([('title', 'text'), ('body', 'text')], {'background': True})
+                      'name': ([('icao', 'text'), ('name', 'text'), ('municipality', 'text'), ('keywords', 'text')], {'background': True})
                       },
 
     'schema': _schema
