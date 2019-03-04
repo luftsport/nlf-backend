@@ -28,7 +28,7 @@ definition = {
     'versioning': False,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET'],
-
+    'allow_unknown': True, # To allow search?
     'pagination_strategy': '',
     'mongo_indexes': {'callsign': ([('callsign', 1)], {'background': True}),
                       'misc': ([('manufacturer', 1), ('model', 1), ('type', 1), ('status', 1)], {'background': True}),
