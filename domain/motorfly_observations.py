@@ -47,7 +47,9 @@ _schema = {'id': {'type': 'integer',
            'club': {'type': 'integer',
                     'required': True
                     },
-
+           'discipline': {'type': 'integer',
+                          'required': True
+                          },
            'location': {'type': 'dict',
                         'default': {}},
 
@@ -112,7 +114,7 @@ definition = {
     'item_title': 'Motorfly Observations',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
-                   #'projection': {'acl': 0}  # 'files': 0,
+                   # 'projection': {'acl': 0}  # 'files': 0,
                    },
     # Make a counter so we can have a lookup for #455
     'additional_lookup': {
@@ -127,11 +129,15 @@ definition = {
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
     'mongo_indexes': {'id': ([('id', 1)], {'background': True}),
+                      'club': ([('club', 1)], {'background': True}),
+                      'discipline': ([('discipline', 1)], {'background': True}),
                       'persons': ([('owner', 1), ('reporter', 1)], {'background': True}),
                       'when': ([('when', 1)], {'background': True}),
                       'type': ([('type', 1)], {'background': True}),
                       'rating': ([('rating', 1)], {'background': True}),
-                      'title': ([('tags', 'text'), ('ask', 'text')], {'background': True, 'default_language': 'norwegian', 'weights': {'tags': 10, 'ask': 2}})
+                      'title': ([('tags', 'text'), ('ask', 'text')],
+                                {'background': True, 'default_language': 'norwegian',
+                                 'weights': {'tags': 10, 'ask': 2}})
 
                       },
     'schema': _schema
