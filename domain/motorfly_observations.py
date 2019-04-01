@@ -58,6 +58,7 @@ _schema = {'id': {'type': 'integer',
 
            'when': {'type': 'datetime', 'default': datetime.utcnow()},
 
+           'aircrafts': {'type': 'dict'},
            'involved': {'type': 'list',
                         'default': []
                         },
