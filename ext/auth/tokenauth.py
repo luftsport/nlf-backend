@@ -123,43 +123,54 @@ class TokenAuth(TokenAuth):
             # SU
 
             u['acl'].append({"activity": 109,
-                             "club": 0,
+                             "org": 0,
                              "role": 999})
+                             #"type": 19})
             u['acl'].append({"activity": 0,
-                             "club": 0,
+                             "org": 0,
                              "role": 999})
+                             # "type": 19})
 
             # HI
             """
-            u['acl'].append({"activity": 109,
-                             "club": 24779,
-                             "role": 201120})
-            u['acl'].append({"activity": 109,
-                             "club": 0,
-                             "role": 201120})
-            u['acl'].append({"activity": 0,
-                             "club": 0,
-                             "role": 201120})
+            u['acl'].append({"activity": 109, # Bgn gren
+                             "org": 817492,
+                             "role": 201120,
+                             "type": 14})
+            u['acl'].append({"activity": 109, # Seksjon
+                             "org": 0,
+                             "role": 201120, 
+                             "type": 19})
+            u['acl'].append({"activity": 0, # Særforbund
+                             "org": 0,
+                             "role": 201120,
+                             "type": 2})
             """
-        app.globals['acl'] = {'roles': u['acl']}
+        # Set acl directly!
+        app.globals['acl'] = {'roles': [{'activity': v['activity'], 'org': v['org'], 'role': v['role']} for v in u['acl']]}
+
         return
+
+        #
+        # To be removed below...
+        #
 
         # Aarg need to remove name and func!!!
         acl_ = user.get('acl_roles', [])
         acl = []
         for role in acl_:
             # Seksjon og klubb
-            acl.append({"activity": role['activity'],
-                        "club": role['club'],
-                        "role": role['role']})
+            acl.append(role)
             # Seksjon
             acl.append({"activity": role['activity'],
                         "club": 0,
-                        "role": role['role']})
+                        "role": role['role'],
+                        "type": 19})
             # Kun rolle
             acl.append({"activity": 0,
                         "club": 0,
-                        "role": role['role']})
+                        "role": role['role'],
+                        "type": 2})
 
         # TO BE REMOVED
         if person_id == 301041:

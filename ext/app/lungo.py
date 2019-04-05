@@ -25,17 +25,20 @@ def get_person_acl(person_id) -> (bool, dict):
 
         # Prepare acl roles
         for item in r.get('_items', []):
+            # print(item)
             acl.append(item)
             acl.append({
                 'activity': item['activity'],
-                'club': 0,
-                'role': item['role']}
-            )
+                'org': 0,
+                'role': item['role'],
+                'type': item['type']
+            })
             acl.append({
                 'activity': 0,
-                'club': 0,
-                'role': item['role']}
-            )
+                'org': 0,
+                'role': item['role'],
+                'type': item['type']
+            })
 
         return True, acl
 

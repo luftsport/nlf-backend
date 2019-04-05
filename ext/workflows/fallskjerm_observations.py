@@ -225,7 +225,10 @@ class ObservationWorkflow(Machine):
 
         self.comment = '' if comment is None else '{}'.format(comment).strip()
 
-        Machine.__init__(self, states=self._states, send_event=True, transitions=self._transitions,
+        Machine.__init__(self,
+                         states=self._states,
+                         send_event=True,
+                         transitions=self._transitions,
                          initial=self.initial_state)
 
     def get_actions(self):
