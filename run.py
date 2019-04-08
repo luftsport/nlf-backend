@@ -33,7 +33,7 @@ from blueprints.authentication import Authenticate
 from blueprints.acl import ACL
 # Observation blueprints
 from blueprints.fallskjerm_observation_workflow import OrsWorkflow as FallskjermOrsWF
-from blueprints.fallskjerm_observation_workflow import OrsWorkflow as MotorflyOrsWF
+from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsWF
 
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
@@ -92,7 +92,6 @@ app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'
 # ORS NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
-
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
