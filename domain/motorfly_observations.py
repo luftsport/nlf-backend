@@ -25,6 +25,7 @@ ORS_MODEL_VERSION = 1
 _schema = {'id': {'type': 'integer',
                   'readonly': True
                   },
+           'e5x': {'type': 'dict'},
 
            'type': {'type': 'string',
                     'allowed': ['sharing', 'unwanted_act', 'unsafe_act', 'near_miss', 'incident', 'accident'],
@@ -33,10 +34,12 @@ _schema = {'id': {'type': 'integer',
 
            'flags': {'type': 'dict',
                      'schema': {'aviation': {'type': 'boolean'},
-                                'insurance': {'type': 'boolean'}
+                                'insurance': {'type': 'boolean'},
+                                'e5x': {'type': 'boolean'}
                                 },
                      'default': {'aviation': False,
-                                 'insurance': False}
+                                 'insurance': False,
+                                 'e5x': False}
                      },
            'ask': ask_schema,
 
