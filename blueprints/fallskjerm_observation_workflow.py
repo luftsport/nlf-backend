@@ -21,7 +21,7 @@ from ext.workflows.fallskjerm_observations import ObservationWorkflow
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 
-OrsWorkflow = Blueprint('Observation Workflow', __name__, )
+OrsWorkflow = Blueprint('Fallskjerm Observation Workflow', __name__, )
 
 
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
@@ -132,15 +132,15 @@ def transition(observation_id, action):
 @require_token()
 def graphit(observation_id, state):
     #wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
-    from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_STATES, WF_FALLSKJERM_TRANSITIONS
-    if state in WF_FALLSKJERM_STATES:
+    from ext.workflows.fallskjerm_observations import WF_MOTORFLY_STATES, WF_MOTORFLY_TRANSITIONS
+    if state in WF_MOTORFLY_STATES:
 
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
     
         
-        machine = Machine(model=wf, states=WF_FALLSKJERM_STATES, transitions=WF_FALLSKJERM_TRANSITIONS, initial=state, title='Workflow graph')
+        machine = Machine(model=wf, states=WF_MOTORFLY_STATES, transitions=WF_MOTORFLY_TRANSITIONS, initial=state, title='Workflow graph')
         stream = io.BytesIO()
         wf.get_graph().draw(stream, prog='dot', format='png')
         #response = make_response(stream.getvalue())

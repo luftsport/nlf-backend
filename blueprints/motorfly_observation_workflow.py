@@ -21,7 +21,9 @@ from ext.workflows.motorfly_observations import ObservationWorkflow
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 
-OrsWorkflow = Blueprint('Observation Workflow', __name__, )
+OrsWorkflow = Blueprint('Motorfly Observation Workflow', __name__, )
+
+RESOURCE_COLLECTION = 'motorfly_observations'
 
 
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
@@ -31,6 +33,8 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
+    print(observation_id)
+
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
     return Response(json.dumps(wf.get_current_state()), mimetype='application/json')
@@ -66,10 +70,10 @@ def get_observations():
         sort['field'] = sort_tmp
         sort['direction'] = 1
 
-    col = app.data.driver.db['fallskjerm_observations']
+    col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
-    cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}}, \
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}}, \
+    cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                          {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
 
     total_items = cursor.count()
@@ -131,21 +135,20 @@ def transition(observation_id, action):
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
 @require_token()
 def graphit(observation_id, state):
-    #wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
-    from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_STATES, WF_FALLSKJERM_TRANSITIONS
-    if state in WF_FALLSKJERM_STATES:
-
+    # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    from ext.workflows.motorfly_observations import WF_MOTORFLY_STATES, WF_MOTORFLY_TRANSITIONS
+    if state in WF_MOTORFLY_STATES:
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
-    
-        
-        machine = Machine(model=wf, states=WF_FALLSKJERM_STATES, transitions=WF_FALLSKJERM_TRANSITIONS, initial=state, title='Workflow graph')
+
+        machine = Machine(model=wf, states=WF_MOTORFLY_STATES, transitions=WF_MOTORFLY_TRANSITIONS, initial=state,
+                          title='Workflow graph')
         stream = io.BytesIO()
         wf.get_graph().draw(stream, prog='dot', format='png')
-        #response = make_response(stream.getvalue())
-        #response.mimetype = 'image/png'
-        #return response
+        # response = make_response(stream.getvalue())
+        # response.mimetype = 'image/png'
+        # return response
         return eve_response({'graph': base64.b64encode(stream.getvalue())}, 200)
 
 
@@ -162,6 +165,7 @@ def tasks(observation_id):
     # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
     raise NotImplemented
+
 
 class Dummy(object):
     pass
