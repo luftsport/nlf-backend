@@ -36,11 +36,21 @@ def after_post(request, response):
 
 def before_patch(request, lookup):
     print(request)
-    print(lookup)
-    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
-                           {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
+    print(app.globals['acl']['roles'])
+    # lookup.update({"acl.write.users": {'$in': [app.globals.get('user_id')]}})
+    """
+    lookup.update({'$or': [{"acl.write.users": {'$in': [app.globals.get('user_id')]}},
+                           {"acl.write.roles": {'$in': app.globals['acl']['roles']}}
+                           ]
+    })
+    """
 
 
 def before_delete(request, lookup):
+    # lookup.update({"acl.write.users": {'$in': [app.globals.get('user_id')]}})
+    """
     lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
-                           {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
+                           {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]
+    })
+    """
+
