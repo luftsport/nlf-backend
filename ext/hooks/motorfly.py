@@ -64,15 +64,17 @@ def ors_before_insert(items):
                 ors['watchers'] = [app.globals.get('user_id')]
                 ors['workflow'] = get_wf_init(app.globals.get('user_id'))
 
-                role_ors = ACL_MOTORFLY_ORS.copy()
-                role_ors['org'] = ors.get('discipline')
-                _, _role_ors = get_person_from_role(role_ors)
+                ors['organization'] = {}
+                person_ors = ACL_MOTORFLY_ORS.copy()
+                person_ors['org'] = ors.get('discipline')
+                _, _person_ors = get_person_from_role(person_ors)
+                ors['organization']['ors'] = _person_ors
 
-                role_dto = ACL_MOTORFLY_DTO.copy()
-                role_dto['org'] = ors.get('discipline')
-                _, _role_dto = get_person_from_role(role_dto)
+                persons_dto = ACL_MOTORFLY_DTO.copy()
+                persons_dto['org'] = ors.get('discipline')
+                _, _persons_dto = get_person_from_role(persons_dto)
+                ors['organization']['dto'] = persons_dto
 
-                ors['organization'] = {'ors': _role_dto, 'dto': _role_dto}
 
                 ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
 
