@@ -30,7 +30,7 @@ import json
 # import signals from hooks
 from ext.hooks.fallskjerm_signals import signal_activity_log, signal_insert_workflow, \
     signal_change_owner, signal_init_acl
-from ext.hooks.motorfly_signals import signal_g_init_acl, signal_g_insert_workflow
+from ext.hooks.motorfly_signals import signal_g_init_acl, signal_motorfly_insert_workflow
 
 from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP, ACL_FALLSKJERM_FSJ
 from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
@@ -83,7 +83,7 @@ def ors_before_insert(items):
 def after_g_post(request, response):
     payload = json.loads(response.get_data().decode('UTF-8'))
 
-    signal_g_insert_workflow.send({'app': app, 'payload': payload})
+    signal_motorfly_insert_workflow.send({'app': app, 'payload': payload})
 
     signal_g_init_acl.send({'app': app, 'payload': payload})
 

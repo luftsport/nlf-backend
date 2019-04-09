@@ -28,12 +28,12 @@ import ext.app.eve_helper as eve_helper
 from ext.app.decorators import *
 import json
 # import signals from hooks
-from ext.hooks.fallskjerm_signals import signal_activity_log, signal_insert_workflow, \
-    signal_change_owner, signal_init_acl
-from ext.hooks.motorfly_signals import signal_g_init_acl, signal_g_insert_workflow
+from ext.hooks.motorfly_signals import signal_activity_log,  \
+    signal_change_owner #signal_init_acl signal_insert_workflow,
+from ext.hooks.motorfly_signals import signal_g_init_acl, signal_motorfly_insert_workflow
 
-from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_FSJ
-from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
+from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
+from ext.workflows.motorfly_observations import get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 
@@ -50,7 +50,7 @@ def ors_before_insert(items):
 
         try:
             ors = items[0].copy()
-            if 'club' in ors and ors.get('club', 0) > 0:
+            if 'discipline' in ors and ors.get('discipline', 0) > 0:
 
                 ors_id = increment('ors_motorfly')
 
@@ -64,12 +64,17 @@ def ors_before_insert(items):
                 ors['watchers'] = [app.globals.get('user_id')]
                 ors['workflow'] = get_wf_init(app.globals.get('user_id'))
 
-                role_hi = ACL_MOTORFLY_SKOLESJEF.copy()
-                role_hi['club'] = ors.get('club')
-                _, hi = get_person_from_role(role_hi)
-                ors['organization'] = {'hi': hi}
+                role_ors = ACL_MOTORFLY_ORS.copy()
+                role_ors['org'] = ors.get('discipline')
+                _, _role_ors = get_person_from_role(role_ors)
 
-                ors['acl'] = get_acl_init(app.globals.get('user_id'), ors['club'])
+                role_dto = ACL_MOTORFLY_DTO.copy()
+                role_dto['org'] = ors.get('discipline')
+                _, _role_dto = get_person_from_role(role_dto)
+
+                ors['organization'] = {'ors': _role_dto, 'dto': _role_dto}
+
+                ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
 
                 items[0] = ors
 
@@ -83,7 +88,7 @@ def ors_before_insert(items):
 def after_g_post(request, response):
     payload = json.loads(response.get_data().decode('UTF-8'))
 
-    signal_g_insert_workflow.send({'app': app, 'payload': payload})
+    signal_motorfly_insert_workflow.send({'app': app, 'payload': payload})
 
     signal_g_init_acl.send({'app': app, 'payload': payload})
 
@@ -99,22 +104,6 @@ def after_patch(request, response):
     signal_change_owner.send(app, response=response)
 
 
-def after_post(request, response):
-    """ When payload as json, request.get_json()
-    Else; payload
-    @todo: Integrate with ObservationWorkflow!
-    @todo: Set expiry as attribute for states!
-    """
-
-    payload = json.loads(response.get_data().decode('UTF-8'))
-
-    signal_insert_workflow.send({'app': app, 'payload': payload})
-
-    signal_init_acl.send({'app': app, 'payload': payload})
-
-    # action, ref, user, resource=None ref, act = None, resource=None, **extra
-
-    pass
 
 
 def after_fetched_p(response, _id):

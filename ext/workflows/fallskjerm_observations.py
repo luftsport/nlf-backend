@@ -204,7 +204,7 @@ class ObservationWorkflow(Machine):
         col = app.data.driver.db[RESOURCE_COLLECTION]
 
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
-                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, '_etag': 1, '_version': 1, 'owner': 1,
+                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1, '_version': 1, 'owner': 1,
                                    'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)

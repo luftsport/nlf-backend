@@ -31,13 +31,13 @@ _signals = Namespace()
 
 # Define signals
 signal_activity_log     = _signals.signal('user-activity-logger')
-signal_g_insert_workflow  = _signals.signal('insert-g-workflow')
 signal_change_owner     = _signals.signal('change-owner')
 signal_change_acl       = _signals.signal('change-acl')
 signal_g_init_acl         = _signals.signal('init-g-acl')
+signal_motorfly_insert_workflow  = _signals.signal('insert-g-workflow')
 
 
-@signal_g_insert_workflow.connect
+@signal_motorfly_insert_workflow.connect
 def insert_workflow(dict_app, **extra):
     """ Inserts workflow, wathcers, owner, reporter and custom id on the current resource
     Only when method equals POST
