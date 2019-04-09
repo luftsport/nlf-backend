@@ -115,6 +115,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    {'trigger': 'reopen',
+     'source': 'withdrawn',
+     'dest': 'draft',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
     {'trigger': 'approve',
      'source': 'pending_review_ors',
      'dest': 'closed',
