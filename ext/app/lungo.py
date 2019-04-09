@@ -89,7 +89,7 @@ def get_person_merged_from(person_id):
 def get_person_from_role(role) -> (bool, [int]):
     resp = requests.get(
         '%s/functions?where={"active_in_org_id": %s, "type_id": %s}&projection={"person_id": 1}'
-        % (LUNGO_URL, role.get('discipline'), role.get('role')),
+        % (LUNGO_URL, role.get('org'), role.get('role')),
         headers=LUNGO_HEADERS)
 
     if resp.status_code == 200:

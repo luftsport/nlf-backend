@@ -309,7 +309,7 @@ class ObservationWorkflow(Machine):
             self.initial_state = initial_state
 
         # Set defaults from
-        self.hi = self.db_wf.get('organization', {}).get('hi', None)
+        self.ors = self.db_wf.get('organization', {}).get('ors', None)
         self.reporter = self.db_wf.get('reporter', None)
         self.owner = self.db_wf.get('owner', None)
         self.club = self.db_wf.get('club', None)

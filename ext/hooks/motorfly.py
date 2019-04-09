@@ -28,8 +28,8 @@ import ext.app.eve_helper as eve_helper
 from ext.app.decorators import *
 import json
 # import signals from hooks
-from ext.hooks.motorfly_signals import signal_activity_log,  \
-    signal_change_owner #signal_init_acl signal_insert_workflow,
+from ext.hooks.motorfly_signals import signal_activity_log, \
+    signal_change_owner  # signal_init_acl signal_insert_workflow,
 from ext.hooks.motorfly_signals import signal_g_init_acl, signal_motorfly_insert_workflow
 
 from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
@@ -65,16 +65,13 @@ def ors_before_insert(items):
                 ors['workflow'] = get_wf_init(app.globals.get('user_id'))
 
                 ors['organization'] = {}
-                person_ors = ACL_MOTORFLY_ORS.copy()
-                person_ors['org'] = ors.get('discipline')
-                _, _person_ors = get_person_from_role(person_ors)
+                _, _person_ors = get_person_from_role(ACL_MOTORFLY_ORS)
                 ors['organization']['ors'] = _person_ors
 
                 persons_dto = ACL_MOTORFLY_DTO.copy()
                 persons_dto['org'] = ors.get('discipline')
                 _, _persons_dto = get_person_from_role(persons_dto)
                 ors['organization']['dto'] = _persons_dto
-
 
                 ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
 
@@ -104,8 +101,6 @@ def after_patch(request, response):
     """ Change owner, owner is readonly
     """
     signal_change_owner.send(app, response=response)
-
-
 
 
 def after_fetched_p(response, _id):
