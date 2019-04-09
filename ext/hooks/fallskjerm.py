@@ -32,7 +32,7 @@ from ext.hooks.fallskjerm_signals import signal_activity_log, signal_insert_work
     signal_change_owner, signal_init_acl
 from ext.hooks.motorfly_signals import signal_g_init_acl, signal_g_insert_workflow
 
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU, ACL_FALLSKJERM_FSJ
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP, ACL_FALLSKJERM_FSJ
 from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
@@ -162,7 +162,7 @@ def has_nanon_permission(resource_acl, perm, state):
     if state == 'closed' and perm == 'execute':
         if (
                 any(pid for pid in app.globals['acl']['roles'] if
-                    pid in [ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU, ACL_FALLSKJERM_FSJ]) is True
+                    pid in [ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP, ACL_FALLSKJERM_FSJ]) is True
                 or app.globals['user_id'] in resource_acl[perm]['roles'] is True
         ):
             return True
