@@ -12,7 +12,7 @@ import re
 from ext.auth.helpers import Helpers
 from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.email import Email  # , Sms
-from ext.scf import ACL_CLOSED_ALL, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU
+from ext.scf import ACL_CLOSED_ALL, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP
 import arrow
 
 RESOURCE_COLLECTION = 'fallskjerm_observations'
