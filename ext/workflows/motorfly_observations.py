@@ -12,7 +12,7 @@ import re
 from ext.auth.helpers import Helpers
 from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.email import Email  # , Sms
-from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_FSJ, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_SU
+from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_TEKNISK_LEDER
 import arrow
 
 RESOURCE_COLLECTION = 'motorfly_observations'
@@ -37,13 +37,13 @@ def get_wf_init(person_id):
             }
 
 
-def get_acl_init(person_id, club_id):
-    hi_role = ACL_MOTORFLY_SKOLESJEF.copy()
-    hi_role['club'] = club_id
+def get_acl_init(person_id, discipline_id):
+    ors_role = ACL_MOTORFLY_ORS.copy()
+    ors_role['org'] = discipline_id
     acl = {
         'read': {
             'users': [person_id],
-            'roles': [hi_role]
+            'roles': [ors_role]
         },
         'execute': {
             'users': [person_id],
@@ -60,74 +60,162 @@ def get_acl_init(person_id, club_id):
     }
     return acl
 
-# reporter -> ors_responsible -> dto_club -> others -> ors_responsible
-WF_MOTORFLY_STATES = ['draft', 'pending_review_ors_coordinator', 'pending_review_dto', 'pending_review_school', 'closed', 'withdrawn']
 
-WF_MOTORFLY_ATTR = {'draft': {'title': 'Utkast', 'description': 'Utkast'},
-                      'pending_review_ors_coordinator': {'title': 'Avventer Koordinator', 'description': 'Avventer vurdering ORS koordinator'},
-                      'pending_review_dto': {'title': 'Avventer DTO',
-                                            'description': 'Avventer vurdering DTO i klubb'},
-                      'pending_review_school': {'title': 'Avventer Skolesjef', 'description': 'Avventer vurdering Skolesjef'},
-                      'closed': {'title': 'Lukket', 'description': 'Observasjonen er lukket'},
-                      'withdrawn': {'title': 'Trukket', 'description': 'Observasjonen er trekt tilbake'},
-                      }
+WF_MOTORFLY_STATES = [
+    'draft',
+    'pending_review_ors',
+    'pending_review_dto',
+    'pending_review_skole',
+    'pending_review_teknisk',
+    'closed',
+    'withdrawn'
+]
+
+WF_MOTORFLY_STATES_ATTR = {
+    'draft': {
+        'title': 'Utkast',
+        'description': 'Utkast'
+    },
+    'pending_review_ors': {
+        'title': 'Avventer ORS',
+        'description': 'Avventer ORS koordinator'
+    },
+    'pending_review_dto': {
+        'title': 'Avventer DTO',
+        'description': 'Avventer DTO ansvarlig i klubb'
+    },
+    'pending_review_skole': {
+        'title': 'Avventer Skolesjef',
+        'description': 'Avventer Skolesjef i klubb'
+    },
+    'pending_review_teknisk': {
+        'title': 'Avventer Teknisk',
+        'description': 'Avventer Teknisk leder i klubb'
+    },
+    'withdrawn': {
+        'title': 'Trukket',
+        'description': 'Observasjonen er trukket'
+    },
+    'closed': {
+        'title': 'Lukket',
+        'description': 'Observasjonen er ferdigbehandlet'
+    }
+}
+
 WF_MOTORFLY_TRANSITIONS = [
-    # { 'trigger': 'set_ready', 'source': 'draft', 'dest': 'ready', 'after': 'save_workflow', 'conditions':['has_permission']},
-    {'trigger': 'send_to_ors_coordinator', 'source': 'draft', 'dest': 'pending_review_ors_coordinator', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
+    {'trigger': 'send_to_ors',
+     'source': 'draft',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'withdraw',
+     'source': 'draft',
+     'dest': 'withdrawn',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve',
+     'source': 'pending_review_ors',
+     'dest': 'closed',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reopen',
+     'source': 'closed',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_ors',
+     'source': 'pending_review_ors',
+     'dest': 'draft',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'review_by_dto',
+     'source': 'pending_review_ors',
+     'dest': 'pending_review_dto',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'review_complete',
+     'source': 'pending_review_dto',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'review_by_skole',
+     'source': 'pending_review_ors',
+     'dest': 'pending_review_skole',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'review_complete',
+     'source': 'pending_review_skole',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'review_by_teknisk',
+     'source': 'pending_review_ors',
+     'dest': 'pending_review_teknisk',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
 
-    {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
+     },
+    {'trigger': 'review_complete',
+     'source': 'pending_review_teknisk',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
 
-    {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-
-    {'trigger': 'reject_coordinator', 'source': 'pending_review_ors_coordinator', 'dest': 'draft', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-
-    {'trigger': 'approve_coordinator', 'source': 'pending_review_ors_coordinator', 'dest': 'pending_review_dto',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-
-    {'trigger': 'reject_dto', 'source': 'pending_review_dto', 'dest': 'pending_review_ors_coordinator',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-
-    {'trigger': 'approve_dto', 'source': 'pending_review_dto', 'dest': 'pending_review_school',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-
-    {'trigger': 'reject_school', 'source': 'pending_review_school', 'dest': 'pending_review_dto',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-
-    {'trigger': 'approve_school', 'source': 'pending_review_school', 'dest': 'pending_review_dto', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-
-    {'trigger': 'reopen_ors_coordinator', 'source': 'closed', 'dest': 'pending_review_school', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-
-    # {'trigger': '*', 'source': '*', 'dest': '*', 'after': 'save_workflow'},
 ]
 
 WF_MOTORFLY_TRANSITIONS_ATTR = {
-    # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
-    'send_to_ors_coordinator': {'title': 'Send til Koordinator', 'action': 'Send til Koordinator', 'resource': 'approve', 'comment': True,
-                   'descr': 'Sendt til ORS Ans'},
-    'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw',
-                 'comment': True, 'descr': 'Trekt tilbake'},
-    'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-               'descr': 'Gjenåpnet'},
-    'reject_ors_coordinator': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av ORS koord'},
-    'approve_ors_coordinator': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av HI'},
-    'reject_dto': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av DTO'},
-    'approve_dto': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av DTO'},
-    'reject_school': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av Skolesjef'},
-    'approve_school': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av Skolesjef'},
-    'reopen_ors_coordinator': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-                  'descr': 'Gjenåpnet av ORS Koordinator'},
+    'send_to_ors_': {
+        'title': 'Send til Koordinator',
+        'action': 'Send til Koordinator',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til ORS Ans'
+    },
+    'withdraw': {
+        'title': 'Trekk tilbake observasjon',
+        'action': 'Trekk tilbake',
+        'resource': 'withdraw',
+        'comment': True,
+        'descr': 'Trekt tilbake'
+    },
+    'reopen': {
+        'title': 'Gjenåpne observasjon',
+        'action': 'Gjenåpne',
+        'resource': 'reopen',
+        'comment': True,
+        'descr': 'Gjenåpnet'},
+    'reject_ors': {
+        'title': 'Avslå observasjon',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Avslått av ORS koord'
+    },
+    'approve': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Lukk',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av HI'
+    },
+    'review_complete': {
+        'title': 'Avslå observasjon',
+        'action': 'Avslå',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Avslått av DTO'
+    },
+
 }
 
 
@@ -146,7 +234,7 @@ class ObservationWorkflow(Machine):
         # states 'name', 'on_enter', 'on_exit'
         self._states = WF_MOTORFLY_STATES
 
-        self._state_attrs = WF_MOTORFLY_ATTR
+        self._state_attrs = WF_MOTORFLY_STATES_ATTR
 
         """ And some transitions between states. We're lazy, so we'll leave out
         the inverse phase transitions (freezing, condensation, etc.).
@@ -209,7 +297,8 @@ class ObservationWorkflow(Machine):
         """
         col = app.data.driver.db[RESOURCE_COLLECTION]
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
-                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, '_etag': 1, '_version': 1, 'owner': 1,
+                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
+                                   '_version': 1, 'owner': 1,
                                    'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)
@@ -224,9 +313,21 @@ class ObservationWorkflow(Machine):
         self.reporter = self.db_wf.get('reporter', None)
         self.owner = self.db_wf.get('owner', None)
         self.club = self.db_wf.get('club', None)
-        self.acl_hi = ACL_MOTORFLY_SKOLESJEF.copy()
-        self.acl_hi['club'] = self.club
-        self.acl = self.db_wf.get('acl', {})
+        self.discipline = self.db_wf.get('discipline', None)
+        
+        self.acl_ORS = ACL_MOTORFLY_ORS.copy()
+        # self.acl_ORS['org'] = self.discipline
+
+        self.acl_SKOLE = ACL_MOTORFLY_SKOLESJEF.copy()
+        self.acl_SKOLE['org'] = self.discipline
+
+        self.acl_DTO = ACL_MOTORFLY_DTO.copy()
+        self.acl_DTO['org'] = self.discipline
+
+        self.acl_TEKNISK = ACL_MOTORFLY_TEKNISK_LEDER.copy()
+        self.acl_SKOLE['org'] = self.discipline
+
+        self.current_acl = self.db_wf.get('acl', {})
 
         self.comment = '' if comment is None else '{}'.format(comment).strip()
 
@@ -336,7 +437,7 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] += [reporter]
             acl['execute']['users'] = [reporter]
 
-            acl['read']['roles'] += [self.acl_hi]
+            acl['read']['roles'] += [self.acl_ORS]
             acl['write']['roles'] = []
             acl['execute']['roles'] = []
 
@@ -356,38 +457,44 @@ class ObservationWorkflow(Machine):
             acl['execute']['roles'] = []
 
 
-        elif self.state == 'pending_review_ors_coordinator':
+        elif self.state == 'pending_review_ors':
             """ Owner, reporter read, fsj read, hi read, write, execute """
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['roles'] = [self.acl_hi]
-            acl['read']['roles'] = [self.acl_hi, ACL_MOTORFLY_FSJ]
-            acl['execute']['roles'] = [self.acl_hi]
+            acl['write']['roles'] = [self.acl_ORS]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['execute']['roles'] = [self.acl_ORS]
 
         elif self.state == 'pending_review_dto':
-            """ Owner, reporter, hi read, fsj read, write, execute """
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['roles'] = [ACL_MOTORFLY_FSJ]
-            acl['read']['roles'] = [self.acl_hi, ACL_MOTORFLY_FSJ, ACL_MOTORFLY_SU]
-            acl['execute']['roles'] = [ACL_MOTORFLY_FSJ]
+            acl['write']['roles'] = [self.acl_DTO]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['execute']['roles'] = [self.acl_DTO]
 
-        elif self.state == 'pending_review_school':
-            """ Owner, reporter, hi, fs read, su read, write, execute """
+        elif self.state == 'pending_review_skole':
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [self.acl_hi, ACL_MOTORFLY_FSJ]
-            acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_MOTORFLY_SU]
+            acl['write']['roles'] = [self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['execute']['roles'] = [self.acl_SKOLE]
+
+        elif self.state == 'pending_review_teknisk':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_TEKNISK]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['execute']['roles'] = [self.acl_TEKNISK]
 
         elif self.state == 'closed':
-            """ everybody read, su execute """
 
             # acl['read']['users'] = [] #Should let users still see??
             acl['write']['users'] = []
@@ -395,11 +502,10 @@ class ObservationWorkflow(Machine):
 
             acl['read']['roles'] = [ACL_CLOSED_ALL]
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_MOTORFLY_SU]
+            acl['execute']['roles'] = [self.acl_ORS]
 
             # Fjernet hele f fallskjermnorge her! Kanskje egen klubb bare?
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['write']['groups'] + acl['execute']['groups'],
                               acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
         # Sanity - should really do list comprehension...
@@ -411,9 +517,11 @@ class ObservationWorkflow(Machine):
         acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
         acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
+        """
         if self.state != 'closed':
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
                               acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
+        """
 
         return acl
 
