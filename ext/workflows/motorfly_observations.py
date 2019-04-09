@@ -174,7 +174,7 @@ WF_MOTORFLY_TRANSITIONS = [
 ]
 
 WF_MOTORFLY_TRANSITIONS_ATTR = {
-    'send_to_ors_': {
+    'send_to_ors': {
         'title': 'Send til Koordinator',
         'action': 'Send til Koordinator',
         'resource': 'approve',
