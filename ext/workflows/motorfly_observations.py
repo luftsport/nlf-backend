@@ -387,8 +387,8 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
-        if len([i for i in app.globals['acl'].get('roles', []) if i in self.acl['execute']['roles']]) > 0 \
-                or app.globals['user_id'] in self.acl['execute']['users']:
+        if len([i for i in app.globals['acl'].get('roles', []) if i in self.current_acl['execute']['roles']]) > 0 \
+                or app.globals['user_id'] in self.current_acl['execute']['users']:
             return True
 
         return False
