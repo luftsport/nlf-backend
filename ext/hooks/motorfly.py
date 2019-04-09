@@ -73,7 +73,7 @@ def ors_before_insert(items):
                 persons_dto = ACL_MOTORFLY_DTO.copy()
                 persons_dto['org'] = ors.get('discipline')
                 _, _persons_dto = get_person_from_role(persons_dto)
-                ors['organization']['dto'] = persons_dto
+                ors['organization']['dto'] = _persons_dto
 
 
                 ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
