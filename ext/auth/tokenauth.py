@@ -107,7 +107,7 @@ class TokenAuth(TokenAuth):
         This makes the browser NOT fire up the basic auth
         """
         resp = Response(None, 401)
-        abort(401, description='Please provide proper credentials', response=resp)
+        abort(401) #, description='Please provide proper credentials')  # , response=resp)
 
     def set_acl(self, u):
         """ Sets the acl dict on the current authenticated user
@@ -125,11 +125,11 @@ class TokenAuth(TokenAuth):
             u['acl'].append({"activity": 109,
                              "org": 0,
                              "role": 999})
-                             #"type": 19})
+            # "type": 19})
             u['acl'].append({"activity": 0,
                              "org": 0,
                              "role": 999})
-                             # "type": 19})
+            # "type": 19})
 
             # HI
             """
@@ -147,7 +147,8 @@ class TokenAuth(TokenAuth):
                              "type": 2})
             """
         # Set acl directly!
-        app.globals['acl'] = {'roles': [{'activity': v['activity'], 'org': v['org'], 'role': v['role']} for v in u['acl']]}
+        app.globals['acl'] = {
+            'roles': [{'activity': v['activity'], 'org': v['org'], 'role': v['role']} for v in u['acl']]}
 
         return
 
