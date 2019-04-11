@@ -40,7 +40,7 @@ def get_person_acl(person_id) -> (bool, dict):
                 'type': item['type']
             })
 
-        return True, acl
+        return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
 
     return False, None
 
