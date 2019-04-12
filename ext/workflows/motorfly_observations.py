@@ -12,7 +12,8 @@ import re
 from ext.auth.helpers import Helpers
 from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.email import Email  # , Sms
-from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_TEKNISK_LEDER
+from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
+    ACL_MOTORFLY_TEKNISK_LEDER
 import arrow
 
 RESOURCE_COLLECTION = 'motorfly_observations'
@@ -121,13 +122,13 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'approve',
+    {'trigger': 'approve_ors',
      'source': 'pending_review_ors',
      'dest': 'closed',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'reopen',
+    {'trigger': 'reopen_ors',
      'source': 'closed',
      'dest': 'pending_review_ors',
      'after': 'save_workflow',
@@ -139,53 +140,68 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'review_by_dto',
+    {'trigger': 'send_to_dto',
      'source': 'pending_review_ors',
      'dest': 'pending_review_dto',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'review_complete',
+    {'trigger': 'approve_dto',
      'source': 'pending_review_dto',
      'dest': 'pending_review_ors',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'review_by_skole',
-     'source': 'pending_review_ors',
+    {'trigger': 'send_to_skole',
+     'source': 'pending_review_dto',
      'dest': 'pending_review_skole',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'review_complete',
+    {'trigger': 'approve_skole',
      'source': 'pending_review_skole',
-     'dest': 'pending_review_ors',
+     'dest': 'pending_review_dto',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'review_by_teknisk',
-     'source': 'pending_review_ors',
+    {'trigger': 'send_to_teknisk',
+     'source': 'pending_review_dto',
      'dest': 'pending_review_teknisk',
      'after': 'save_workflow',
      'conditions': ['has_permission']
 
      },
-    {'trigger': 'review_complete',
+    {'trigger': 'approve_teknisk',
      'source': 'pending_review_teknisk',
-     'dest': 'pending_review_ors',
+     'dest': 'pending_review_dto',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
 
 ]
 
+"""
+Resource is bluepring trigger
+['send_to_ors', 
+'withdraw', 
+'reopen', 
+'approve', 
+'reopen_ors', 
+'reject_ors', 
+'send_to_dto', 
+'approve_dto', 
+'send_to_skole', 
+'approve_skole', 
+'send_to_teknisk', 
+'approve_teknisk']
+"""
 WF_MOTORFLY_TRANSITIONS_ATTR = {
     'send_to_ors': {
         'title': 'Send til Koordinator',
         'action': 'Send til Koordinator',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Ans'
+        'descr': 'Sendt til ORS Koordinator'
     },
     'withdraw': {
         'title': 'Trekk tilbake observasjon',
@@ -200,6 +216,19 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'resource': 'reopen',
         'comment': True,
         'descr': 'Gjenåpnet'},
+    'reopen_ors': {
+        'title': 'Gjenåpne observasjon',
+        'action': 'Gjenåpne',
+        'resource': 'reopen',
+        'comment': True,
+        'descr': 'Gjenåpnet'},
+    'approve_ors': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Lukk',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av ORS Koordinator'
+    },
     'reject_ors': {
         'title': 'Avslå observasjon',
         'action': 'Avslå',
@@ -207,19 +236,48 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Avslått av ORS koord'
     },
-    'approve': {
-        'title': 'Godkjenn observasjon',
-        'action': 'Lukk',
-        'resource': 'approve',
+
+    'send_to_dto': {
+        'title': 'Send til DTO',
+        'action': 'Send til DTO',
+        'resource': 'dto',
         'comment': True,
-        'descr': 'Godkjent av HI'
+        'descr': 'Sendt til DTO ansvarlig'
     },
-    'review_complete': {
-        'title': 'Avslå observasjon',
-        'action': 'Avslå',
+    'approve_dto': {
+        'title': 'Godkjent DTO',
+        'action': 'Send til ORS koordinator',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Avslått av DTO'
+        'descr': 'Sendt til ORS koordinator'
+    },
+    'send_to_skole': {
+        'title': 'Send til Skolesjef',
+        'action': 'Send til Skolesjef',
+        'resource': 'skole',
+        'comment': True,
+        'descr': 'Sendt til Skolesjef'
+    },
+    'approve_skole': {
+        'title': 'Godkjent Skolesjef',
+        'action': 'Send til DTO representant',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til DTO representant'
+    },
+    'send_to_teknisk': {
+        'title': 'Send til Teknisk Leder',
+        'action': 'Send til Teknisk Leder',
+        'resource': 'teknisk',
+        'comment': True,
+        'descr': 'Sendt til Teknisk Leder'
+    },
+    'approve_teknisk': {
+        'title': 'Godkjent DTO',
+        'action': 'Send til DTO representant',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til DTO representant'
     },
 
 }
@@ -320,7 +378,7 @@ class ObservationWorkflow(Machine):
         self.owner = self.db_wf.get('owner', None)
         self.club = self.db_wf.get('club', None)
         self.discipline = self.db_wf.get('discipline', None)
-        
+
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
         # self.acl_ORS['org'] = self.discipline
 
@@ -331,7 +389,7 @@ class ObservationWorkflow(Machine):
         self.acl_DTO['org'] = self.discipline
 
         self.acl_TEKNISK = ACL_MOTORFLY_TEKNISK_LEDER.copy()
-        self.acl_SKOLE['org'] = self.discipline
+        self.acl_TEKNISK['org'] = self.discipline
 
         self.current_acl = self.db_wf.get('acl', {})
 
@@ -367,6 +425,8 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
+            print('Event', event)
+            print('TMP', tmp)
             tmp['permission'] = self.has_permission(None)
 
             resources.append(tmp)
@@ -506,7 +566,7 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [ACL_CLOSED_ALL]
+            acl['read']['roles'] = ACL_CLOSED_ALL
             acl['write']['roles'] = []
             acl['execute']['roles'] = [self.acl_ORS]
 

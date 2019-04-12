@@ -148,7 +148,7 @@ def has_nanon_permission(resource_acl, perm, state):
     if state == 'closed' and perm == 'execute':
         if (
                 any(pid for pid in app.globals['acl']['roles'] if
-                    pid in [ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_FSJ]) is True
+                    pid in [ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS]) is True
                 or app.globals['user_id'] in resource_acl[perm]['roles'] is True
         ):
             return True
@@ -179,7 +179,9 @@ def after_fetched(response):
 
                     if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
                         # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
-                        response[key] = anon.anonymize_ors(response[key])
+
+                        pass
+                        # response[key] = anon.anonymize_ors(response[key])
 
 
         elif isinstance(response, dict):
@@ -191,7 +193,9 @@ def after_fetched(response):
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
                     if not has_nanon_permission(response['acl'], 'execute', 'closed'):
-                        response = anon.anonymize_ors(response)
+
+                        pass
+                        # response = anon.anonymize_ors(response)
 
             ### REMOVE
             """
@@ -231,8 +235,7 @@ def after_fetched(response):
                              'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        eve_helper.eve_abort(500,
-                             'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+        eve_helper.eve_abort(500, 'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(e))
 
 
 @require_token()

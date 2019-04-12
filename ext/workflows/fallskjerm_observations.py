@@ -61,67 +61,187 @@ def get_acl_init(person_id, club_id):
     return acl
 
 
-WF_FALLSKJERM_STATES = ['draft', 'pending_review_hi', 'pending_review_fs', 'pending_review_su', 'closed', 'withdrawn']
+WF_FALLSKJERM_STATES = [
+    'draft',
+    'pending_review_hi',
+    'pending_review_fs',
+    'pending_review_su',
+    'closed',
+    'withdrawn'
+]
 
-WF_FALLSKJERM_ATTR = {'draft': {'title': 'Utkast', 'description': 'Utkast'},
-                      'pending_review_hi': {'title': 'Avventer HI', 'description': 'Avventer vurdering HI'},
-                      'pending_review_fs': {'title': 'Avventer Fagsjef',
-                                            'description': 'Avventer vurdering Fagsjef'},
-                      'pending_review_su': {'title': 'Avventer SU', 'description': 'Avventer vurdering SU'},
-                      'closed': {'title': 'Lukket', 'description': 'Observasjonen er lukket'},
-                      'withdrawn': {'title': 'Trukket', 'description': 'Observasjonen er trekt tilbake'},
-                      }
+WF_FALLSKJERM_ATTR = {
+    'draft': {
+        'title': 'Utkast',
+        'description': 'Utkast'
+    },
+    'pending_review_hi': {
+        'title': 'Avventer HI',
+        'description': 'Avventer vurdering HI'
+    },
+    'pending_review_fs': {
+        'title': 'Avventer Fagsjef',
+        'description': 'Avventer vurdering Fagsjef'
+    },
+    'pending_review_su': {
+        'title': 'Avventer SU',
+        'description': 'Avventer vurdering SU'},
+    'closed': {
+        'title': 'Lukket',
+        'description': 'Observasjonen er lukket'},
+    'withdrawn': {
+        'title': 'Trukket',
+        'description': 'Observasjonen er trekt tilbake'
+    },
+}
 WF_FALLSKJERM_TRANSITIONS = [
-    # { 'trigger': 'set_ready', 'source': 'draft', 'dest': 'ready', 'after': 'save_workflow', 'conditions':['has_permission']},
-    {'trigger': 'send_to_hi', 'source': 'draft', 'dest': 'pending_review_hi', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-    {'trigger': 'withdraw', 'source': ['draft'], 'dest': 'withdrawn', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-    {'trigger': 'reopen', 'source': 'withdrawn', 'dest': 'draft', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
+    {
+        'trigger': 'send_to_hi',
+        'source': 'draft',
+        'dest': 'pending_review_hi',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'withdraw',
+        'source': ['draft'],
+        'dest': 'withdrawn',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'reopen',
+        'source': 'withdrawn',
+        'dest': 'draft',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
 
-    {'trigger': 'reject_hi', 'source': 'pending_review_hi', 'dest': 'draft', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-    {'trigger': 'approve_hi', 'source': 'pending_review_hi', 'dest': 'pending_review_fs',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
+    {
+        'trigger': 'reject_hi',
+        'source': 'pending_review_hi',
+        'dest': 'draft',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_hi',
+        'source': 'pending_review_hi',
+        'dest': 'pending_review_fs',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
 
-    {'trigger': 'reject_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_hi',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-    {'trigger': 'approve_fs', 'source': 'pending_review_fs', 'dest': 'pending_review_su',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
+    {
+        'trigger': 'reject_fs',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_hi',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_fs',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_su',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
 
-    {'trigger': 'reject_su', 'source': 'pending_review_su', 'dest': 'pending_review_fs',
-     'after': 'save_workflow', 'conditions': ['has_permission']},
-    {'trigger': 'approve_su', 'source': 'pending_review_su', 'dest': 'closed', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
-    {'trigger': 'reopen_su', 'source': 'closed', 'dest': 'pending_review_su', 'after': 'save_workflow',
-     'conditions': ['has_permission']},
+    {
+        'trigger': 'reject_su',
+        'source': 'pending_review_su',
+        'dest': 'pending_review_fs',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_su',
+        'source': 'pending_review_su',
+        'dest': 'closed',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'reopen_su',
+        'source': 'closed',
+        'dest': 'pending_review_su',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
 
-    # {'trigger': '*', 'source': '*', 'dest': '*', 'after': 'save_workflow'},
 ]
 
 WF_FALLSKJERM_TRANSITIONS_ATTR = {
-    # 'set_ready': {'title': 'Set Ready', 'action': 'Set Ready', 'resource': 'approve', 'comment': True},
-    'send_to_hi': {'title': 'Send til HI', 'action': 'Send til HI', 'resource': 'approve', 'comment': True,
-                   'descr': 'Sendt til HI'},
-    'withdraw': {'title': 'Trekk tilbake observasjon', 'action': 'Trekk tilbake', 'resource': 'withdraw',
-                 'comment': True, 'descr': 'Trekt tilbake'},
-    'reopen': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-               'descr': 'Gjenåpnet'},
-    'reject_hi': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av HI'},
-    'approve_hi': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av HI'},
-    'reject_fs': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av Fagsjef'},
-    'approve_fs': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av Fagsjef'},
-    'reject_su': {'title': 'Avslå observasjon', 'action': 'Avslå', 'resource': 'reject', 'comment': True,
-                  'descr': 'Avslått av SU'},
-    'approve_su': {'title': 'Godkjenn observasjon', 'action': 'Godkjenn', 'resource': 'approve',
-                   'comment': True, 'descr': 'Godkjent av SU'},
-    'reopen_su': {'title': 'Gjenåpne observasjon', 'action': 'Gjenåpne', 'resource': 'reopen', 'comment': True,
-                  'descr': 'Gjenåpnet av SU'},
+    'send_to_hi': {
+        'title': 'Send til HI',
+        'action': 'Send til HI',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til HI'
+    },
+    'withdraw': {
+        'title': 'Trekk tilbake observasjon',
+        'action': 'Trekk tilbake',
+        'resource': 'withdraw',
+        'comment': True,
+        'descr': 'Trekt tilbake'
+    },
+    'reopen': {
+        'title': 'Gjenåpne observasjon',
+        'action': 'Gjenåpne',
+        'resource': 'reopen',
+        'comment': True,
+        'descr': 'Gjenåpnet'
+    },
+    'reject_hi': {
+        'title': 'Avslå observasjon',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Avslått av HI'
+    },
+    'approve_hi': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av HI'
+    },
+    'reject_fs': {
+        'title': 'Avslå observasjon',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Avslått av Fagsjef'
+    },
+    'approve_fs': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagsjef'
+    },
+    'reject_su': {
+        'title': 'Avslå observasjon',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Avslått av SU'
+    },
+    'approve_su': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av SU'
+    },
+    'reopen_su': {
+        'title': 'Gjenåpne observasjon',
+        'action': 'Gjenåpne',
+        'resource': 'reopen',
+        'comment': True,
+        'descr': 'Gjenåpnet av SU'
+    },
 }
 
 
@@ -204,7 +324,8 @@ class ObservationWorkflow(Machine):
         col = app.data.driver.db[RESOURCE_COLLECTION]
 
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
-                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1, '_version': 1, 'owner': 1,
+                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
+                                   '_version': 1, 'owner': 1,
                                    'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)

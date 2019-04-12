@@ -33,7 +33,7 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
-    print(observation_id)
+    # print(observation_id)
 
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
@@ -83,7 +83,7 @@ def get_observations():
 
     """
     #hateos
-    _links = {"self": {"title": "observations/todo", "href": "observations/todo?max_results=%i&page=%i" % (max_results, page), 
+    _links = {"self": {"title": "observations/todo", "href": "observations/todo?max_results=%i&page=%i" % (max_results, page),
                        "next": {},
                        "previous": {},
                        "last": {},
@@ -95,7 +95,7 @@ def get_observations():
     return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
 
 
-@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen)"):action>', methods=['POST'])
+@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|dto|skole|teknisk)"):action>', methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
