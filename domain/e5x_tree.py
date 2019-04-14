@@ -6,7 +6,7 @@ _schema = {
     'name': {'type': 'string'},
     'version': {'type': 'string', 'nullable': True},
     'domain': {'type': 'string', 'nullable': True},
-    'tree': {'type': 'dict', 'nullable': True}
+    'Occurrence': {'type': 'dict', 'nullable': True}
 }
 
 definition = {
