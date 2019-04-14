@@ -4,7 +4,7 @@ BASE_URL = 'e5x/tree'
 _schema = {
 
     'name': {'type': 'string'},
-    'version': {'type': 'integer', 'nullable': True},
+    'version': {'type': 'string', 'nullable': True},
     'domain': {'type': 'string', 'nullable': True},
     'tree': {'type': 'dict', 'nullable': True}
 }
