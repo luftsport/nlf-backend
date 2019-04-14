@@ -1,0 +1,45 @@
+RESOURCE_COLLECTION = 'e5x_choices'
+BASE_URL = 'e5x/choices'
+
+_schema = {
+
+    'key': {'type': 'string'},
+    'value': {'type': 'integer', 'nullable': True},
+    'label': {'type': 'string', 'nullable': True},
+    'descr': {'type': 'string', 'nullable': True},
+    'expl': {'type': 'string', 'nullable': True},
+    'fir': {'type': 'string', 'nullable': True},
+    'iata': {'type': 'string', 'nullable': True},
+    'icao': {'type': 'string', 'nullable': True},
+    'category': {'type': 'string', 'nullable': True},
+    'sub_category': {'type': 'string', 'nullable': True},
+    'cert_country': {'type': 'string', 'nullable': True},
+    'easa_certificate': {'type': 'string', 'nullable': True},
+    'icao_type': {'type': 'string', 'nullable': True},
+    'tc_holder': {'type': 'string', 'nullable': True},
+    'tc_name': {'type': 'string', 'nullable': True},
+    'cictt_td': {'type': 'string', 'nullable': True},
+    'tch_country': {'type': 'string', 'nullable': True},
+    'type_description': {'type': 'string', 'nullable': True},
+}
+
+definition = {
+    'item_title': 'E5X Attribute Choices',
+    'url': BASE_URL,
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   },
+    'additional_lookup': {
+        'url': 'regex("[a-z.0-9-]+")',
+        'field': 'key',
+    },
+    'extra_response_fields': ['attribute'],
+    'versioning': False,
+    'resource_methods': ['GET', 'POST'],
+    'item_methods': ['GET', 'PATCH', 'DELETE'],
+    'mongo_indexes': {'attr': ([('key', 1)], {'background': True}),
+                      'icao': ([('icao', 1)], {'background': True}),
+                      'content': ([('descr', 'text'), ('label', 'text')], {'background': True})
+                      },
+    'schema': _schema
+
+}

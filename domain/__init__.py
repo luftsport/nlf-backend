@@ -42,11 +42,14 @@ import aip_runways
 import aip_navaids
 import aip_countries
 import aip_regions
-#import openaip_airports
+# import openaip_airports
 import aip_airspaces
 
 # Geo
 import geo_countries
+
+# E5X
+import e5x_attributes, e5x_choices, e5x_tree
 
 # Eve testing
 import test
@@ -105,10 +108,16 @@ DOMAIN = {
     "aip_navaids": aip_navaids.definition,
     "aip_countries": aip_countries.definition,
     "aip_regions": aip_regions.definition,
-    #"openaip_airports": openaip_airports.definition,
+    # "openaip_airports": openaip_airports.definition,
 
     # Geo
     "geo_countries": geo_countries.definition,
+
+    # E5X
+    "e5x_attributes": e5x_attributes.definition,
+    "e5x_choices": e5x_choices.definition,
+    "e5x_tree": e5x_tree.definition,
+
     # Testing Eve
     "test": test.definition
 }
