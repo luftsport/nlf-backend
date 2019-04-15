@@ -4,7 +4,7 @@ BASE_URL = 'e5x/choices'
 _schema = {
 
     'key': {'type': 'string'},
-    'value': {'type': 'integer', 'nullable': True},
+    'id': {'type': 'integer', 'nullable': True},
     'label': {'type': 'string', 'nullable': True},
     'descr': {'type': 'string', 'nullable': True},
     'expl': {'type': 'string', 'nullable': True},
@@ -36,7 +36,7 @@ definition = {
     'versioning': False,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'DELETE'],
-    'mongo_indexes': {'attr': ([('key', 1)], {'background': True}),
+    'mongo_indexes': {'attr': ([('key', 1), ('id', 1)], {'background': True}),
                       'icao': ([('icao', 1)], {'background': True}),
                       'content': ([('descr', 'text'), ('label', 'text')], {'background': True})
                       },
