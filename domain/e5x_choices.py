@@ -40,6 +40,7 @@ definition = {
                       'icao': ([('icao', 1)], {'background': True}),
                       'content': ([('descr', 'text'), ('label', 'text')], {'background': True})
                       },
+    'allow_unknown': True,
     'schema': _schema
 
 }
