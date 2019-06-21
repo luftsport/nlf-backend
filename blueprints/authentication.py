@@ -111,11 +111,13 @@ def login():
         # valid = datetime.datetime.now() + datetime.timedelta(seconds=60)
 
         try:
-            _, acl = lungo.get_person_acl(_user.person_id)
+            acl_status, acl = lungo.get_person_acl(_user.person_id)
+            if acl_status is False:
+                acl = []
             response, _, _, status = patch_internal(resource='users_auth',
                                                     payload={'auth': {'token': token,
                                                                       'valid': valid.datetime},
-                                                             'acl': acl,
+                                                             'acl': [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl],
                                                              },
                                                     concurrency_check=False,
                                                     **{'id': _user.person_id})

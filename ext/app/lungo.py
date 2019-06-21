@@ -27,12 +27,14 @@ def get_person_acl(person_id) -> (bool, dict):
         for item in r.get('_items', []):
             # print(item)
             acl.append(item)
+            # All orgs
             acl.append({
                 'activity': item['activity'],
                 'org': 0,
                 'role': item['role'],
                 'type': item['type']
             })
+            # All org and activity
             acl.append({
                 'activity': 0,
                 'org': 0,
@@ -40,7 +42,8 @@ def get_person_acl(person_id) -> (bool, dict):
                 'type': item['type']
             })
 
-        return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
+        #return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
+        return True, acl
 
     return False, None
 

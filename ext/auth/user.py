@@ -54,7 +54,7 @@ class User:
                 # Insert new person
                 user_response, _, _, user_code, _ = post_internal(resource=self.app.globals['auth']['users_collection'],
                                                                   payl={'id': person_id,
-                                                                        'acl': self.acl,
+                                                                        'acl': [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in self.acl],
                                                                         'settings': {},
                                                                         'merged_from': self.merged_from,
                                                                         'last_person_id': person_id},
@@ -64,7 +64,7 @@ class User:
                     auth_response, _, _, auth_code, _ = post_internal(resource='users_auth',
                                                                       payl={'id': person_id,
                                                                             'user': user_response['_id'],
-                                                                            'acl': self.acl,
+                                                                            'acl': [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in self.acl],
                                                                             'auth': {"token": "",
                                                                                      "valid": ""}},
                                                                       skip_validation=True)
