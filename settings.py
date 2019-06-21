@@ -28,7 +28,7 @@ PAGINATION_STRATEGY = 'estimated'
 AUTH_SESSION_LENGHT = 3600  # Seconds
 
 # @TODO: use sys.argv to parse this as cmdline input
-APP_INSTANCES = ['dev', 'beta', 'app']
+APP_INSTANCES = ['local', 'dev', 'beta', 'app']
 APP_INSTANCE = APP_INSTANCES[0]
 
 if APP_INSTANCE == 'app':
@@ -53,7 +53,7 @@ elif APP_INSTANCE == 'beta':
     APP_HOST = '127.0.0.1'
     APP_PORT = 8081
 
-elif APP_INSTANCE == 'dev':
+elif APP_INSTANCE in ['dev', 'local']:
     MONGO_HOST = 'localhost'
     MONGO_PORT = 27017
     MONGO_USERNAME = ''
@@ -63,6 +63,13 @@ elif APP_INSTANCE == 'dev':
     MONGO_CONNECT_TIMEOUT_MS = 200
     APP_HOST = '127.0.0.1'
     APP_PORT = 8082
+
+
+if APP_INSTANCE == 'local':
+    E5X_WORKING_DIR = '/home/einar/Development/Luftfartstilsynet/xsd-json/ors'
+else:
+    E5X_WORKING_DIR = '/www/{}/e5x'.format(APP_INSTANCE)
+
 
 # Will also make server watch inode and reload on changes
 DEBUG = True

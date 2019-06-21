@@ -48,12 +48,12 @@ def require_token(allowed_roles=None):
                                               method=request.method,
                                               resource=request.path[len(app.globals.get('prefix')) + 1:],
                                               allowed_roles=allowed_roles)
-
+                
                 if auth_result is not True:
                     raise AuthenticationFailed
-
+                
             # Catch exceptions and handle correctly
-            except AuthenticationFailed:
+            except AuthenticationFailed as e:
                 eve_abort(401, 'Please provide proper credentials')
             except Exception as e:
                 eve_abort(500, 'Server error')

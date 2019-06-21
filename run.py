@@ -45,6 +45,7 @@ from blueprints.files import Files
 from blueprints.tags import Tags
 # Membership integration blueprint
 from blueprints.lungo import Lungo
+from blueprints.e5x import E5X
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
@@ -106,6 +107,9 @@ app.register_blueprint(Files, url_prefix="%s/download" % app.globals.get('prefix
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
 
+app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
+
+
 """
     Eve hooks
     ~~~~~~~~~
@@ -140,6 +144,11 @@ app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
+
+
+# Aircrafts
+app.on_insert_aircrafts += hook.aircrafts.on_insert
+app.on_update_aircrafts += hook.aircrafts.on_update
 
 # Motor
 
@@ -190,6 +199,8 @@ if 1 == 1 or not app.debug:
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     import pkg_resources
+
+
 
     print(" App:         %s" % app.config['APP_VERSION'])
     print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)

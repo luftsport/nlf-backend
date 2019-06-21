@@ -121,15 +121,17 @@ def get_nearest_metar(metars, target_time):
 
     return metars[index]
 
-@require_token()
+
 @Weather.route("/", methods=['GET'])
+@require_token()
 def index():
     return jsonify(**{'message': 'Use yr or aero resources'})
 
 
-@require_token()
+
 @Weather.route("/yr/<string:county>/<string:municipality>/<string:name>/<regex('(now|forecast|wind)'):what>",
                methods=['GET'])
+@require_token()
 def yr(what, county, municipality, name):
     """ Downloads data from yr.no
     @todo: Should fix units
@@ -155,8 +157,9 @@ def yr(what, county, municipality, name):
         return jsonify(**wind_speed)
 
 
-@require_token()
+
 @Weather.route("/aero/<regex('[aA-zZ]{4}'):icao>/<regex('(metar|taf|shorttaf)'):what>", methods=['GET'])
+@require_token()
 def aero(what, icao):
     """ Aero resource retrieves metar and taf for given icao code
     @todo: support switches for raw and decoded messages
@@ -173,8 +176,9 @@ def aero(what, icao):
         return jsonify(**{'shorttaf': w.shorttaf()})
 
 
-@require_token()
+
 @Weather.route("/tafmetar/<regex('[aA-zZ]{4}'):icao>/<regex('(metar|taf|tafmetar)'):what>", methods=['GET'])
+@require_token()
 def tafmetar(what, icao):
     """ Aero resource retrieves metar and taf for given icao code
     @todo: support switches for raw and decoded messages
@@ -196,10 +200,12 @@ New metar methods using api.met.no
 """
 
 
-@require_token()
+
 @Weather.route("/met/<regex('[aA-zZ]{4}'):icao>/<regex('[0-9]{4}-[0-9]{2}-[0-9]{2}'):date>", methods=['GET'])
+@require_token()
 def met_tafmetar(icao, date):
     try:
+        print(icao, date)
         status, taf, metar = get_taf_metar(icao, date)
 
         if status is True:
@@ -212,8 +218,9 @@ def met_tafmetar(icao, date):
     return eve_abort(404, 'Could not process')
 
 
-@require_token()
+
 @Weather.route("/met/parse/<regex('(metar|taf)'):what>/<string:msg>", methods=['GET'])
+@require_token()
 def met_parse(what, msg):
     try:
         if what == 'metar':
@@ -226,8 +233,9 @@ def met_parse(what, msg):
         return eve_abort(404, 'Could not process')
 
 
-@require_token()
+
 @Weather.route("/met/metar/<regex('[aA-zZ]{4}'):icao>", methods=['GET'])
+@require_token()
 def met_get_metar_dict(icao):
     try:
         status, taf, metar = get_taf_metar(icao)
@@ -245,8 +253,9 @@ def met_get_metar_dict(icao):
         print(e)
         return eve_abort(404, 'Could not process')
 
-@require_token()
+
 @Weather.route("/met/metar/nearest/<regex('[aA-zZ]{4}'):icao>/<string:date>", methods=['GET'])
+@require_token()
 def met_nearest_metar(icao, date):
     try:
         target_time = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M')

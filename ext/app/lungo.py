@@ -7,7 +7,7 @@ from ext.scf import LUNGO_HEADERS, LUNGO_URL
 
 def get_person(person_id) -> (bool, dict):
     resp = requests.get('{}/persons/{}'.format(LUNGO_URL, person_id),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
         return True, resp.json()
@@ -18,7 +18,7 @@ def get_person(person_id) -> (bool, dict):
 def get_person_acl(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/{}'.format(LUNGO_URL, person_id),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
         r = resp.json()
@@ -48,7 +48,7 @@ def get_person_acl(person_id) -> (bool, dict):
 def get_person_acl_simple(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/simple/{}'.format(LUNGO_URL, person_id),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
         r = resp.json()
@@ -57,7 +57,7 @@ def get_person_acl_simple(person_id) -> (bool, dict):
 def get_person_activities(person_id):
     activities = []
     resp = requests.get('{}/acl/activities/{}'.format(LUNGO_URL, person_id),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
 
@@ -74,7 +74,7 @@ def get_person_merged_from(person_id):
     merged_from = []
 
     resp = requests.get('%s/persons/merged?aggregate={"$person_id":%s}' % (LUNGO_URL, person_id),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
         r = resp.json()
@@ -90,7 +90,7 @@ def get_person_from_role(role) -> (bool, [int]):
     resp = requests.get(
         '%s/functions?where={"active_in_org_id": %s, "type_id": %s}&projection={"person_id": 1}'
         % (LUNGO_URL, role.get('org'), role.get('role')),
-        headers=LUNGO_HEADERS)
+        headers=LUNGO_HEADERS, verify=False)
 
     if resp.status_code == 200:
         r = resp.json()

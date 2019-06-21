@@ -99,6 +99,7 @@ DOMAIN = {
     "help": help.definition,
     # Aircrafts
     "aircrafts": aircrafts.definition,
+    "aircrafts_types": aircrafts.agg_count_types,
 
     # Airports and stuff
     "aip_airports": aip_airports.definition,

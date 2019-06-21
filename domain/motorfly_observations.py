@@ -60,8 +60,10 @@ _schema = {'id': {'type': 'integer',
            'reporter': {'type': 'integer', 'readonly': True},
 
            'when': {'type': 'datetime', 'default': datetime.utcnow()},
-
+            # E5X
            'aircrafts': {'type': 'list', 'default': []},
+           'occurrence': {'type': 'dict', 'default': {}},
+           
            'involved': {'type': 'list',
                         'default': []
                         },

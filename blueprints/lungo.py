@@ -14,11 +14,28 @@ import requests
 import urllib.parse
 
 Lungo = Blueprint('Lungo passthrough', __name__, )
+
+
 @Lungo.route("/syncdaemon/workers/start", methods=["POST"])
+@require_token()
 def syncdaemon_workers_start():
     resp = requests.post('{}/syncdaemon/workers/start'.format(LUNGO_URL),
                         data=None,
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS,
+                        verify=False)
+
+    return eve_response(resp.json(), resp.status_code)
+
+@Lungo.route("/syncdaemon/worker/reboot/<int:index>", methods=["POST"])
+@require_token()
+def lungo_worker_reboot(index):
+    print('test')
+    print('{}'.format(request.args))
+ 
+    resp = requests.post('{}/syncdaemon/worker/reboot/{}'.format(LUNGO_URL, index),
+                        data=None,
+                        headers=LUNGO_HEADERS,
+                        verify=False)
 
     return eve_response(resp.json(), resp.status_code)
 
@@ -32,6 +49,8 @@ def lungo(path):
 
     resp = requests.get('{}/{}'.format(LUNGO_URL, path),
                         params=request.args.to_dict(),
-                        headers=LUNGO_HEADERS)
+                        headers=LUNGO_HEADERS,
+                        verify=False)
 
     return eve_response(resp.json(), resp.status_code)
+
