@@ -194,13 +194,12 @@ if 1 == 1 or not app.debug:
     app.logger.setLevel(logging.INFO)
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
-    app.logger.info('NLF-backend startup on database %s' % app.config['MONGO_DBNAME'])
+    app.logger.info('NLF-backend startup on database:\t %s' % app.config['MONGO_DBNAME'].upper())
+    app.logger.info('NLF-backend instance:\t %s' % app.config['APP_INSTANCE'].upper())
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     import pkg_resources
-
-
 
     print(" App:         %s" % app.config['APP_VERSION'])
     print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
