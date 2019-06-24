@@ -7,6 +7,21 @@ from bson.objectid import ObjectId
 
 helper = h.Helpers()
 
+def on_insert_items(items):
+    for item in items:
+        on_insert_item(item)
+
+def on_insert_item(item):
+    #superadmin = helper.get_role_by_ref(ref='superadmin')
+    if {'activity': 0, 'org': 0, 'role': 202639} in app.globals['acl']['roles']:
+        #if superadmin in app.globals['acl']['roles']:
+        item['owner'] = app.globals['user_id']
+        item['acl'] = {'read': { 'activity' : 0, 'club' : 0, 'role' : 10000000 },
+                       'write': {'user': [app.globals['user_id']]}}
+
+    else:
+        eve_helper.eve_abort(404, 'No access to this item')
+
 def before_post(request, payload=None):
 
     print(request)

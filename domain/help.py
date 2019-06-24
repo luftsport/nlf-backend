@@ -23,7 +23,7 @@ definition = {
                    },
 
     'additional_lookup': {
-        'url': 'regex("[a-z-]+")',
+        'url': 'regex("[a-z0-9-]+")',
         'field': 'key',
     },
     'extra_response_fields': ['key'],

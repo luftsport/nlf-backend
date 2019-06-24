@@ -6,7 +6,7 @@
 
 """
 
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app as app
 from ext.scf import LUNGO_HEADERS, LUNGO_URL
 from ext.app.eve_helper import eve_response
 from ext.app.decorators import require_token
@@ -22,7 +22,7 @@ def syncdaemon_workers_start():
     resp = requests.post('{}/syncdaemon/workers/start'.format(LUNGO_URL),
                         data=None,
                         headers=LUNGO_HEADERS,
-                        verify=False)
+                        verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
 
@@ -35,7 +35,7 @@ def lungo_worker_reboot(index):
     resp = requests.post('{}/syncdaemon/worker/reboot/{}'.format(LUNGO_URL, index),
                         data=None,
                         headers=LUNGO_HEADERS,
-                        verify=False)
+                         verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
 
@@ -50,7 +50,7 @@ def lungo(path):
     resp = requests.get('{}/{}'.format(LUNGO_URL, path),
                         params=request.args.to_dict(),
                         headers=LUNGO_HEADERS,
-                        verify=False)
+                        verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
 
