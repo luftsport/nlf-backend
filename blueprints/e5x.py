@@ -186,8 +186,9 @@ def generate(_id):
 
                     try:
                         status = data.get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', {}).get('value', 5)
-                    except:
-                        status = 9
+                    except Exception as e:
+                        print('Error gettings status', status, e)
+                        status = 0
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
