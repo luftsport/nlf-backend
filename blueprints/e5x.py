@@ -185,7 +185,7 @@ def generate(_id):
                     print('Stderr', stderr.rstrip())
 
                     try:
-                        status = data.get('entities', {}).get('reportingHistory', [])[0].get('reportStatus', 5)
+                        status = data.get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', 5)
                     except:
                         status = 5
 
