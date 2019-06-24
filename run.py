@@ -177,8 +177,9 @@ app.on_insert_f_observation_comments += hook.fallskjerm.before_post_comments
 
 
 # Help hooks
-app.on_pre_PATCH_help += hook.help.before_patch
-app.on_post_POST_help += hook.help.after_post
+app.on_insert_help += hook.help.on_insert_items
+#app.on_pre_PATCH_help += hook.help.before_patch
+#app.on_post_POST_help += hook.help.after_post
 # Content hooks
 app.on_insert_content += hook.content.before_insert
 
