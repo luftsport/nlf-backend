@@ -185,10 +185,11 @@ def generate(_id):
                     print('Stderr', stderr.rstrip())
 
                     try:
-                        status = data.get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', {}).get('value', 5)
+                        status = data.get('e5x').get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', {}).get('value', 5)
                     except Exception as e:
-                        print('Error gettings status', status, e)
                         status = 0
+                        print('Error gettings status', status, e)
+
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
