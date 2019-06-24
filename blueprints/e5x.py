@@ -185,9 +185,9 @@ def generate(_id):
                     print('Stderr', stderr.rstrip())
 
                     try:
-                        status = data.get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', 5)
+                        status = data.get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', {}).get('value', 5)
                     except:
-                        status = 5
+                        status = 9
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
