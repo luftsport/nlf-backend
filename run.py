@@ -46,6 +46,7 @@ from blueprints.tags import Tags
 # Membership integration blueprint
 from blueprints.lungo import Lungo
 from blueprints.e5x import E5X
+from blueprints.heartbeat import Heartbeat
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
@@ -109,7 +110,8 @@ app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('pre
 
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
 
-
+# Heartbeat
+app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
