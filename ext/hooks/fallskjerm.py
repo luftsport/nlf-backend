@@ -36,7 +36,7 @@ from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP, ACL_FALLSKJERM_F
 from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
-
+from datetime import datetime
 
 def ors_before_insert(items):
     """Do everything needed before processing
@@ -58,7 +58,8 @@ def ors_before_insert(items):
                     ors['id'] = ors_id
                 else:
                     eve_abort(422, 'Could not create ORS, missing increment')
-
+                
+                ors['when'] = datetime.utcnow()
                 ors['reporter'] = app.globals.get('user_id')
                 ors['owner'] = app.globals.get('user_id')
                 ors['watchers'] = [app.globals.get('user_id')]
