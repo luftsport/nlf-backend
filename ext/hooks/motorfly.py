@@ -36,6 +36,7 @@ from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
 from ext.workflows.motorfly_observations import get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
+from datetime import datetime
 
 
 def ors_before_insert(items):
@@ -59,6 +60,7 @@ def ors_before_insert(items):
                 else:
                     eve_abort(422, 'Could not create ORS, missing increment')
 
+                ors['when'] = datetime.utcnow()
                 ors['reporter'] = app.globals.get('user_id')
                 ors['owner'] = app.globals.get('user_id')
                 ors['watchers'] = [app.globals.get('user_id')]
