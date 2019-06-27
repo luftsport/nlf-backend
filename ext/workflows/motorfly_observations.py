@@ -39,12 +39,11 @@ def get_wf_init(person_id):
 
 
 def get_acl_init(person_id, discipline_id):
-    ors_role = ACL_MOTORFLY_ORS.copy()
-    ors_role['org'] = discipline_id
+
     acl = {
         'read': {
             'users': [person_id],
-            'roles': [ors_role]
+            'roles': [ACL_MOTORFLY_ORS]
         },
         'execute': {
             'users': [person_id],
