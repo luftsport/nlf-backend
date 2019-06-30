@@ -47,6 +47,7 @@ import aip_airspaces
 
 # Geo
 import geo_countries
+import geo_admin
 
 # E5X
 import e5x_attributes, e5x_choices, e5x_tree
@@ -113,6 +114,7 @@ DOMAIN = {
 
     # Geo
     "geo_countries": geo_countries.definition,
+    "geo_admin": geo_admin.definition,
 
     # E5X
     "e5x_attributes": e5x_attributes.definition,
