@@ -44,3 +44,21 @@ definition = {
     'schema': _schema
 
 }
+
+
+from bson import SON, ObjectId
+
+agg_count_keys = {
+    'url': 'e5x/choices/keys/count',
+    'item_title': 'E5X choices count',
+    'pagination': False,
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$group": {"_id": {"key": "$key"}, "count": {"$sum": 1}}},
+                {"$sort": SON([("count", -1), ("_id", -1)])}
+            ]
+        }
+    }
+}

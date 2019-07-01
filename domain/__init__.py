@@ -119,6 +119,7 @@ DOMAIN = {
     # E5X
     "e5x_attributes": e5x_attributes.definition,
     "e5x_choices": e5x_choices.definition,
+    "e5x_choices_count": e5x_choices.agg_count_keys,
     "e5x_tree": e5x_tree.definition,
 
     # Testing Eve
