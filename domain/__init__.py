@@ -70,10 +70,12 @@ DOMAIN = {
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
     "fallskjerm_observations_agg": fallskjerm_observations.aggregate_observation_types,
+    "fallskjerm_observations_todo": fallskjerm_observations.workflow_todo,
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
     "motorfly_observations_agg": motorfly_observations.aggregate_observation_types,
+    "motorfly_observations_todo": motorfly_observations.workflow_todo,
 
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,

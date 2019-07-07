@@ -144,6 +144,24 @@ definition = {
 
 }
 
+workflow_todo = {
+    'item_title': 'Fallskjerm Observations todo',
+    'url': '{}/todo'.format(BASE_URL),
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   # 'projection': {'acl': 0}  # 'files': 0,
+                   },
+    'additional_lookup': {
+        'url': 'regex("[\d{1,9}]+")',
+        'field': 'id',
+    },
+    'extra_response_fields': ['id'],
+
+    'versioning': False,
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'schema': _schema
+}
+
 aggregate_observation_types = {
     'item_title': 'Observation Aggregations',
     'url': '{}/aggregate'.format(BASE_URL),

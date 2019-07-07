@@ -147,7 +147,23 @@ definition = {
 
                       },
     'schema': _schema
+}
 
+workflow_todo = {
+    'item_title': 'Motorfly Observations todo',
+    'url': '{}/todo'.format(BASE_URL),
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   },
+    # Make a counter so we can have a lookup for #455
+    'additional_lookup': {
+        'url': 'regex("[\d{1,9}]+")',
+        'field': 'id',
+    },
+    'extra_response_fields': ['id'],
+    'versioning': False,
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'schema': _schema
 }
 
 aggregate_observation_types = {
