@@ -131,9 +131,10 @@ def dump_request(request):
 app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.before_get
-app.on_pre_GET_fallskjerm_observations_todo += hook.falskjerm.before_get_todo
+app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.after_fetched
+app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.after_fetched
 app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_diffs
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
@@ -145,6 +146,7 @@ app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
+app.on_fetched_item_motorfly_observations_todo += hook.motorfly.after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
