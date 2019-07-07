@@ -195,7 +195,6 @@ def after_fetched(response):
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
                     if not has_nanon_permission(response['acl'], 'execute', 'closed'):
-
                         pass
                         # response = anon.anonymize_ors(response)
 
@@ -237,7 +236,15 @@ def after_fetched(response):
                              'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        eve_helper.eve_abort(500, 'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(e))
+        eve_helper.eve_abort(500,
+                             'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(
+                                 e))
+
+
+def before_get_todo(request, lookup):
+    lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+                            {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
+                                     {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
 
 
 @require_token()

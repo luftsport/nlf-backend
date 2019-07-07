@@ -26,6 +26,12 @@ import ext.auth.anonymizer as anon
 from ext.auth.acl import get_user_acl_mapping
 import ext.app.eve_helper as eve_helper
 from ext.app.decorators import *
+
+# Broadcast socketio
+from ext.app.responseless_decorators import async
+import socketio
+import time
+
 import json
 # import signals from hooks
 from ext.hooks.fallskjerm_signals import signal_activity_log, signal_insert_workflow, \
@@ -37,6 +43,7 @@ from ext.workflows.fallskjerm_observations import get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
+
 
 def ors_before_insert(items):
     """Do everything needed before processing
@@ -58,7 +65,7 @@ def ors_before_insert(items):
                     ors['id'] = ors_id
                 else:
                     eve_abort(422, 'Could not create ORS, missing increment')
-                
+
                 ors['when'] = datetime.utcnow()
                 ors['reporter'] = app.globals.get('user_id')
                 ors['owner'] = app.globals.get('user_id')
@@ -171,6 +178,16 @@ def has_nanon_permission(resource_acl, perm, state):
     return has_permission(resource_acl, perm)
 
 
+@async
+def broadcast(message):
+    print('BROADCAST IT')
+    sio = socketio.Client()
+    sio.connect('http://localhost:8080?token=tulletoken')
+    sio.emit('broadcast', message)
+    time.sleep(0.1)
+    sio.disconnect()
+
+
 def after_fetched(response):
     """ Modify response after GETing an observation
     This hook checks if permission on each observation
@@ -178,6 +195,7 @@ def after_fetched(response):
     """
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
+
     try:
         if isinstance(response, list):
 
@@ -195,6 +213,9 @@ def after_fetched(response):
 
         elif isinstance(response, dict):
             # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
+
+            # SocketIO
+            broadcast('Somebody is looking at ORS#{}'.format(response['id']))
 
             response['acl_user'] = get_user_acl_mapping(response['acl'])
 
@@ -243,6 +264,12 @@ def after_fetched(response):
         app.logger.info("Unexpected error: {}".format(e))
         eve_helper.eve_abort(500,
                              'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+
+
+def before_get_todo(request, lookup):
+    lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+                            {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
+                                     {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
 
 
 @require_token()
