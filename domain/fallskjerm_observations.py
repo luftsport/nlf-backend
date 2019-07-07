@@ -146,7 +146,7 @@ definition = {
 
 workflow_todo = {
     'item_title': 'Fallskjerm Observations todo',
-    'url': '{}/todo'.format(BASE_URL),
+    'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
                    # 'projection': {'acl': 0}  # 'files': 0,
                    },

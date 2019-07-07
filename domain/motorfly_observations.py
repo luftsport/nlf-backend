@@ -151,7 +151,7 @@ definition = {
 
 workflow_todo = {
     'item_title': 'Motorfly Observations todo',
-    'url': '{}/todo'.format(BASE_URL),
+    'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
                    },
     # Make a counter so we can have a lookup for #455
