@@ -26,9 +26,6 @@ ACL = Blueprint('Acl', __name__, )
 @ACL.route("/<string:collection>/<int:observation_id>", methods=['GET'])
 @require_token()
 def get_observation_user_acl(collection, observation_id):
-    ''' This is NOT a good one since jsonifying those objectid's are bad
-    Should rather use Eve for getting stuff!
-    '''
 
     result = acl_helper.get_user_permissions(observation_id, collection)
 

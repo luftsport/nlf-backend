@@ -20,24 +20,26 @@ Lungo = Blueprint('Lungo passthrough', __name__, )
 @require_token()
 def syncdaemon_workers_start():
     resp = requests.post('{}/syncdaemon/workers/start'.format(LUNGO_URL),
-                        data=None,
-                        headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                         data=None,
+                         headers=LUNGO_HEADERS,
+                         verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
+
 
 @Lungo.route("/syncdaemon/worker/reboot/<int:index>", methods=["POST"])
 @require_token()
 def lungo_worker_reboot(index):
     print('test')
     print('{}'.format(request.args))
- 
+
     resp = requests.post('{}/syncdaemon/worker/reboot/{}'.format(LUNGO_URL, index),
-                        data=None,
-                        headers=LUNGO_HEADERS,
+                         data=None,
+                         headers=LUNGO_HEADERS,
                          verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
+
 
 @Lungo.route("/", defaults={"path": ""}, methods=['GET'])
 @Lungo.route("/<string:path>", methods=['GET'])
@@ -45,7 +47,6 @@ def lungo_worker_reboot(index):
 @require_token()
 def lungo(path):
     print('{}'.format(request.args))
- 
 
     resp = requests.get('{}/{}'.format(LUNGO_URL, path),
                         params=request.args.to_dict(),
@@ -53,4 +54,3 @@ def lungo(path):
                         verify=app.config.get('REQUESTS_VERIFY', True))
 
     return eve_response(resp.json(), resp.status_code)
-
