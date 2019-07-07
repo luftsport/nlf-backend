@@ -89,7 +89,7 @@ app.register_blueprint(swagger)
 
 # Register custom blueprints
 app.register_blueprint(Authenticate, url_prefix="%s/user" % app.globals.get('prefix'))
-app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'))
+# app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'))
 
 # ORS NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
@@ -131,6 +131,7 @@ def dump_request(request):
 app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.before_get
+app.on_pre_GET_fallskjerm_observations_todo += hook.falskjerm.before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.after_fetched
 app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_diffs
@@ -141,6 +142,7 @@ app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
 # BEFORE GET
 app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
+app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
@@ -202,6 +204,7 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+
     import pkg_resources
 
     print(" App:         %s" % app.config['APP_VERSION'])

@@ -8,14 +8,10 @@
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
-
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify, make_response
-from bson import json_util
-import json
-import re
+from flask import Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
-from ext.workflows.fallskjerm_observations import ObservationWorkflow
+from ext.workflows.motorfly_observations import ObservationWorkflow
 
 # Need custom decorators
 from ext.app.decorators import *
@@ -33,7 +29,7 @@ def state(observation_id):
     # No need for user_id, ObservatoinWorkflow already has that!
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
-    return Response(json.dumps(wf.get_current_state()), mimetype='application/json')
+    return eve_response(wf.get_current_state(), 200)
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/audit", methods=['GET'])
@@ -43,10 +39,10 @@ def audit(observation_id):
     """
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
-    return Response(json.dumps(wf.get_audit(), default=json_util.default), mimetype='application/json')
+    return eve_response(wf.get_audit(), 200)
 
 
-@OrsWorkflow.route("/todo", methods=['GET'])
+@OrsWorkflow.route("/legacy/todo", methods=['GET'])
 @require_token()
 def get_observations():
     """ Get a number of observations which you can execute
@@ -68,8 +64,8 @@ def get_observations():
 
     col = app.data.driver.db['fallskjerm_observations']
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
-    cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}}, \
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}}, \
+    cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                          {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
 
     total_items = cursor.count()
@@ -88,7 +84,7 @@ def get_observations():
     """
     _meta = {'page': page, 'max_results': max_results, 'total': total_items}
     result = {'_items': _items, '_meta': _meta}
-    return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
+    return eve_response(result, 200)
 
 
 @OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen)"):action>', methods=['POST'])
@@ -125,21 +121,19 @@ def transition(observation_id, action):
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
-    return Response(json.dumps(wf.state), mimetype='application/json')
+    return eve_response(wf.state, 200)
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
 @require_token()
 def graphit(observation_id, state):
-    #wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
     from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_STATES, WF_FALLSKJERM_TRANSITIONS
     if state in WF_FALLSKJERM_STATES:
-
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
-    
-        
+
         machine = Machine(model=wf,
                           states=WF_FALLSKJERM_STATES,
                           transitions=WF_FALLSKJERM_TRANSITIONS,
@@ -147,9 +141,9 @@ def graphit(observation_id, state):
                           title='Workflow graph')
         stream = io.BytesIO()
         wf.get_graph().draw(stream, prog='dot', format='png')
-        #response = make_response(stream.getvalue())
-        #response.mimetype = 'image/png'
-        #return response
+        # response = make_response(stream.getvalue())
+        # response.mimetype = 'image/png'
+        # return response
         return eve_response({'graph': base64.b64encode(stream.getvalue())}, 200)
 
 
@@ -166,6 +160,7 @@ def tasks(observation_id):
     # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
     raise NotImplemented
+
 
 class Dummy(object):
     pass

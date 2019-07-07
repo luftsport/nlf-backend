@@ -9,10 +9,7 @@
 
 """
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify, make_response
-from bson import json_util
-import json
-import re
+from flask import Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
 from ext.workflows.motorfly_observations import ObservationWorkflow
@@ -37,7 +34,7 @@ def state(observation_id):
 
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
-    return Response(json.dumps(wf.get_current_state()), mimetype='application/json')
+    return eve_response(wf.get_current_state(), 200)
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/audit", methods=['GET'])
@@ -47,10 +44,10 @@ def audit(observation_id):
     """
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
-    return Response(json.dumps(wf.get_audit(), default=json_util.default), mimetype='application/json')
+    return eve_response(wf.get_audit(), 200)
 
 
-@OrsWorkflow.route("/todo", methods=['GET'])
+@OrsWorkflow.route("/legacy/todo", methods=['GET'])
 @require_token()
 def get_observations():
     """ Get a number of observations which you can execute
@@ -92,10 +89,13 @@ def get_observations():
     """
     _meta = {'page': page, 'max_results': max_results, 'total': total_items}
     result = {'_items': _items, '_meta': _meta}
-    return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
+    # return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
+    return eve_response(result, 200)
 
 
-@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|dto|skole|teknisk)"):action>', methods=['POST'])
+@OrsWorkflow.route(
+    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|dto|skole|teknisk)"):action>',
+    methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
@@ -129,7 +129,7 @@ def transition(observation_id, action):
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
-    return Response(json.dumps(wf.state), mimetype='application/json')
+    return eve_response(wf.state, 200)
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
