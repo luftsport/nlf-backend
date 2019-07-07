@@ -7,9 +7,10 @@
 
 from flask import jsonify, abort, Response, current_app as app
 import sys
-import simplejson as json
+import json #simplejson as json
 import bson.json_util as json_util
 from ..scf import Scf
+from ext.app.eve_jsonencoder import EveJSONEncoder
 
 from ext.notifications.sms import Sms  # Email
 #from ext.app.decorators import async
@@ -78,7 +79,7 @@ def eve_response(data={}, status=200):
         data = {'data': data}
 
     try:
-        resp = Response(json.dumps(data, default=json_util.default), status=status, mimetype='application/json')
+        resp = Response(json.dumps(data, cls=EveJSONEncoder), status=status, mimetype='application/json')
     except:
         resp = jsonify(**data)
     return resp
