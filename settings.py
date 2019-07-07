@@ -21,7 +21,6 @@ APP_LICENSE = 'GPLV1'
 APP_COPYRIGHT = '(c) 2014-{} NLF'.format(datetime.now().year)
 APP_ALL = ['nlf-backend']
 
-PAGINATION_STRATEGY = 'estimated'
 #HATEOAS = False
 # OPTIMIZE_PAGINATION_FOR_SPEED = True
 
