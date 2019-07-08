@@ -277,13 +277,14 @@ def before_get(request, lookup):
     print('################')
     print('REQ', request)
     print('LOOKUP', lookup)
-    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}}, \
+    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.read.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
 @require_token()
 def before_patch(request, lookup):
-    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}}, \
+
+    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
 
 

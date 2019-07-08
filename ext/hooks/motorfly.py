@@ -106,12 +106,13 @@ def after_patch(request, response):
 
 
 def after_fetched_p(response, _id):
-    print('##### RESPONSE ####')
-    print(response)
+    # print('##### RESPONSE ####')
+    # print(response)
+    pass
 
 
 def after_fetched_diffs(response):
-    print('########', response)
+    # print('########', response)
     if isinstance(response, list):
 
         if response[0].get('workflow', {}).get('state', None) == 'closed':
@@ -181,9 +182,7 @@ def after_fetched(response):
 
                     if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
                         # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
-
-                        pass
-                        # response[key] = anon.anonymize_ors(response[key])
+                        response[key] = anon.anonymize_ors(response[key])
 
 
         elif isinstance(response, dict):
@@ -195,37 +194,7 @@ def after_fetched(response):
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
                     if not has_nanon_permission(response['acl'], 'execute', 'closed'):
-                        pass
-                        # response = anon.anonymize_ors(response)
-
-            ### REMOVE
-            """
-            if response.get('weather', False):
-
-                if response['weather'].get('auto', False):
-
-                    if response['weather']['auto'].get('taf', False):
-                        try:
-                            import pytaf
-                            taf_raw = response['weather']['auto'].get('taf')
-                            # print(taf_raw[17:])
-                            taf = pytaf.TAF(taf_raw[17:])
-                            decoder = pytaf.Decoder(taf)
-                            response['weather']['auto'].update({'taf_decoded': decoder.decode_taf()})
-                        except Exception as e:
-                            app.logger.info("ERR TAF ", e)
-                            pass
-
-                    if response['weather']['auto'].get('metar', False):
-                        try:
-                            from metar import Metar
-                            met = Metar.Metar("METAR %s" % response['weather']['auto']['metar'][17:])
-                            response['weather']['auto'].update({'metar_decoded': met.string()})
-
-                        except Exception as e:
-                            app.logger.info("ERR Metar ", e)
-                            pass
-            """
+                        response = anon.anonymize_ors(response)
 
 
     # except Exception as e:
@@ -252,13 +221,13 @@ def before_get(request, lookup):
     # print('################')
     # print('REQ', request)
     # print('LOOKUP', lookup)
-    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}}, \
+    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.read.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
 @require_token()
 def before_patch(request, lookup):
-    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}}, \
+    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
