@@ -4,7 +4,7 @@ import ext.auth.acl as acl_helper
 from ext.app.eve_helper import eve_abort
 import sys
 from pprint import pprint
-
+from bs4 import BeautifulSoup
 
 class Anon(object):
     def __init__(self):
@@ -32,13 +32,13 @@ class Anon(object):
 
         # Allow users to see themself
         if int(x['id']) == int(app.globals['id']):
-            # Always delete tmpname!
-            if 'tmpname' in x:
-                del x['tmpname']
+            # Always delete tmp_name!
+            if 'tmp_name' in x:
+                del x['tmp_name']
             return x
 
 
-        elif 'id' in x and 'tmpname' not in x:
+        elif 'id' in x and 'tmp_name' not in x:
             # print("ID: %s" % x['id'])
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
@@ -46,25 +46,25 @@ class Anon(object):
                 # print("X her: " % x)
                 pass
 
-        elif 'id' in x and 'tmpname' in x:
-            # print("ID TMP: %s %s" % (x['id'], x['tmpname']))
+        elif 'id' in x and 'tmp_name' in x:
+            # print("ID TMP: %s %s" % (x['id'], x['tmp_name']))
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
             else:
                 x['id'] = self.assign(x['id'])
 
 
-        elif 'id' not in x and 'tmpname' in x:
-            # print("TMP: %s" % x['tmpname'])
-            x['id'] = 0  # self.assign(x['tmpname'])
+        elif 'id' not in x and 'tmp_name' in x:
+            # print("TMP: %s" % x['tmp_name'])
+            x['id'] = 0  # self.assign(x['tmp_name'])
 
         else:
             # print("ERROR")
             x['id'] = 0
 
-        # Always delete tmpname!
-        if 'tmpname' in x:
-            del x['tmpname']
+        # Always delete tmp_name!
+        if 'tmp_name' in x:
+            del x['tmp_name']
 
         # print("NEW: %s" % x['id'])
         return x
@@ -93,6 +93,13 @@ def anonymize_ors(item):
                 app.logger.info("Unexpected error 1: %s" % sys.exc_info()[0])
                 pass
     """
+
+    # Set preamble
+    if item.get('_model', {}).get('type') == 'fallskjerm':
+        preamble = 'Hopper'
+    elif item.get('_model', {}).get('type') == 'motorfly':
+        preamble = 'Flyver'
+
     # try:
     anon = Anon()
 
@@ -107,6 +114,35 @@ def anonymize_ors(item):
 
     if 'components' not in item:
         item['components'] = []
+
+    # ASK MACRO anon
+    for ask_key in list(item.get('ask', {}).get('text', {}).keys()):
+
+        try:
+
+            soup = BeautifulSoup(item.get('ask', {}).get('text', {}).get(ask_key, ''), features='html.parser')
+            macros = soup.findAll('macro')
+            for key, macro in enumerate(macros):
+
+                # USER MACRO
+                if macros[key].get('data-type', '') == 'user':
+
+                    macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
+
+                    macros[key].string = '{} {}'.format(preamble, -1*macros[key].get('data-id'))
+
+                    for attr in list(macros[key].attrs.keys()):
+                        if attr not in ['data-id', 'data-type']:
+                            macros[key].attrs.pop(attr, None)
+
+                    macros[key]['class'] = 'anon'
+
+                item['ask']['text'][ask_key] = '{}'.format(soup)
+
+        except Exception as e:
+
+            item['ask']['text'][ask_key] = '<macro>Anon Error ({})</macro>'.format(e)
+
 
     # Involved
     for key, val in enumerate(item.get('involved', [])):
