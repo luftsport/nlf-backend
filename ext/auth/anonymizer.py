@@ -143,6 +143,11 @@ def anonymize_ors(item):
 
             item['ask']['text'][ask_key] = '<macro>Anon Error ({})</macro>'.format(e)
 
+    # Aircraft CREW
+    for key, aircraft in enumerate(item.get('aircrafts', [])):
+
+        for k, crew in enumerate(aircraft.get('crew', [])):
+            item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(item['aircrafts'][key]['crew'][k].get('person', {}))
 
     # Involved
     for key, val in enumerate(item.get('involved', [])):
