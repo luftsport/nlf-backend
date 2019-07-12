@@ -95,11 +95,13 @@ def anonymize_ors(item):
     """
 
     # Set preamble
+    """
     if item.get('_model', {}).get('type') == 'fallskjerm':
         preamble = 'Hopper'
     elif item.get('_model', {}).get('type') == 'motorfly':
         preamble = 'Flyver'
-
+    """
+    preamble = 'Person'
     # try:
     anon = Anon()
 
@@ -125,7 +127,7 @@ def anonymize_ors(item):
             for key, macro in enumerate(macros):
 
                 # USER MACRO
-                if macros[key].get('data-type', '') == 'user':
+                if macros[key].get('data-type', '') == 'user' and int(macros[key].get('data-id', 0)) != int(app.globals['id']):
 
                     macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
 
@@ -136,6 +138,7 @@ def anonymize_ors(item):
                             macros[key].attrs.pop(attr, None)
 
                     macros[key]['class'] = 'anon'
+                    macros[key]['data-id'] = '#'
 
                 item['ask']['text'][ask_key] = '{}'.format(soup)
 
@@ -145,9 +148,11 @@ def anonymize_ors(item):
 
     # Aircraft CREW
     for key, aircraft in enumerate(item.get('aircrafts', [])):
-
-        for k, crew in enumerate(aircraft.get('crew', [])):
-            item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(item['aircrafts'][key]['crew'][k].get('person', {}))
+        try:
+            for k, crew in enumerate(aircraft.get('crew', [])):
+                item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(item['aircrafts'][key]['crew'][k].get('person', {}))
+        except Exception as e:
+            pass
 
     # Involved
     for key, val in enumerate(item.get('involved', [])):
