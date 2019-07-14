@@ -671,9 +671,15 @@ class ObservationWorkflow(Machine):
 
         subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), self._trigger_attrs[self.action]['descr'])
 
+        action = ''
+        if self.action is not None:
+            action = self._trigger_attrs[self.action]['descr']
+        else:
+            action = 'created'
+
         message.update({'observation_id': self.db_wf['id']})
         message.update({'action_by': get_person_name_text(app.globals['id'])})
-        message.update({'action': self._trigger_attrs[self.action]['descr']})
+        message.update({'action': action})
         message.update({'title': '%s' % ' '.join(self.db_wf.get('tags'))})
         message.update({'wf_from': self._state_attrs[self.initial_state]['description']})
         message.update({'wf_to': self._state_attrs[self.state]['description']})
