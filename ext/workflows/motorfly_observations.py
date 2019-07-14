@@ -8,7 +8,8 @@ from eve.methods.patch import patch_internal
 from datetime import datetime
 
 from ext.notifications.email import Email  # , Sms
-from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, get_person_name_text
+from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
+    get_person_name_text
 
 from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
     ACL_MOTORFLY_TEKNISK_LEDER
@@ -449,9 +450,12 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
-        if len([i for i in app.globals['acl'].get('roles', []) if i in self.current_acl['execute']['roles']]) > 0 \
-                or app.globals['user_id'] in self.current_acl['execute']['users']:
-            return True
+        try:
+            if len([i for i in app.globals['acl'].get('roles', []) if i in self.current_acl['execute']['roles']]) > 0 \
+                    or app.globals['user_id'] in self.current_acl['execute']['users']:
+                return True
+        except:
+            pass
 
         return False
 
