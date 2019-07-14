@@ -647,6 +647,8 @@ class ObservationWorkflow(Machine):
 
     def notify_created(self):
         acl = self.db_wf.get('acl')
+        print('WFFFF acl')
+        print(acl)
         self.notification(users=acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
                           roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
