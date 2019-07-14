@@ -49,7 +49,6 @@ def ors_before_insert_item(item):
     Add WF
     Add other known...
     """
-    print('ITEM ON INSERT', item)
     try:
         if 'discipline' in item and item.get('discipline', 0) > 0:
 
