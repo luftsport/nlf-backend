@@ -121,7 +121,7 @@ def get_person_email(person_id) -> (bool, dict):
 
 def get_org_name(org_id):
     print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
-    resp = requests.get('{}/{}/{}&projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
+    resp = requests.get('{}/{}/{}?projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
                         headers=LUNGO_HEADERS)
 
     if resp.status_code == 200:
