@@ -492,7 +492,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [ACL_FALLSKJERM_FSJ]
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_GROUP]
             acl['execute']['roles'] = [ACL_FALLSKJERM_FSJ]
 
         elif self.state == 'pending_review_su':
@@ -503,7 +503,7 @@ class ObservationWorkflow(Machine):
 
             acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ]
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_FALLSKJERM_SU]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_GROUP]
 
         elif self.state == 'closed':
             """ everybody read, su execute """
@@ -514,7 +514,7 @@ class ObservationWorkflow(Machine):
 
             acl['read']['roles'] = [ACL_CLOSED_ALL]
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_FALLSKJERM_SU]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_GROUP]
 
             # Fjernet hele f fallskjermnorge her! Kanskje egen klubb bare?
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
@@ -599,8 +599,7 @@ class ObservationWorkflow(Machine):
         mail = Email()
 
         """
-        recepients = self.helper.get_melwin_users_email(
-            self.helper.collect_users(users=users, roles=roles, groups=groups))
+        recepients = get_recepients(
         """
         recepients = [{'name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
         message = {}
