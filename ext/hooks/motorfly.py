@@ -92,13 +92,12 @@ def ors_after_insert(items):
 
 def ors_after_insert_item(item):
     try:
-        wf = ObservationWorkflow(item.get('_id'), 'draft', app.globals.get('user_id'))
+        wf = ObservationWorkflow(item.get('_id', ''), 'draft', app.globals.get('user_id'))
 
-        users = item.get('acl', {}).get('read', {}).get('users', [])
-        roles = item.get('acl', {}).get('read', {}).get('roles', [])
-        wf.notification(users, roles)
-    except:
-        print('ERR cant process WF')
+        wf.notify_created()
+    except Exception as e:
+        print('ERR item {}'.format(item))
+        print('ERR cant process WF: {}'.format(e))
         pass
 
 
