@@ -33,57 +33,73 @@ from ext.hooks.motorfly_signals import signal_activity_log, \
 from ext.hooks.motorfly_signals import signal_g_init_acl, signal_motorfly_insert_workflow
 
 from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
-from ext.workflows.motorfly_observations import get_wf_init, get_acl_init
+from ext.workflows.motorfly_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 
 
 def ors_before_insert(items):
+    for item in items:
+        ors_before_insert_item(item)
+
+
+def ors_before_insert_item(item):
     """Do everything needed before processing
     Add WF
     Add other known...
     """
 
-    if len(items) > 1:
-        eve_abort(401, 'Do not support batch operations')
-    elif len(items) == 1:
+    try:
+        ors = item.copy()
+        if 'discipline' in ors and ors.get('discipline', 0) > 0:
 
-        try:
-            ors = items[0].copy()
-            if 'discipline' in ors and ors.get('discipline', 0) > 0:
+            ors_id = increment('ors_motorfly')
 
-                ors_id = increment('ors_motorfly')
+            if ors_id:
+                ors['id'] = ors_id
+            else:
+                eve_abort(422, 'Could not create ORS, missing increment')
 
-                if ors_id:
-                    ors['id'] = ors_id
-                else:
-                    eve_abort(422, 'Could not create ORS, missing increment')
+            ors['when'] = datetime.utcnow()
+            ors['reporter'] = app.globals.get('user_id')
+            ors['owner'] = app.globals.get('user_id')
+            ors['watchers'] = [app.globals.get('user_id')]
+            ors['workflow'] = get_wf_init(app.globals.get('user_id'))
 
-                ors['when'] = datetime.utcnow()
-                ors['reporter'] = app.globals.get('user_id')
-                ors['owner'] = app.globals.get('user_id')
-                ors['watchers'] = [app.globals.get('user_id')]
-                ors['workflow'] = get_wf_init(app.globals.get('user_id'))
+            ors['organization'] = {}
+            _, _person_ors = get_person_from_role(ACL_MOTORFLY_ORS)
+            ors['organization']['ors'] = _person_ors
 
-                ors['organization'] = {}
-                _, _person_ors = get_person_from_role(ACL_MOTORFLY_ORS)
-                ors['organization']['ors'] = _person_ors
+            persons_dto = ACL_MOTORFLY_DTO.copy()
+            persons_dto['org'] = ors.get('discipline')
+            _, _persons_dto = get_person_from_role(persons_dto)
+            ors['organization']['dto'] = _persons_dto
 
-                persons_dto = ACL_MOTORFLY_DTO.copy()
-                persons_dto['org'] = ors.get('discipline')
-                _, _persons_dto = get_person_from_role(persons_dto)
-                ors['organization']['dto'] = _persons_dto
+            ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
 
-                ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
+            item = ors
 
-                items[0] = ors
-
-        except Exception as e:
-            print('Error', e)
-            pass
-    else:
+    except Exception as e:
+        print('Error', e)
         eve_abort(422, 'Could not create ORS')
+
+
+def ors_after_insert(items):
+    for item in items:
+        ors_after_insert_item(item)
+
+
+def ors_after_insert_item(item):
+    try:
+        wf = ObservationWorkflow(item.get('_id'), 'draft', app.globals.get('user_id'))
+
+        users = item.get('acl', {}).get('read', {}).get('users', [])
+        roles = item.get('acl', {}).get('read', {}).get('roles', [])
+        wf.notification(users, roles)
+    except:
+        print('ERR cant process WF')
+        pass
 
 
 def after_g_post(request, response):
