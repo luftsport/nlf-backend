@@ -28,6 +28,9 @@ import content, content_aggregations
 # A custom endpoint for developement flexibility!
 import dev
 
+# NOTIFICATIONS
+import notifications
+
 # LEGACY
 import legacy_melwin_clubs, legacy_melwin_licenses, legacy_melwin_membership, legacy_melwin_users
 import legacy_licenses
@@ -62,6 +65,9 @@ DOMAIN = {
     "users": users.definition,
     "users_acl": users_acl.definition,
     "users_auth": users_auth.definition,
+
+    # Notfication
+    "notifications": notifications.definition,
 
     # ACL
     "acl_groups": acl_groups.definition,
