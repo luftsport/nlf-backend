@@ -581,8 +581,8 @@ class ObservationWorkflow(Machine):
 
         # NOTIFY
         if self.state != 'closed':
-            self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
+            self.notification(users=acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
+                              roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
         return acl
 
