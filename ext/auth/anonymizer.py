@@ -157,7 +157,7 @@ def anonymize_ors(item):
     # E5X audit
     for key, audit in enumerate(item.get('e5x', {}).get('audit', [])):
         try:
-            item['e5x'][key]['person_id'] = anon.assign(item['e5x'][key].get('person_id', 0))
+            item['e5x']['audit'][key]['person_id'] = anon.assign(item['e5x']['audit'][key].get('person_id', 0))
         except Exception as e:
             pass
 
