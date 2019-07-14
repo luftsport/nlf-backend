@@ -40,7 +40,6 @@ class Email():
     #@async
     def send_async(self, recepient, prefix, subject, instance):
 
-        print('[EMAIL] Sending....')
         # Now we build the message part!
         if self.message_html and self.message_plaintext:
             message = MIMEMultipart('alternative')
