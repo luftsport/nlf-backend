@@ -663,9 +663,7 @@ class ObservationWorkflow(Machine):
             self.helper.collect_users(users=users, roles=roles, groups=groups))
         """
 
-        _recepients = get_recepients_from_roles(roles) + get_recepients(users)
-
-        recepients = [{'full_name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
+        recepients = get_recepients_from_roles(roles) + get_recepients(users)
 
         message = {}
 
@@ -677,8 +675,6 @@ class ObservationWorkflow(Machine):
 
         subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), action)
 
-
-
         message.update({'observation_id': self.db_wf['id']})
         message.update({'action_by': get_person_name_text(app.globals['id'])})
         message.update({'action': action})
@@ -689,7 +685,7 @@ class ObservationWorkflow(Machine):
         message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
         message.update({'url': 'ors/motorfly/edit/%i\n' % int(self.db_wf.get('id'))})
         message.update({'url_root': request.url_root})
-        message.update({'comment': '{}\n\n{}'.format(self.comment, _recepients)})
+        message.update({'comment': '{}'.format(self.comment)})
         message.update({'context': context})
 
         mail.add_message_html(message, 'ors')
