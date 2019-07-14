@@ -89,7 +89,7 @@ def ors_after_insert(items):
 
 def ors_after_insert_item(item):
     wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=app.globals.get('user_id'))
-
+    print('WFFF state', wf.get_current_state())
     if wf.get_current_state() == 'draft':
         wf.notify_created()
 
