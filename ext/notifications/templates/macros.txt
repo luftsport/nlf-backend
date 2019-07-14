@@ -3,14 +3,13 @@
  Dette er en automatisk generert epost fra:
  {{url}}
 -------------------------------------------
-                                           
- Fallskjermseksjonen,                   
+
  Norges Luftsportforbund                   
  Møllergata 39                             
  0179 Oslo                                 
                                            
- Tlf:	907 04 646               
- Epost:	jan.wang@nlf.no
- Url:	http://www.nlf.no/fallskjerm     
+ Tlf:	23 01 04 50
+ Epost:	post@nlf.no
+ Url:	http://www.nlf.no
 -------------------------------------------
 {%- endmacro %}

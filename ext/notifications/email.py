@@ -37,7 +37,7 @@ class Email():
         self.j2env = Environment(loader=FileSystemLoader(self.template_dir), trim_blocks=True)
         self.j2env.filters['nl2br'] = nl2br
 
-    #@async
+    @async
     def send_async(self, recepient, prefix, subject, instance):
 
         # Now we build the message part!
