@@ -65,7 +65,7 @@ class Email():
         else:
             message['Subject'] = '[%s] %s' % (prefix, subject)
         
-        message['To'] = '%s <%s>' % (recepient['name'], recepient['email'])
+        message['To'] = '%s <%s>' % (recepient['full_name'], recepient['email'])
 
         s = smtplib.SMTP(self.config['smtp'], self.config['smtp_port'])
         s.ehlo()
