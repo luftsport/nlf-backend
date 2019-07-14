@@ -15,7 +15,7 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from ..scf import Scf
+from ..scf import Scf, NOTIFICATION_SEND_EMAIL
 
 class Email():
     
@@ -84,7 +84,7 @@ class Email():
         @todo: check recepients as list and length > 0
         @todo: check that list of dicts with keys name, email
         """
-        if Scf.NOTIFICATION_SEND_EMAIL is True:
+        if NOTIFICATION_SEND_EMAIL is True:
             for i, r in enumerate(recepients):
                 self.send_async(recepient=r, prefix=prefix, subject=subject, instance = app.config.get('APP_INSTANCE'))
             
