@@ -49,36 +49,34 @@ def ors_before_insert_item(item):
     Add WF
     Add other known...
     """
-
+    print('ITEM ON INSERT', item)
     try:
-        ors = item.copy()
-        if 'discipline' in ors and ors.get('discipline', 0) > 0:
+        if 'discipline' in item and item.get('discipline', 0) > 0:
 
             ors_id = increment('ors_motorfly')
 
             if ors_id:
-                ors['id'] = ors_id
+                item['id'] = ors_id
             else:
                 eve_abort(422, 'Could not create ORS, missing increment')
 
-            ors['when'] = datetime.utcnow()
-            ors['reporter'] = app.globals.get('user_id')
-            ors['owner'] = app.globals.get('user_id')
-            ors['watchers'] = [app.globals.get('user_id')]
-            ors['workflow'] = get_wf_init(app.globals.get('user_id'))
+            item['when'] = datetime.utcnow()
+            item['reporter'] = app.globals.get('user_id')
+            item['owner'] = app.globals.get('user_id')
+            item['watchers'] = [app.globals.get('user_id')]
+            item['workflow'] = get_wf_init(app.globals.get('user_id'))
 
-            ors['organization'] = {}
+            item['organization'] = {}
             _, _person_ors = get_person_from_role(ACL_MOTORFLY_ORS)
-            ors['organization']['ors'] = _person_ors
+            item['organization']['ors'] = _person_ors
 
             persons_dto = ACL_MOTORFLY_DTO.copy()
-            persons_dto['org'] = ors.get('discipline')
+            persons_dto['org'] = item.get('discipline')
             _, _persons_dto = get_person_from_role(persons_dto)
-            ors['organization']['dto'] = _persons_dto
+            item['organization']['dto'] = _persons_dto
 
-            ors['acl'] = get_acl_init(app.globals.get('user_id'), ors.get('discipline'))
+            item['acl'] = get_acl_init(app.globals.get('user_id'), item.get('discipline'))
 
-            item = ors
 
     except Exception as e:
         print('Error', e)
