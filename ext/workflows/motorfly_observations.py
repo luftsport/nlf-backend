@@ -654,7 +654,7 @@ class ObservationWorkflow(Machine):
 
         _recepients = get_recepients_from_roles(roles) + get_recepients(users)
 
-        recepients = [{'name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
+        recepients = [{'full_name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
 
         message = {}
 
