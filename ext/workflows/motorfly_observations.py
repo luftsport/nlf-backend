@@ -666,7 +666,7 @@ class ObservationWorkflow(Machine):
         message.update({'title': '%s' % ' '.join(self.db_wf.get('tags'))})
         message.update({'wf_from': self._state_attrs[self.initial_state]['description']})
         message.update({'wf_to': self._state_attrs[self.state]['description']})
-        message.update({'club': get_org_name_text(self.db_wf.get('club'))})
+        message.update({'club': get_org_name_text(self.db_wf.get('discipline'))})
         message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
         message.update({'url': 'ors/motorfly/edit/%i\n' % int(self.db_wf.get('id'))})
         message.update({'url_root': request.url_root})
