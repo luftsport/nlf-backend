@@ -154,6 +154,13 @@ def anonymize_ors(item):
         except Exception as e:
             pass
 
+    # E5X audit
+    for key, audit in enumerate(item.get('e5x', {}).get('audit', [])):
+        try:
+            item['e5x'][key]['person'] = anon.assign(item['e5x'][key].get('person', 0))
+        except Exception as e:
+            pass
+
     # Involved
     for key, val in enumerate(item.get('involved', [])):
 
