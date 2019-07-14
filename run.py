@@ -142,7 +142,7 @@ app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 ## MOTOR
 # BEFORE AND AFTER POST INSERT
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
-# app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert no id??
+# app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert # no id??
 # BEFORE GET
 app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
