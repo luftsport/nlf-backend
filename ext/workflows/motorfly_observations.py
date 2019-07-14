@@ -647,12 +647,12 @@ class ObservationWorkflow(Machine):
 
     def notify_created(self):
         acl = self.db_wf.get('acl')
-        print('WFFFF acl')
         print(acl)
         self.notification(users=acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                          roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
+                          roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'],
+                          context='created')
 
-    def notification(self, users=[], roles=[]):
+    def notification(self, users=[], roles=[], context='transition'):
         """ A wrapper around notifications
         """
 
@@ -673,7 +673,7 @@ class ObservationWorkflow(Machine):
         if self.action is not None:
             action = self._trigger_attrs[self.action]['descr']
         else:
-            action = 'created'
+            action = 'Opprettet'
 
         subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), action)
 
@@ -690,7 +690,7 @@ class ObservationWorkflow(Machine):
         message.update({'url': 'ors/motorfly/edit/%i\n' % int(self.db_wf.get('id'))})
         message.update({'url_root': request.url_root})
         message.update({'comment': '{}\n\n{}'.format(self.comment, _recepients)})
-        message.update({'context': 'transition'})
+        message.update({'context': context})
 
         mail.add_message_html(message, 'ors')
         mail.add_message_plain(message, 'ors')
