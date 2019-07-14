@@ -57,10 +57,10 @@ class Email():
             print("No message body!")
             return False
         
-        message.preamble = 'F/NLF Notification'
-        message['From'] = 'FNLF ORS <%s>' % self.config['from']
+        message.preamble = 'NLF Notification'
+        message['From'] = 'NLF ORS <%s>' % self.config['from']
         
-        if instance == 'develop':
+        if instance in ['dev', 'local', 'beta']:
             message['Subject'] = '[%s TEST] %s' % (prefix, subject)
         else:
             message['Subject'] = '[%s] %s' % (prefix, subject)
@@ -72,7 +72,7 @@ class Email():
         s.starttls()
         s.ehlo()
         
-        s.login(self.config['username'], self.config['password'])
+        # s.login(self.config['username'], self.config['password'])
 
         s.send_message(message)
         s.quit()
@@ -146,7 +146,8 @@ class Email():
         
     def get_message_html(self):
         return self.message_html
-    
+
+    """
     def alertsomething(self):
         # Safety! Should be to admin!
         if len(recepients) > 50:
@@ -156,5 +157,6 @@ class Email():
             message += "Recepients: %i" % len(recepient)
         
         send_email(recepients, subject, message)
+    """
             
     

@@ -91,7 +91,7 @@ def get_person_merged_from(person_id):
 
 def get_person_from_role(role) -> (bool, [int]):
     resp = requests.get(
-        '%s/functions?where={"active_in_org_id": %s, "type_id": %s}&projection={"person_id": 1}'
+        '%s/functions?where={"active_in_org_id": %s, "type_id": %s, "is_deleted": false, "is_passive": false}&projection={"person_id": 1}'
         % (LUNGO_URL, role.get('org'), role.get('role')),
         headers=LUNGO_HEADERS, verify=False)
 
@@ -104,3 +104,42 @@ def get_person_from_role(role) -> (bool, [int]):
                 return True, [i['person_id'] for i in r['_items']]
 
     return False, None
+
+
+def get_person_email(person_id) -> (bool, dict):
+    resp = requests.get('{}/persons/{}?projection={{"full_name": 1, "address.email": 1}}'.format(LUNGO_URL, person_id),
+                        headers=LUNGO_HEADERS, verify=False)
+
+    if resp.status_code == 200:
+        r = resp.json()
+        email = r.get('address', {}).get('email', [])[0]
+        name = r.get('full_name', '')
+        return True, {'full_name': name, 'email': email}
+
+    return False, None
+
+
+def get_org_name(org_id):
+    print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
+    resp = requests.get('{}/{}/{}&projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
+                        headers=LUNGO_HEADERS)
+
+    if resp.status_code == 200:
+        return True, resp.json().get('name', 'Ukjent Klubb')
+
+    return False, 'Ukjent klubb'
+
+
+def get_person_name(person_id):
+    resp = requests.get('{}/{}/{}?projection={{"full_name": 1}}'.format(LUNGO_URL, 'persons', person_id),
+                        headers=LUNGO_HEADERS)
+
+    if resp.status_code == 200:
+        return True, resp.json().get('full_name', 'Ukjent person')
+
+    return False, 'Ukjent person'
+
+
+
+
+

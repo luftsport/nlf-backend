@@ -7,11 +7,9 @@ from eve.methods.patch import patch_internal
 
 from datetime import datetime
 
-import re
-
-from ext.auth.helpers import Helpers
-from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.email import Email  # , Sms
+from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, get_person_name_text
+
 from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
     ACL_MOTORFLY_TEKNISK_LEDER
 import arrow
@@ -39,7 +37,6 @@ def get_wf_init(person_id):
 
 
 def get_acl_init(person_id, discipline_id):
-
     acl = {
         'read': {
             'users': [person_id],
@@ -569,9 +566,9 @@ class ObservationWorkflow(Machine):
             acl['write']['roles'] = []
             acl['execute']['roles'] = [self.acl_ORS]
 
-            # Fjernet hele f fallskjermnorge her! Kanskje egen klubb bare?
+            # Notify closed
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
+                              [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE])
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))
@@ -582,11 +579,10 @@ class ObservationWorkflow(Machine):
         acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
         acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
-        """
+        # NOTIFY
         if self.state != 'closed':
             self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
                               acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
-        """
 
         return acl
 
@@ -645,10 +641,9 @@ class ObservationWorkflow(Machine):
 
         return False
 
-    def notification(self, users=[], groups=[], roles=[]):
+    def notification(self, users=[], roles=[]):
         """ A wrapper around notifications
         """
-        return
 
         mail = Email()
 
@@ -656,22 +651,26 @@ class ObservationWorkflow(Machine):
         recepients = self.helper.get_melwin_users_email(
             self.helper.collect_users(users=users, roles=roles, groups=groups))
         """
+
+        _recepients = get_recepients_from_roles(roles) + get_recepients(users)
+
         recepients = [{'name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
+
         message = {}
 
         subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), self._trigger_attrs[self.action]['descr'])
 
         message.update({'observation_id': self.db_wf['id']})
-        message.update({'action_by': self.helper.get_user_name(app.globals['user_id'])})
+        message.update({'action_by': get_person_name_text(app.globals['id'])})
         message.update({'action': self._trigger_attrs[self.action]['descr']})
         message.update({'title': '%s' % ' '.join(self.db_wf.get('tags'))})
         message.update({'wf_from': self._state_attrs[self.initial_state]['description']})
         message.update({'wf_to': self._state_attrs[self.state]['description']})
-        message.update({'club': self.helper.get_melwin_club_name(self.db_wf.get('club'))})
+        message.update({'club': get_org_name_text(self.db_wf.get('club'))})
         message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
-        message.update({'url': 'app/obs/#!/observation/report/%i\n' % int(self.db_wf.get('id'))})
+        message.update({'url': 'ors/motorfly/edit/%i\n' % int(self.db_wf.get('id'))})
         message.update({'url_root': request.url_root})
-        message.update({'comment': self.comment})
+        message.update({'comment': '{}\n\n{}'.format(self.comment, _recepients)})
         message.update({'context': 'transition'})
 
         mail.add_message_html(message, 'ors')
