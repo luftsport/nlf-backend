@@ -42,8 +42,8 @@ def get_recepients_from_roles(roles):
     try:
         for role in roles:
             resp = requests.get(
-                '{}/{}?where={{"org_id": {}, "type_id": {}, "is_deleted": false, "is_passive": false }}&projection={{"person_id": 1}}'.format(
-                    LUNGO_URL, 'functions', role.org, role.role),
+                '{}/functions?where={{"org_id": {}, "type_id": {}, "is_deleted": false, "is_passive": false }}&projection={{"person_id": 1}}'.format(
+                    LUNGO_URL, role.get('org',0), role.get('role',0)),
                 headers=LUNGO_HEADERS)
 
             if resp.status_code == 200:
