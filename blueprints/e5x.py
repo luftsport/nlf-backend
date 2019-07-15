@@ -17,6 +17,15 @@ import base64
 from ext.auth.tokenauth import TokenAuth
 from ext.notifications.notifications import notify
 
+import pysftp
+
+if app.config.get('APP_INSTANCE', '') == 'dev':
+    from ext.scf import LT_SFTP_TEST_CFG as SFTP
+elif app.config.get('APP_INSTANCE', '') == 'prod':
+    from ext.scf import LT_SFTP_CFG as SFTP
+else:
+    app.logger.warning('No SFTP settings for this instance')
+
 E5X = Blueprint('E5X Blueprint', __name__, )
 
 
@@ -34,7 +43,6 @@ E5X = Blueprint('E5X Blueprint', __name__, )
 # E5X_FILE = '{}/{}/{}/{}.e5x'.format(E5X_WORKING_DIR, ACTIVITY, ID, FILE_NAME)
 
 def has_permission():
-    print(request.args)
     try:
 
         b64token = request.args.get('token', default=None, type=str)
@@ -49,6 +57,8 @@ def has_permission():
 
     except:
         eve_abort(404, 'Please provide proper credentials')
+
+    # If so far, then goodie!
     return True
 
 
@@ -66,28 +76,28 @@ def execute(cmdArray, workingDir):
         for line in iter(process.stdout.readline, b''):
 
             try:
-                echoLine = line.decode("utf-8")
+                echo_line = line.decode("utf-8")
             except:
-                echoLine = str(line)
+                echo_line = str(line)
 
-            stdout += echoLine
+            stdout += echo_line
 
         for line in iter(process.stderr.readline, b''):
 
             try:
-                echoLine = line.decode("utf-8")
+                echo_line = line.decode("utf-8")
             except:
-                echoLine = str(line)
+                echo_line = str(line)
 
-            stderr += echoLine
+            stderr += echo_line
 
     except (KeyboardInterrupt, SystemExit) as err:
         return [False, '', str(err)]
 
     process.stdout.close()
 
-    returnCode = process.wait()
-    if returnCode != 0 or stderr != '':
+    return_code = process.wait()
+    if return_code != 0 or stderr != '':
         return [False, stdout, stderr]
     else:
         return [True, stdout, stderr]
@@ -109,6 +119,37 @@ def generate_structure(activity, ors_id, version):
         return True
     except:
         return False
+
+
+def transport_e5x(dir, file_name):
+    if not SFTP:
+        return False, {}
+
+    # Transport to out
+    result = False
+    try:
+        cnopts = pysftp.CnOpts()
+        cnopts.hostkeys = None
+        with pysftp.Connection(SFTP['host'], username=SFTP['username'],
+                               password=SFTP['password'], cnopts=cnopts) as sftp:
+
+            try:
+                result = sftp.put('{}/{}'.format(dir, file_name), file_name)
+            except Exception as e:
+                app.logger.error('Could not send file via SFTP')
+                return False, {}
+
+    except Exception as e:
+        app.logger.error('Unknown error in SFTP')
+        return False, {}
+
+    if result:
+        return True, {
+            'mtime': result.st_mtime,
+            'size': result.st_size,
+            'uid': result.st_uid,
+            'gid': result.st_gid
+        }
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
@@ -155,60 +196,67 @@ def generate(_id):
                                 f.write(stream.read())
 
                     except Exception as e:
-                        print('Oh ah file err', e)
+                        app.logger.error("Error generating structure for E5X")
 
             try:
                 json_file_name = '{}.json'.format(file_name)
 
-                print('PATHS', FILE_WORKING_DIR, json_file_name)
+                # print('PATHS', FILE_WORKING_DIR, json_file_name)
 
+                # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
                     json.dump(data.get('e5x', {}), f)
 
+                # 2 Generate xml file
                 _, stdout, stderr = execute(
                     ['node', 'e5x-gen.js', str(ors.get('id')), str(ors.get('_version')), 'motorfly'],
                     app.config['E5X_WORKING_DIR'])
 
-                print('Stdout', stdout.rstrip())
-                print('Stderr', stderr.rstrip())
-
-                # Zip it! Add files to it!
+                # 3 Zip it! Add files to it!
                 if stderr.rstrip() == '':
                     time.sleep(0.5)
                     cmds = ['zip', '{}.e5x'.format(file_name), '{}.xml'.format(file_name)]
                     cmds += file_list
-                    print('CMDS', file_list, cmds)
+                    # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
                         FILE_WORKING_DIR)
-                    print('Stdout', stdout.rstrip())
-                    print('Stderr', stderr.rstrip())
 
                     try:
-                        status = data.get('e5x').get('entities', {}).get('reportingHistory', [])[0].get('attributes', {}).get('reportStatus', {}).get('value', 5)
+                        status = data.get('e5x').get('entities', {}) \
+                            .get('reportingHistory', [])[0] \
+                            .get('attributes', {}) \
+                            .get('reportStatus', {}).get('value', 5)
+
                     except Exception as e:
                         status = 0
-                        print('Error gettings status', status, e)
+                        app.logger.error('Error gettings status {}'.format(status))
 
+                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name)
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
+
                     audit.append({
                         'date': datetime.datetime.now(),
                         'person_id': app.globals.get('user_id'),
-                        'sent': False,
+                        'sent': transport_status,
                         'status': status,
                         'version': ors.get('_version'),
                         'file': '{}.e5x'.format(file_name),
-                        'e5y': {
-                            'key': 'abrakadabra',
-                            'number': 'c5de0c62-fbc9-4202-bbe8-ff52c1e79ae0',
-                            'path': '/OCCS/A24A5466CDD843FFAAAA2DA663762C5E.E4O',
-                            'created': '2019-06-19T22:57:46.6719259+02:00',
-                            'modified': '2019-06-19T22:57:46.6719259+02:00',
-                            'taxonomy': '4.1.0.6'
-                        }
+                        'e5y': transport
                     })
+
+                    """
+                    'e5y': {
+                        'key': 'abrakadabra',
+                        'number': 'c5de0c62-fbc9-4202-bbe8-ff52c1e79ae0',
+                        'path': '/OCCS/A24A5466CDD843FFAAAA2DA663762C5E.E4O',
+                        'created': '2019-06-19T22:57:46.6719259+02:00',
+                        'modified': '2019-06-19T22:57:46.6719259+02:00',
+                        'taxonomy': '4.1.0.6'
+                    }
+                    """
 
                     e5x = {'audit': audit,
                            'status': 'sent',
@@ -216,35 +264,42 @@ def generate(_id):
 
                     _update = col.update_one({'_id': ors.get('_id'), '_etag': ors.get('_etag')}, {'$set': {'e5x': e5x}})
 
-                    print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
+                    if not _update:
+                        app.logger.error('Error storing e5x delivery message in database')
 
-                    #### TEST EMAIL!
-                    recepients = list(set([app.globals.get('user_id')]
-                                          + ors.get('organization', {}).get('ors', [])
-                                          + ors.get('organization', {}).get('dto', [])
-                                          ))
-                    print('RECEPIENTS', recepients)
+                    # print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
+                    try:
+                        #### TEST EMAIL!
+                        recepients = list(set([app.globals.get('user_id')]
+                                              + ors.get('organization', {}).get('ors', [])
+                                              + ors.get('organization', {}).get('dto', [])
+                                              ))
+                        # print('RECEPIENTS', recepients)
 
-                    message = 'Hei\n\nDette er en leveringsbekreftelse for ORS #{0} version {1}\n\n \
-                              Levert:\t{2}\
-                              Status:\t{3}\
-                              Fil:\t{4}\
-                              Sent:\t{5}'.format(ors.get('id', ''),
-                                                 ors.get('_version', ''),
-                                                 datetime.datetime.now(),
-                                                 status,
-                                                 '{}.e5x'.format(file_name),
-                                                 'email')
+                        message = 'Hei\n\nDette er en leveringsbekreftelse for ORS #{0} versjon {1}\n\n \
+                                  Levert:\t{2}\n\
+                                  Status:\t{3}\n\
+                                  Fil:\t{4}\n\
+                                  Levert via:\t{5}\n\
+                                  Instans:\t{}\n'.format(ors.get('id', ''),
+                                                         ors.get('_version', ''),
+                                                         datetime.datetime.now(),
+                                                         status,
+                                                         '{}.e5x'.format(file_name),
+                                                         'sftp',
+                                                         app.config.get('APP_INSTANCE', ''))
 
-                    subject = 'E5X Leveringsbekreftelse ORS {0} v{1}'.format(ors.get('id', ''), ors.get('_version', ''))
-                    print(subject)
-                    print(message)
-                    notify(recepients, subject, message)
+                        subject = 'E5X Leveringsbekreftelse ORS {0} v{1}'.format(ors.get('id', ''),
+                                                                                 ors.get('_version', ''))
+
+                        notify(recepients, subject, message)
+                    except Exception as e:
+                        app.logger.error('Error delivering e5x delivery notification')
 
                     return eve_response({'e5x': {'audit': audit}}, 200)
 
             except Exception as e:
-                print('Oh my fucking god', e)
+                app.logger.error('Error processing e5x file')
 
             return eve_response({'ERR': 'Could not process'}, 422)
 
