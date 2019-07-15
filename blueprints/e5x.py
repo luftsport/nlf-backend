@@ -19,14 +19,7 @@ from ext.notifications.notifications import notify
 
 import pysftp
 
-# Only dev and prod should be able to deliver to LT
-if app.config.get('APP_INSTANCE', '') == 'dev':
-    from ext.scf import LT_SFTP_TEST_CFG as SFTP
-elif app.config.get('APP_INSTANCE', '') == 'prod':
-    from ext.scf import LT_SFTP_CFG as SFTP
-else:
-    app.logger.warning('No SFTP settings for this instance')
-    SFTP = False
+
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
@@ -110,8 +103,8 @@ def generate_structure(activity, ors_id, version):
         return False
 
 
-def transport_e5x(dir, file_name):
-    if not SFTP:
+def transport_e5x(dir, file_name, sftp_settings):
+    if not sftp_settings:
         return False, {}
 
     # Transport to out
@@ -119,8 +112,8 @@ def transport_e5x(dir, file_name):
     try:
         cnopts = pysftp.CnOpts()
         cnopts.hostkeys = None
-        with pysftp.Connection(SFTP['host'], username=SFTP['username'],
-                               password=SFTP['password'], cnopts=cnopts) as sftp:
+        with pysftp.Connection(sftp_settings['host'], username=sftp_settings['username'],
+                               password=sftp_settings['password'], cnopts=cnopts) as sftp:
 
             try:
                 result = sftp.put('{}/{}'.format(dir, file_name), file_name)
@@ -221,7 +214,17 @@ def generate(_id):
                         status = 0
                         app.logger.error('Error gettings status {}'.format(status))
 
-                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name)
+                    # SFTP DELIVERY!
+                    # Only dev and prod should be able to deliver to LT
+                    if app.config.get('APP_INSTANCE', '') == 'dev':
+                        from ext.scf import LT_SFTP_TEST_CFG as SFTP
+                    elif app.config.get('APP_INSTANCE', '') == 'prod':
+                        from ext.scf import LT_SFTP_CFG as SFTP
+                    else:
+                        app.logger.warning('No SFTP settings for this instance')
+                        SFTP = False
+
+                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
