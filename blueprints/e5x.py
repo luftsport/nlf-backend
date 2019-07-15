@@ -19,8 +19,6 @@ from ext.notifications.notifications import notify
 
 import pysftp
 
-
-
 E5X = Blueprint('E5X Blueprint', __name__, )
 
 
@@ -286,7 +284,7 @@ def generate(_id):
 
                         notify(recepients, subject, message)
                     except Exception as e:
-                        app.logger.error('Error delivering e5x delivery notification')
+                        app.logger.error('Error delivering e5x delivery notification', e)
 
                     return eve_response({'e5x': {'audit': audit}}, 200)
 
