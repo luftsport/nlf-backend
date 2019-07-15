@@ -30,7 +30,7 @@ def get_recepients(recepients):
                         'full_name': person.get('full_name', ''),
                         'email': person.get('address', {}).get('email', [])[0]})
                 except Exception as e:
-                    print('Ugha', e)
+                    #print('Ugha', e)
                     pass
 
     return list({v['email']: v for v in result if len(v['email']) > 4}.values())
@@ -87,21 +87,21 @@ def notify(recepients, subject, message, prefix='NLF', subprefix='ORS'):
     send_async(recepients, msg)
 
 
-# @async
+@async
 def send_async(recepients, message):
     s = smtplib.SMTP(EMAIL_CFG['smtp'], EMAIL_CFG['smtp_port'])
     s.ehlo()
     s.starttls()
     s.ehlo()
-    s.login(EMAIL_CFG['username'], EMAIL_CFG['password'])
+    # s.login(EMAIL_CFG['username'], EMAIL_CFG['password'])
 
     for recepient in get_recepients(recepients):
-        print(recepient)
+        # print(recepient)
         message['To'] = '{} <{}>'.format(recepient['full_name'], recepient['email'])
         try:
             s.send_message(message)
         except:
-            print('Error sending message')
+            #print('Error sending message')
             pass
 
     s.quit()
