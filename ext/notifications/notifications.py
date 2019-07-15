@@ -76,7 +76,7 @@ def get_person_name_text(person_id):
 
 def notify(recepients, subject, message, prefix='NLF', subprefix='ORS'):
     ## TESTIONG
-    recepients = list(set([301041]))
+    recepients = list(set(recepients))
 
     msg = email.message.Message()
     msg['From'] = 'NLF Notifications <{}>'.format(EMAIL_CFG['from'])
