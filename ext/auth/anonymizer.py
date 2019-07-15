@@ -12,6 +12,11 @@ class Anon(object):
 
     def assign(self, person):
         """Keep track of all assigned persons"""
+
+        # See yourself
+        if int(person) == int(app.globals['id']):
+            return int(person)
+
         if person in self.persons:
             return -1 * (self.persons.index(person) + 1)
         else:
@@ -24,10 +29,10 @@ class Anon(object):
     def assign_x(self, x):
         """Take the whole array part, modify id and tempname, return whole array"""
 
-        if x == None or x == '' or not x:
+        if x is None or x == '' or not x:
             return None
 
-        if not 'id' in x:
+        if 'id' not in x:
             x['id'] = 0
 
         # Allow users to see themself
