@@ -19,28 +19,17 @@ from ext.notifications.notifications import notify
 
 import pysftp
 
+# Only dev and prod should be able to deliver to LT
 if app.config.get('APP_INSTANCE', '') == 'dev':
     from ext.scf import LT_SFTP_TEST_CFG as SFTP
 elif app.config.get('APP_INSTANCE', '') == 'prod':
     from ext.scf import LT_SFTP_CFG as SFTP
 else:
     app.logger.warning('No SFTP settings for this instance')
+    SFTP = False
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
-
-# ID = '49'
-# VERSION = '6'
-# ACTIVITY = 'motorfly'
-
-# FILE_NAME = 'nlf_{}_{}_v{}'.format(ACTIVITY, ID, VERSION)
-
-# @TODO add version to dir motorfly/49/6/filer...
-# E5X_WORKING_DIR_FILES = '{}/{}/{}'.format(E5X_WORKING_DIR, ACTIVITY, ID)
-# DATA = {}
-# JSON_FILE = '{}/{}/{}/{}.json'.format(E5X_WORKING_DIR, ACTIVITY, ID, FILE_NAME)
-# XML_FILE = '{}/{}/{}/{}.xml'.format(E5X_WORKING_DIR, ACTIVITY, ID, FILE_NAME)
-# E5X_FILE = '{}/{}/{}/{}.e5x'.format(E5X_WORKING_DIR, ACTIVITY, ID, FILE_NAME)
 
 def has_permission():
     try:
