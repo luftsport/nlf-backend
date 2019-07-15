@@ -35,14 +35,14 @@ def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
             tmp = resp.text.rstrip('=\n\n').replace('///', '').split('\n\n')
             taf = []
             metar = []
-            
+
             if len(tmp) > 0:
                 m = tmp[0]
                 metar = [_m.lstrip('\n') for _m in m.split('=') if len(_m) > 4]
             if len(tmp) > 1:
                 t = tmp[1]
                 taf = [_t for _t in t.replace('\n', '').strip().split('=') if len(_t) > 4]
-            
+
             return True, taf, metar
         except:
             pass
@@ -76,17 +76,20 @@ def get_metar_as_dict(metar):
 
     return m
 
+
 def get_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
         return True, resp.text.strip().rstrip('=').split('=\n')
 
+
 def get_taf(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
     resp = requests.get('{}taf.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
-        
-        return True,  [t for t in resp.text.strip().replace('\n','').split('=') if len(t)>4] #[m for m in resp.text.lstrip('\n').split('=\n')]
-    
+        return True, [t for t in resp.text.strip().replace('\n', '').split('=') if
+                      len(t) > 4]  # [m for m in resp.text.lstrip('\n').split('=\n')]
+
+
 def parse_metar(metar):
     try:
         return Metar.Metar(metar)
@@ -114,7 +117,8 @@ def get_nearest_metar(metars, target_time):
     mint = None
     index = 0
     for idx, m in enumerate(metars):
-        mtime = target_stamp - datetime.datetime(target_time.year, target_time.month, target_time.day, int(m[7:9]), int(m[9:11])).timestamp()
+        mtime = target_stamp - datetime.datetime(target_time.year, target_time.month, target_time.day, int(m[7:9]),
+                                                 int(m[9:11])).timestamp()
         if mint is None or mint > abs(mtime):
             mint = abs(mtime)
             index = idx
@@ -126,7 +130,6 @@ def get_nearest_metar(metars, target_time):
 @require_token()
 def index():
     return jsonify(**{'message': 'Use yr or aero resources'})
-
 
 
 @Weather.route("/yr/<string:county>/<string:municipality>/<string:name>/<regex('(now|forecast|wind)'):what>",
@@ -157,7 +160,6 @@ def yr(what, county, municipality, name):
         return jsonify(**wind_speed)
 
 
-
 @Weather.route("/aero/<regex('[aA-zZ]{4}'):icao>/<regex('(metar|taf|shorttaf)'):what>", methods=['GET'])
 @require_token()
 def aero(what, icao):
@@ -174,7 +176,6 @@ def aero(what, icao):
         return jsonify(**{'taf': w.taf()})
     elif what == 'shorttaf':
         return jsonify(**{'shorttaf': w.shorttaf()})
-
 
 
 @Weather.route("/tafmetar/<regex('[aA-zZ]{4}'):icao>/<regex('(metar|taf|tafmetar)'):what>", methods=['GET'])
@@ -200,23 +201,22 @@ New metar methods using api.met.no
 """
 
 
-
 @Weather.route("/met/<regex('[aA-zZ]{4}'):icao>/<regex('[0-9]{4}-[0-9]{2}-[0-9]{2}'):date>", methods=['GET'])
 @require_token()
 def met_tafmetar(icao, date):
     try:
-        print(icao, date)
+        # print(icao, date)
         status, taf, metar = get_taf_metar(icao, date)
 
         if status is True:
             return eve_response({'taf': taf, 'metar': metar}, 200)
         else:
-            print(get_taf_metar(icao, date))
-    except:
-        pass
-    
-    return eve_abort(404, 'Could not process')
+            # print(get_taf_metar(icao, date))
+            pass
+    except Exception as e:
+        app.logger.error(e)
 
+    return eve_abort(500, 'Could not process')
 
 
 @Weather.route("/met/parse/<regex('(metar|taf)'):what>/<string:msg>", methods=['GET'])
@@ -233,24 +233,23 @@ def met_parse(what, msg):
         return eve_abort(404, 'Could not process')
 
 
-
 @Weather.route("/met/metar/<regex('[aA-zZ]{4}'):icao>", methods=['GET'])
 @require_token()
 def met_get_metar_dict(icao):
     try:
         status, taf, metar = get_taf_metar(icao)
-        if len(metar)>0:
+        if len(metar) > 0:
             resp = get_metar_as_dict(Metar.Metar(metar[-1]))
         else:
             status, metar = get_metar(icao)
-            if len(metar)>0:
+            if len(metar) > 0:
                 resp = get_metar_as_dict(Metar.Metar(metar[-1]))
             else:
                 resp = {}
 
         return eve_response({'icao': icao, 'metar': resp})
     except Exception as e:
-        print(e)
+        app.logger.error(e)
         return eve_abort(404, 'Could not process')
 
 
@@ -264,5 +263,5 @@ def met_nearest_metar(icao, date):
         parsed = parse_metar(metar)
         return eve_response({'metar': metar, 'parsed': '{}'.format(parsed)}, 200)
     except Exception as e:
-        print(e)
+        ppp.logger.error(e)
         return eve_abort(404, 'Could not process {}'.format(e))
