@@ -116,13 +116,13 @@ def transport_e5x(dir, file_name, sftp_settings):
                                password=sftp_settings['password'], cnopts=cnopts) as sftp:
 
             try:
-                result = sftp.put('{}/{}'.format(dir, file_name), file_name)
+                result = sftp.put('{}/{}.e5x'.format(dir, file_name), file_name)
             except Exception as e:
-                app.logger.error('Could not send file via SFTP')
+                app.logger.error('Could not send file via SFTP', e)
                 return False, {}
 
     except Exception as e:
-        app.logger.error('Unknown error in SFTP')
+        app.logger.error('Unknown error in SFTP', e)
         return False, {}
 
     if result:
