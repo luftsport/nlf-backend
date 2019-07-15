@@ -20,7 +20,7 @@ RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
 
 ORS_MODEL_TYPE = 'motorfly'
-ORS_MODEL_VERSION = 1
+ORS_MODEL_VERSION = 2
 
 _schema = {'id': {'type': 'integer',
                   'readonly': True
