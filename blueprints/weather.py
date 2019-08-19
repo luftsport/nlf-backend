@@ -29,6 +29,7 @@ Weather = Blueprint('Weather', __name__, )
 
 
 def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+    print('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
         try:
@@ -66,7 +67,7 @@ def get_metar_as_dict(metar):
                 elif k == '_utcdelta':
                     m[k] = '{}'.format(metar.__dict__[k])
                 elif k == 'time' or k == '_now':
-                    m[k] = metar.__dict__[k].isoformat()
+                    m[k] = '{}Z'.format(metar.__dict__[k].isoformat())
                 elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
                     m[k] = metar.__dict__[k].__dict__
                 else:
