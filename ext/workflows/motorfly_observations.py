@@ -227,11 +227,11 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'descr': 'Godkjent av ORS Koordinator'
     },
     'reject_ors': {
-        'title': 'Avslå observasjon',
+        'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Avslått av ORS koord'
+        'descr': 'Sendt tilbake av ORS koord'
     },
 
     'send_to_dto': {

@@ -194,11 +194,11 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
         'descr': 'Gjenåpnet'
     },
     'reject_hi': {
-        'title': 'Avslå observasjon',
+        'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Avslått av HI'
+        'descr': 'Sendt tilbake av HI'
     },
     'approve_hi': {
         'title': 'Godkjenn observasjon',
@@ -208,11 +208,11 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
         'descr': 'Godkjent av HI'
     },
     'reject_fs': {
-        'title': 'Avslå observasjon',
+        'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Avslått av Fagsjef'
+        'descr': 'Sendt tilbake av Fagsjef'
     },
     'approve_fs': {
         'title': 'Godkjenn observasjon',
@@ -222,11 +222,11 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
         'descr': 'Godkjent av Fagsjef'
     },
     'reject_su': {
-        'title': 'Avslå observasjon',
+        'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Avslått av SU'
+        'descr': 'Sendt tilbake av SU'
     },
     'approve_su': {
         'title': 'Godkjenn observasjon',
