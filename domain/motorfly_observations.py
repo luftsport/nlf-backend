@@ -33,12 +33,12 @@ _schema = {'id': {'type': 'integer',
                     },
 
            'flags': {'type': 'dict',
-                     'schema': {'aviation': {'type': 'boolean'},
-                                'insurance': {'type': 'boolean'},
+                     'schema': {'school': {'type': 'boolean'},
+                                'flight_service': {'type': 'boolean'},
                                 'e5x': {'type': 'boolean'}
                                 },
-                     'default': {'aviation': False,
-                                 'insurance': False,
+                     'default': {'school': False,
+                                 'flight_service': False,
                                  'e5x': False}
                      },
            'ask': ask_schema,
