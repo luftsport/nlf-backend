@@ -7,13 +7,14 @@
 
 from flask import jsonify, abort, Response, current_app as app
 import sys
-import json #simplejson as json
+import json  # simplejson as json
 import bson.json_util as json_util
 from ..scf import Scf
 from ext.app.eve_jsonencoder import EveJSONEncoder
 
 from ext.notifications.sms import Sms  # Email
-#from ext.app.decorators import async
+
+# from ext.app.decorators import async
 
 CRITICAL_ERROR_CODES = [503]
 
@@ -32,17 +33,17 @@ def eve_abort(status=500, message='', sysinfo=None):
                 pass
 
         if 100 <= status <= 299:
-            #app.logger.info("%s: %s" % (message, sysinfo))
+            # app.logger.info("%s: %s" % (message, sysinfo))
             pass
         elif 300 <= status <= 399:
-            #app.logger.warn("%s: %s" % (message, sysinfo))
+            # app.logger.warn("%s: %s" % (message, sysinfo))
             pass
         elif 400 <= status <= 499:
-            #app.logger.error("%s: %s" % (message, sysinfo))
+            # app.logger.error("%s: %s" % (message, sysinfo))
             pass
         elif 500 <= status <= 599:
             # Check if mongo is down
-            #app.logger.error("%s: %s" % (message, sysinfo))
+            # app.logger.error("%s: %s" % (message, sysinfo))
 
             # 503 Service Unavailable
             if status in CRITICAL_ERROR_CODES:
@@ -54,7 +55,7 @@ def eve_abort(status=500, message='', sysinfo=None):
                     send_sms(status, "%s (%s)" % (message, app.config['APP_INSTANCE']))
 
         else:
-            #app.logger.debug("%s: %s" % (message, sysinfo))
+            # app.logger.debug("%s: %s" % (message, sysinfo))
             pass
     except:
         pass
@@ -69,9 +70,10 @@ def eve_abort(status=500, message='', sysinfo=None):
     resp = Response(None, status)
     abort(status, description=message, response=resp)
 
-def eve_error_response(message, status):
 
+def eve_error_response(message, status):
     return eve_response(data={'_status': 'ERR', '_error': message}, status=status)
+
 
 def eve_response(data={}, status=200):
     """Manually send a response like Eve
@@ -91,8 +93,10 @@ def eve_response(data={}, status=200):
     try:
         resp = Response(json.dumps(data, cls=EveJSONEncoder), status=status, mimetype='application/json')
     except:
+        data.update({'_not_flask_response': True})
         resp = jsonify(**data)
     return resp
+
 
 def eve_response_pppd(data={}, status=200, error_message=False):
     """Manually create a reponse for POST, PATCH, PUT, DELETE"""
@@ -109,6 +113,7 @@ def eve_response_pppd(data={}, status=200, error_message=False):
 
 def eve_response_get(data={}, status=200, error_message=False):
     return eve_response(data, status)
+
 
 def eve_response_post(data={}, status=200, error_message=False):
     return eve_response_pppd(data, status, error_message)
