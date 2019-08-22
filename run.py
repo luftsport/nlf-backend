@@ -28,6 +28,8 @@ from flask import jsonify, request, abort, Response
 # Swagger docs
 from eve_swagger import swagger
 
+from ext.app.eve_helper import eve_error_response
+
 # Auth and Authz blueprints
 from blueprints.authentication import Authenticate
 from blueprints.acl import ACL
@@ -195,17 +197,15 @@ app.on_insert_content += hook.content.before_insert
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
-    app.logger.info('Error 401 handler', e)
-    response = jsonify({'code': 401,'message': 'Not damn authorized'})
-    response.status_code = 401
-    return response
+    app.logger.exception('Error 401 handler')
+
+    return eve_error_response('Unauthorized',401)
 
 @app.errorhandler(403)
 def http_403(e):
-    app.logger.info('Error 403 handler', e)
-    response = jsonify({'code': 403,'message': 'Not damn allowed'})
-    response.status_code = 403
-    return response
+    app.logger.exception('Error 403 handler')
+    return eve_error_response('Forbidden', 401)
+
 
 """ A simple python logger setup
 Use app.logger.<level>(<message>) for manual logging

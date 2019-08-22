@@ -69,6 +69,9 @@ def eve_abort(status=500, message='', sysinfo=None):
     resp = Response(None, status)
     abort(status, description=message, response=resp)
 
+def eve_error_response(message, status):
+
+    return eve_response(data={'_status': 'ERR', '_error': message}, status=status)
 
 def eve_response(data={}, status=200):
     """Manually send a response like Eve
