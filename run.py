@@ -191,6 +191,22 @@ app.on_insert_help += hook.help.on_insert_items
 # Content hooks
 app.on_insert_content += hook.content.before_insert
 
+
+# App error hooks
+@app.errorhandler(401)
+def http_401(e):
+    app.logger.info('Error 401 handler', e)
+    response = jsonify({'code': 401,'message': 'Not damn authorized'})
+    response.status_code = 401
+    return response
+
+@app.errorhandler(403)
+def http_403(e):
+    app.logger.info('Error 403 handler', e)
+    response = jsonify({'code': 403,'message': 'Not damn allowed'})
+    response.status_code = 403
+    return response
+
 """ A simple python logger setup
 Use app.logger.<level>(<message>) for manual logging
 Levels: debug|info|warning|error|critical"""
