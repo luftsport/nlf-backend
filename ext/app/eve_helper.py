@@ -91,7 +91,7 @@ def eve_response(data={}, status=200):
         data = {'data': data}
 
     try:
-        resp = Response(json.dumps(data, cls=EveJSONEncoder), status=status, mimetype='application/json')
+        resp = Response(json.dumps(data, cls=EveJSONEncoder), status_code=status, mimetype='application/json')
     except:
         data.update({'_not_flask_response': True})
         resp = jsonify(**data)
