@@ -68,7 +68,7 @@ def eve_abort(status=500, message='', sysinfo=None):
         # raises an exception only in Flask
     """
     resp = Response(None, status)
-    abort(status, description=message, response=resp)
+    abort(status, description=message) #, response=resp)
 
 
 def eve_error_response(message, status):
@@ -91,7 +91,7 @@ def eve_response(data={}, status=200):
         data = {'data': data}
 
     try:
-        resp = Response(json.dumps(data, cls=EveJSONEncoder), status_code=status, mimetype='application/json')
+        resp = Response(json.dumps(data, cls=EveJSONEncoder), status=status, mimetype='application/json')
         return resp
     except:
         data.update({'_not_flask_response': True})
