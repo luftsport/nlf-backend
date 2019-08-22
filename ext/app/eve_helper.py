@@ -59,12 +59,15 @@ def eve_abort(status=500, message='', sysinfo=None):
     except:
         pass
 
+    """
     try:
         return Response(json.dumps(message, cls=EveJSONEncoder), status=status, mimetype='application/json')
     except:
         resp = Response(None, status)
         # raises an exception only in Flask
-        abort(status, description=message, response=resp)
+    """
+    resp = Response(None, status)
+    abort(status, description=message, response=resp)
 
 
 def eve_response(data={}, status=200):
