@@ -194,8 +194,8 @@ app.on_insert_content += hook.content.before_insert
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
-    print(e)
-    return eve_error_response('Unauthorized', 401), 401
+    print('error', e)
+    return eve_error_response('Unauthorized', 401)
 
 
 @app.errorhandler(403)
