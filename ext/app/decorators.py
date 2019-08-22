@@ -54,9 +54,9 @@ def require_token(allowed_roles=None):
                 
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
-                return eve_abort(401, 'Please provide proper credentials')
+                eve_abort(401, 'Please provide proper credentials')
             except Exception as e:
-                return eve_abort(500, 'Server error')
+                eve_abort(500, 'Server error')
 
             return f(*args, **kwargs)
 
