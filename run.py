@@ -194,6 +194,8 @@ app.on_insert_content += hook.content.before_insert
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
+    print('ERR',dir(e))
+    print('ERR2', e)
     return eve_error_response(e, 401)
 
 
