@@ -33,13 +33,14 @@ _schema = {'id': {'type': 'integer',
                     },
 
            'flags': {'type': 'dict',
-                     'schema': {'school': {'type': 'boolean'},
-                                'flight_service': {'type': 'boolean'},
-                                'e5x': {'type': 'boolean'}
-                                },
-                     'default': {'school': False,
-                                 'flight_service': False,
-                                 'e5x': False}
+                     # 'schema': {'school': {'type': 'boolean'},
+                     #          'flight_service': {'type': 'boolean'},
+                     #          'e5x': {'type': 'boolean'}
+                     #          },
+                     # 'default': {'school': False,
+                     #            'flight_service': False,
+                     #            'e5x': False}
+                     'default': {}
                      },
            'ask': ask_schema,
 
@@ -60,10 +61,10 @@ _schema = {'id': {'type': 'integer',
            'reporter': {'type': 'integer', 'readonly': True},
 
            'when': {'type': 'datetime', 'default': datetime.utcnow()},
-            # E5X
+           # E5X
            'aircrafts': {'type': 'list', 'default': []},
            'occurrence': {'type': 'dict', 'default': {}},
-           
+
            'involved': {'type': 'list',
                         'default': []
                         },
