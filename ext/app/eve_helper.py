@@ -31,8 +31,6 @@ def eve_abort(status=500, message='', sysinfo=None):
             except:
                 pass
 
-        resp = Response(None, status)
-
         if 100 <= status <= 299:
             #app.logger.info("%s: %s" % (message, sysinfo))
             pass
@@ -61,7 +59,13 @@ def eve_abort(status=500, message='', sysinfo=None):
     except:
         pass
 
-    abort(status, description=message, response=resp)
+    try:
+        return Response(json.dumps(message, cls=EveJSONEncoder), status=status, mimetype='application/json')
+    except:
+        resp = Response(None, status)
+        # raises an exception only in Flask
+        abort(status, description=message, response=resp)
+
 
 def eve_response(data={}, status=200):
     """Manually send a response like Eve
