@@ -28,7 +28,7 @@ from flask import jsonify, request, abort, Response
 # Swagger docs
 from eve_swagger import swagger
 
-from ext.app.eve_helper import eve_error_response
+# from ext.app.eve_helper import eve_error_response
 
 # Auth and Authz blueprints
 from blueprints.authentication import Authenticate
@@ -195,26 +195,23 @@ app.on_insert_content += hook.content.before_insert
 @app.errorhandler(401)
 def http_401(e):
     return jsonify(error=str(e)), 401
-    return eve_error_response(str(e), 401)
+    #  eve_error_response(str(e), 401)
 
 
 @app.errorhandler(403)
 def http_403(e):
     return jsonify(error=str(e)), 403
-    return eve_error_response(str(e), 403)
 
 
 @app.errorhandler(500)
 def http_500(e):
     return jsonify(error=str(e)), 500
-    return eve_error_response(str(e), 500)
 
 
 @app.errorhandler(501)
 def http_501(e):
     # app.logger.exception('Error 501 handler')
     return jsonify(error=str(e)), 501
-    return eve_error_response(str(e), 501)
 
 
 """ A simple python logger setup
