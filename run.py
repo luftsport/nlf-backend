@@ -127,6 +127,7 @@ import ext.hooks as hook
 def dump_request(request):
     print(app.config['SOURCES'])
 
+
 # ORS
 # Fallskjerm
 # POST
@@ -144,7 +145,7 @@ app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 ## MOTOR
 # BEFORE AND AFTER POST INSERT
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
-app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert # no id??
+app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert  # no id??
 # BEFORE GET
 app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
@@ -155,19 +156,18 @@ app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
 
-
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
 
 # Motor
 
-#app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
-#app.on_pre_POST_fallskjerm_observations += dump_request
+# app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
+# app.on_pre_POST_fallskjerm_observations += dump_request
 
-#app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
+# app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 
-#app.on_post_PATCH_fallskjerm_observations += hook.fallskjerm.after_patch
+# app.on_post_PATCH_fallskjerm_observations += hook.fallskjerm.after_patch
 
 # app.on_insert_oplog += hook.oplog.before_insert
 
@@ -183,13 +183,10 @@ app.on_insert_f_observation_comments += hook.fallskjerm.before_post_comments
 # app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
 
 
-
-
-
 # Help hooks
 app.on_insert_help += hook.help.on_insert_items
-#app.on_pre_PATCH_help += hook.help.before_patch
-#app.on_post_POST_help += hook.help.after_post
+# app.on_pre_PATCH_help += hook.help.before_patch
+# app.on_post_POST_help += hook.help.after_post
 # Content hooks
 app.on_insert_content += hook.content.before_insert
 
@@ -197,14 +194,23 @@ app.on_insert_content += hook.content.before_insert
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
-    app.logger.exception('Error 401 handler')
+    return eve_error_response('Unauthorized', 401)
 
-    return eve_error_response('Unauthorized',401)
 
 @app.errorhandler(403)
 def http_403(e):
-    app.logger.exception('Error 403 handler')
-    return eve_error_response('Forbidden', 401)
+    return eve_error_response('Forbidden', 403)
+
+
+@app.errorhandler(500)
+def http_500(e):
+    return eve_error_response('Internal Server Error', 500)
+
+
+@app.errorhandler(501)
+def http_501(e):
+    # app.logger.exception('Error 501 handler')
+    return eve_error_response('Not Implemented', 501)
 
 
 """ A simple python logger setup
@@ -224,7 +230,6 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-
     import pkg_resources
 
     print(" App:         %s" % app.config['APP_VERSION'])
