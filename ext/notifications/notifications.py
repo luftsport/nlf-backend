@@ -75,16 +75,18 @@ def get_person_name_text(person_id):
 
 
 def notify(recepients, subject, message, prefix='NLF', subprefix='ORS'):
-    ## TESTIONG
-    recepients = list(set(recepients))
 
-    msg = email.message.Message()
-    msg['From'] = 'NLF Notifications <{}>'.format(EMAIL_CFG['from'])
-    msg['Subject'] = '[{}.{}] {}'.format(prefix, app.config.get('APP_INSTANCE', '').upper(), subject)
-    msg.add_header('Content-Type', 'text')
-    msg.set_payload(message)
+    if app.config.get('APP_INSTANCE', '') != 'local':
+        ## TESTIONG
+        recepients = list(set(recepients))
 
-    send_async(recepients, msg)
+        msg = email.message.Message()
+        msg['From'] = 'NLF Notifications <{}>'.format(EMAIL_CFG['from'])
+        msg['Subject'] = '[{}.{}] {}'.format(prefix, app.config.get('APP_INSTANCE', '').upper(), subject)
+        msg.add_header('Content-Type', 'text')
+        msg.set_payload(message)
+
+        send_async(recepients, msg)
 
 
 @async
