@@ -157,10 +157,26 @@ def generate(_id):
                                            ors.get('_version'))
 
         if generate_structure(ors.get('_model', {}).get('type', None), ors.get('id'), ors.get('_version')) is True:
+
             # Process files!
             file_list = []
+
             if len(ors.get('files', [])) > 0:
                 col_files = app.data.driver.db['files']
+
+                # Fix data structures
+                # if 'report' not in \
+                #        data.get('value', {}).get('occurrence', {}).get('entities', {}).get('reportingHistory', [])[
+                #            0].get('attributes', {}).get('report'):
+                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'] = [] # = {
+                #'attachments': []}
+                #'attributes': {'resourceLocator': []}}
+
+
+                ## Folder for files
+                files_working_path = '{}/{}'.format(FILE_WORKING_DIR, file_name)
+                if os.path.exists(files_working_path) is False:
+                    _, stdout, stderr = execute(['mkdir', file_name], FILE_WORKING_DIR)
 
                 for key, _file in enumerate(ors.get('files', [])):
                     file = col_files.find_one({'_id': ObjectId(_file['f'])})
@@ -170,10 +186,25 @@ def generate(_id):
                         if not grid_fs.exists(_id=file['file']):
                             pass
                         else:
+
                             stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
-                            file_list.append('{}-{}'.format(key, file['name']))
-                            with open('{}/{}-{}'.format(FILE_WORKING_DIR, key, file['name']), 'wb') as f:
+
+                            file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
+
+                            with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
                                 f.write(stream.read())
+
+                            try:
+                                #data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
+                                #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                #)
+                                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
+                                    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                )
+                            except Exception as e:
+                                app.logger.exception("[ERROR] Could not add file name to report")
+                                app.logger.error(e)
+                                pass
 
                     except Exception as e:
                         app.logger.error("Error generating structure for E5X")
@@ -197,6 +228,8 @@ def generate(_id):
                     time.sleep(0.5)
                     cmds = ['zip', '{}.e5x'.format(file_name), '{}.xml'.format(file_name)]
                     cmds += file_list
+                    # dir:
+                    # cmds += file_name
                     # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
@@ -271,7 +304,7 @@ def generate(_id):
                                   Status:\t{3}\n\
                                   Fil:\t{4}\n\
                                   Levert via:\t{5}\n\
-                                  Instans:\t{}\n'.format(ors.get('id', ''),
+                                  Instans:\t{6}\n'.format(ors.get('id', ''),
                                                          ors.get('_version', ''),
                                                          datetime.datetime.now(),
                                                          status,
