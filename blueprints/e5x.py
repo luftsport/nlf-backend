@@ -199,7 +199,7 @@ def generate(_id):
                                 #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                 #)
                                 data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                    {'attachments': {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}}
+                                    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                 )
                             except Exception as e:
                                 app.logger.exception("[ERROR] Could not add file name to report")
