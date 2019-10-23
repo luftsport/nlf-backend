@@ -33,11 +33,11 @@ class TokenAuth(TokenAuth):
         # Can also get the database lookup for the resource and check that here!!
         # Can also issue a new token here, and that needs to be returned by injecting to pre dispatch
         # use the abort/eve_error_msg to issue errors!
-        
+
         accounts = app.data.driver.db[app.globals['auth']['auth_collection']]
 
         u = accounts.find_one({'auth.token': token})
-        
+
         if u:
 
             self.person_id = u['id']
@@ -48,7 +48,7 @@ class TokenAuth(TokenAuth):
                 valid = datetime.utcnow() + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
 
                 # If it fails, then token is not renewed
-                accounts.update_one({'_id': u['_id']}, {"$set": {"auth.valid": valid.datetime}})
+                accounts.update_one({'_id': u['_id']}, {"$set": {"auth.valid": valid}})  # Arrow .datetime
 
                 # For use in pre_insert/update - handled in set_acl
                 # app.globals.update({'id': u['id']})
@@ -107,7 +107,7 @@ class TokenAuth(TokenAuth):
         This makes the browser NOT fire up the basic auth
         """
         resp = Response(None, 401)
-        abort(401) #, description='Please provide proper credentials')  # , response=resp)
+        abort(401)  # , description='Please provide proper credentials')  # , response=resp)
 
     def set_acl(self, u):
         """ Sets the acl dict on the current authenticated user
