@@ -181,6 +181,9 @@ def generate(_id):
                 for key, _file in enumerate(ors.get('files', [])):
                     file = col_files.find_one({'_id': ObjectId(_file['f'])})
 
+                    """
+                    @TODO need to verify size for LT
+                    """
                     try:
                         grid_fs = GridFS(app.data.driver.db)
                         if not grid_fs.exists(_id=file['file']):
