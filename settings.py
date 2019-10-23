@@ -14,31 +14,28 @@ sys.path.insert(0, "domain")
 # Import the apps - DOMAIN definition (app.DOMAIN)
 import domain
 
-__version_info__ = ('0', '1', '0')
+__version_info__ = ('0', '2', '0')
 APP_VERSION = '.'.join(__version_info__)
 APP_AUTHOR = 'Einar Huseby'
 APP_LICENSE = 'GPLV1'
 APP_COPYRIGHT = '(c) 2014-{} NLF'.format(datetime.now().year)
 APP_ALL = ['nlf-backend']
 
-#HATEOAS = False
+# HATEOAS = False
 # OPTIMIZE_PAGINATION_FOR_SPEED = True
 
 AUTH_SESSION_LENGHT = 3600  # Seconds
 
-
-
-
 # @TODO: use sys.argv to parse this as cmdline input
-APP_INSTANCES = ['local', 'dev', 'beta', 'app']
-APP_INSTANCE = APP_INSTANCES[0]
+APP_INSTANCES = ['local', 'dev', 'beta', 'prod']
+APP_INSTANCE = 'local'  # APP_INSTANCES[0]
 
-if APP_INSTANCE == 'app':
+if APP_INSTANCE == 'prod':
     MONGO_HOST = 'localhost'
     MONGO_PORT = 27017
     MONGO_USERNAME = ''
     MONGO_PASSWORD = ''
-    MONGO_DBNAME = 'nlf-dev'
+    MONGO_DBNAME = 'nlf-prod'
     # Use default 30s?
     MONGO_CONNECT_TIMEOUT_MS = 200
     APP_HOST = '127.0.0.1'
@@ -67,7 +64,6 @@ elif APP_INSTANCE in ['dev', 'local']:
     APP_HOST = '127.0.0.1'
     APP_PORT = 8082
 
-
 if APP_INSTANCE == 'local':
     E5X_WORKING_DIR = '/home/einar/Development/Luftfartstilsynet/xsd-json/ors'
     REQUESTS_VERIFY = False
@@ -75,7 +71,6 @@ else:
     E5X_WORKING_DIR = '/www/{}/e5x'.format(APP_INSTANCE)
     # For requests, only local should be false
     REQUESTS_VERIFY = True
-
 
 # Will also make server watch inode and reload on changes
 DEBUG = True

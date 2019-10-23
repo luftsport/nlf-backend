@@ -125,7 +125,10 @@ import ext.hooks as hook
 
 
 def dump_request(request):
-    print(app.config['SOURCES'])
+    try:
+        print(app.config['SOURCES'])
+    except Exception as e:
+        pass
 
 
 # ORS
