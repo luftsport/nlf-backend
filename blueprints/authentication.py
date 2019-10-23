@@ -33,7 +33,7 @@ import os.path
 
 def _get_public_key():
     public_key = None
-    with open('fnlfbeta-public.pem', 'rb') as f:
+    with open(app.config.get('APP_INSTANCE_PEM'), 'rb') as f:
         public_key = f.read()
     return public_key
 

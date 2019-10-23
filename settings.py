@@ -40,6 +40,7 @@ if APP_INSTANCE == 'prod':
     MONGO_CONNECT_TIMEOUT_MS = 200
     APP_HOST = '127.0.0.1'
     APP_PORT = 8080
+    APP_INSTANCE_PEM = 'app-public.pem'
 
 
 elif APP_INSTANCE == 'beta':
@@ -52,6 +53,7 @@ elif APP_INSTANCE == 'beta':
     MONGO_CONNECT_TIMEOUT_MS = 200
     APP_HOST = '127.0.0.1'
     APP_PORT = 8081
+    APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
 
 elif APP_INSTANCE in ['dev', 'local']:
     MONGO_HOST = 'localhost'
@@ -63,6 +65,7 @@ elif APP_INSTANCE in ['dev', 'local']:
     MONGO_CONNECT_TIMEOUT_MS = 200
     APP_HOST = '127.0.0.1'
     APP_PORT = 8082
+    APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
 
 if APP_INSTANCE == 'local':
     E5X_WORKING_DIR = '/home/einar/Development/Luftfartstilsynet/xsd-json/ors'
