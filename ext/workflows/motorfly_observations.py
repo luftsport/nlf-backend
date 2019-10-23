@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from eve.methods.patch import patch_internal
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ext.notifications.email import Email  # , Sms
 from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
@@ -19,20 +19,20 @@ RESOURCE_COLLECTION = 'motorfly_observations'
 
 
 def get_wf_init(person_id):
-    utc = arrow.utcnow()
+    utc = datetime.utcnow()
 
     return {'name': 'ObservationWorkflow',
             'comment': 'Initialized workflow',
             'state': 'draft',
             'last_transition': utc.datetime,
-            'expires': utc.replace(days=+7).datetime,
+            'expires': utc + timedelta(days=7),
             'audit': [{'a': 'init',
                        'r': 'init',
                        'u': person_id,
                        's': None,
                        'd': 'draft',
                        'v': 1,
-                       't': utc.datetime,
+                       't': utc,
                        'c': 'Initialized workflow'}]
             }
 

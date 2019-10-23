@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from eve.methods.patch import patch_internal
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import re
 
@@ -19,13 +19,13 @@ RESOURCE_COLLECTION = 'fallskjerm_observations'
 
 
 def get_wf_init(person_id):
-    utc = arrow.utcnow()
+    utc = datetime.utcnow()
 
     return {'name': 'ObservationWorkflow',
             'comment': 'Initialized workflow',
             'state': 'draft',
-            'last_transition': utc.datetime,
-            'expires': utc.replace(days=+7).datetime,
+            'last_transition': utc,
+            'expires': utc + timedelta(days=7),
             'audit': [{'a': 'init',
                        'r': 'init',
                        'u': person_id,

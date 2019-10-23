@@ -25,6 +25,7 @@ from ext.notifications.email import Email  # , Sms
 
 # TIME & DATE - better with arrow only?
 import arrow
+from datetime import datetime, timedelta
 from ext.scf import ACL_FALLSKJERM_HI
 
 _signals = Namespace()
@@ -55,20 +56,19 @@ def insert_workflow(dict_app, **extra):
         _etag = r.get('_etag')
         _version = r.get('_version')
 
-        utc = arrow.utcnow()
-
+        utc = datetime.utcnow()
         workflow = {"name": "ObservationWorkflow",
                     "comment": "Initialized workflow",
                     "state": "draft",
-                    "last_transition": utc.datetime,
-                    "expires": utc.replace(days=+7).datetime,
+                    "last_transition": utc,
+                    "expires": utc + timedelta(days=7),
                     "audit": [{'a': "init",
                                'r': "init",
                                'u': c_app.globals.get('user_id'),
                                's': None,
                                'd': "draft",
                                'v': _version,
-                               't': utc.datetime,
+                               't': utc,
                                'c': "Initialized workflow"}]
                     }
 
