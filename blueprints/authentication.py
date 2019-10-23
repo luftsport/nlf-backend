@@ -11,7 +11,7 @@ from eve.methods.post import post_internal
 from eve.methods.patch import patch_internal
 from eve.methods.get import getitem_internal, get_internal
 from ext.app.eve_helper import eve_abort, eve_response, is_mongo_alive
-import datetime
+from datetime import datetime, timedelta
 import arrow
 from time import sleep
 from uuid import uuid4
@@ -105,10 +105,11 @@ def login():
         token = uuid4().hex
 
         # valid = utc.replace(hours=+2)  # @bug: utc and cet!!!
-        utc = arrow.utcnow()
-        valid = utc.shift(seconds=+app.config['AUTH_SESSION_LENGHT'])
+        # utc = datetime.utcnow() #arrow.utcnow()
+        valid = datetime.utcnow() + timedelta(
+            seconds=app.config['AUTH_SESSION_LENGHT'])  # utc.shift(seconds=+app.config['AUTH_SESSION_LENGHT'])
         # Pure datetime
-        # valid = datetime.datetime.now() + datetime.timedelta(seconds=60)
+        # valid = datetime.now() + datetime.timedelta(seconds=60)
 
         try:
             acl_status, acl = lungo.get_person_acl(_user.person_id)
@@ -116,8 +117,11 @@ def login():
                 acl = []
             response, _, _, status = patch_internal(resource='users_auth',
                                                     payload={'auth': {'token': token,
-                                                                      'valid': valid.datetime},
-                                                             'acl': [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl],
+                                                                      'valid': valid},  # Arrow utc.datetime
+                                                             'acl': [{'activity': a['activity'],
+                                                                      'org': a['org'],
+                                                                      'role': a['role']
+                                                                      } for a in acl],
                                                              },
                                                     concurrency_check=False,
                                                     **{'id': _user.person_id})
