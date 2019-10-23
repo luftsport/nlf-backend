@@ -106,8 +106,10 @@ def login():
 
         # valid = utc.replace(hours=+2)  # @bug: utc and cet!!!
         # utc = datetime.utcnow() #arrow.utcnow()
-        valid = datetime.utcnow() + timedelta(
-            seconds=app.config['AUTH_SESSION_LENGHT'])  # utc.shift(seconds=+app.config['AUTH_SESSION_LENGHT'])
+
+        valid = datetime.utcnow() + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
+
+        # utc.shift(seconds=+app.config['AUTH_SESSION_LENGHT'])
         # Pure datetime
         # valid = datetime.now() + datetime.timedelta(seconds=60)
 
@@ -134,7 +136,7 @@ def login():
                                           'username': _user.person_id,
                                           'token': token,
                                           'token64': b64.decode('utf-8'),
-                                          'valid': valid.datetime,
+                                          'valid': valid,
                                           'activities': activities,
                                           'acl': acl,
                                           '_id': str(_user.user.get('_id')),
