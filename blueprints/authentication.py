@@ -106,7 +106,7 @@ def login():
 
         # valid = utc.replace(hours=+2)  # @bug: utc and cet!!!
         utc = arrow.utcnow()
-        valid = utc.replace(seconds=+app.config['AUTH_SESSION_LENGHT'])
+        valid = utc.replace(second=+app.config['AUTH_SESSION_LENGHT'])
         # Pure datetime
         # valid = datetime.datetime.now() + datetime.timedelta(seconds=60)
 
