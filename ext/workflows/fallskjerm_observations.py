@@ -32,7 +32,7 @@ def get_wf_init(person_id):
                        's': None,
                        'd': 'draft',
                        'v': 1,
-                       't': utc.datetime,
+                       't': utc,
                        'c': 'Initialized workflow'}]
             }
 

@@ -24,7 +24,7 @@ def get_wf_init(person_id):
     return {'name': 'ObservationWorkflow',
             'comment': 'Initialized workflow',
             'state': 'draft',
-            'last_transition': utc.datetime,
+            'last_transition': utc,
             'expires': utc + timedelta(days=7),
             'audit': [{'a': 'init',
                        'r': 'init',
