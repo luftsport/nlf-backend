@@ -13,6 +13,7 @@ _schema = {
     'choices_key': {'type': 'string', 'nullable': True},
     'type': {'type': 'string', 'nullable': True},
     'restrictions': {'type': 'dict', 'nullable': True},
+    'rit_version': {'type': 'string'}
 }
 
 definition = {
@@ -29,7 +30,8 @@ definition = {
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'DELETE'],
     'mongo_indexes': {'attr': ([('attribute', 1)], {'background': True}),
-                      'content': ([('attribute', 'text')], {'background': True})
+                      'content': ([('attribute', 'text')], {'background': True}),
+                      'rit_version': ([('rit_version', 1)], {'background': True})
                       },
     'schema': _schema
 

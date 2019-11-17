@@ -21,6 +21,7 @@ _schema = {
     'cictt_td': {'type': 'string', 'nullable': True},
     'tch_country': {'type': 'string', 'nullable': True},
     'type_description': {'type': 'string', 'nullable': True},
+    'rit_version': {'type': 'string'}
 }
 
 definition = {
@@ -38,13 +39,13 @@ definition = {
     'item_methods': ['GET', 'PATCH', 'DELETE'],
     'mongo_indexes': {'attr': ([('key', 1), ('id', 1)], {'background': True}),
                       'icao': ([('icao', 1)], {'background': True}),
-                      'content': ([('descr', 'text'), ('label', 'text')], {'background': True})
+                      'content': ([('descr', 'text'), ('label', 'text')], {'background': True}),
+                      'rit_version': ([('rit_version', 1)], {'background': True})
                       },
     'allow_unknown': True,
     'schema': _schema
 
 }
-
 
 from bson import SON, ObjectId
 
