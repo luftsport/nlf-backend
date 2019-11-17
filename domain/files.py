@@ -51,3 +51,80 @@ definition = {
     'schema': _schema,
 
 }
+
+"""
+Find duplicate files by md5 sum
+"""
+agg_duplicate_files = {
+    'url': 'files/duplicates',
+    'item_title': 'Duplicate files',
+    'pagination': True,
+    'datasource': {
+        'source': 'fs.files',
+        'aggregation': {
+            'pipeline': [
+                {
+                    "$group": {
+                        "_id": "$md5",
+                        "num": {
+                            "$sum": 1
+                        },
+                        "ref_ids": {"$addToSet": "$_id"},
+                        "length": {"$sum": "$length"},
+                        "content_type": {"$first": "$contentType"}
+                    }
+                },
+                {
+                    "$match": {
+                        "num": {
+                            "$gt": 1
+                        }
+                    }
+                }
+
+            ]
+        }
+    }
+}
+
+"""
+Find orphan files
+"""
+agg_orphan_files = {
+    'url': 'files/orphan',
+    'item_title': 'Orphan files',
+    'pagination': True,
+    'datasource': {
+        'source': 'fs.files',
+        'aggregation': {
+            'pipeline': [
+                {
+                    "$lookup": {
+                        "from": "files",
+                        "localField": "_id",
+                        "foreignField": "file",
+                        "as": "refs"
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 1,
+                        "uploadDate": 1,
+                        "contentType": 1,
+                        "length": 1,
+                        "md5": 1,
+                        "ref_count": {
+                            "$size": "$refs"
+                        }
+                    }
+                },
+                {
+                    "$match": {
+                        "ref_count": 0
+                    }
+                }
+
+            ]
+        }
+    }
+}

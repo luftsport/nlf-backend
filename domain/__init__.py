@@ -99,6 +99,10 @@ DOMAIN = {
 
     # Common
     "files": files.definition,
+    "agg_duplicate_files": files.agg_duplicate_files,
+    "agg_orphan_files": files.agg_orphan_files,
+
+    # Tags
     "tags": tags.definition,
 
     # Development
