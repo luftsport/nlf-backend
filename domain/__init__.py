@@ -29,7 +29,9 @@ import content, content_aggregations
 import dev
 
 # NOTIFICATIONS
-import notifications
+#from notifications import definition as notification_definition
+#from notifications import agg_events as notification_agg_events
+import app_notifications
 
 # LEGACY
 import legacy_melwin_clubs, legacy_melwin_licenses, legacy_melwin_membership, legacy_melwin_users
@@ -67,8 +69,8 @@ DOMAIN = {
     "users_auth": users_auth.definition,
 
     # Notfication
-    "notifications": notifications.definition,
-
+    "notifications": app_notifications.definition,
+    "notifications_events": app_notifications.agg_events,
     # ACL
     "acl_groups": acl_groups.definition,
     "acl_roles": acl_roles.definition,
