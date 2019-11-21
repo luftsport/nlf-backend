@@ -281,7 +281,7 @@ def generate(_id):
                         'status': status,
                         'version': ors.get('_version'),
                         'file': '{}.e5x'.format(file_name),
-                        'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION)
+                        'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION),
                         'e5y': transport
                     })
 
