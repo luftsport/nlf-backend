@@ -163,6 +163,11 @@ app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
 
+# E5X delete
+app.on_pre_DELETE_e5x_attributes += hook.e5x.add_delete_filters
+app.on_pre_DELETE_e5x_choices += hook.e5x.add_delete_filters
+app.on_pre_DELETE_e5x_tree += hook.e5x.add_delete_filters
+
 # Motor
 
 # app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
