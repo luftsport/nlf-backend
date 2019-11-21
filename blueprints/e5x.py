@@ -6,6 +6,8 @@ from pprint import pprint
 import os
 import datetime
 import time
+
+from pymongo import MongoClient
 from gridfs import GridFS
 from gridfs.errors import NoFile
 from bson.objectid import ObjectId
@@ -18,6 +20,8 @@ from ext.auth.tokenauth import TokenAuth
 from ext.notifications.notifications import notify
 
 import pysftp
+
+E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
@@ -168,10 +172,9 @@ def generate(_id):
                 # if 'report' not in \
                 #        data.get('value', {}).get('occurrence', {}).get('entities', {}).get('reportingHistory', [])[
                 #            0].get('attributes', {}).get('report'):
-                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'] = [] # = {
-                #'attachments': []}
-                #'attributes': {'resourceLocator': []}}
-
+                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'] = []  # = {
+                # 'attachments': []}
+                # 'attributes': {'resourceLocator': []}}
 
                 ## Folder for files
                 files_working_path = '{}/{}'.format(FILE_WORKING_DIR, file_name)
@@ -198,9 +201,9 @@ def generate(_id):
                                 f.write(stream.read())
 
                             try:
-                                #data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
+                                # data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
                                 #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
-                                #)
+                                # )
                                 data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
                                     {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                 )
@@ -223,7 +226,15 @@ def generate(_id):
 
                 # 2 Generate xml file
                 _, stdout, stderr = execute(
-                    ['node', 'e5x-gen.js', str(ors.get('id')), str(ors.get('_version')), 'motorfly'],
+                    [
+                        'node',
+                        'e5x-generate.js',
+                        str(ors.get('id')),
+                        str(ors.get('_version')),
+                        'motorfly',
+                        str(data.get('rit_version', E5X_RIT_DEFAULT_VERSION))
+
+                    ],
                     app.config['E5X_WORKING_DIR'])
 
                 # 3 Zip it! Add files to it!
@@ -270,6 +281,7 @@ def generate(_id):
                         'status': status,
                         'version': ors.get('_version'),
                         'file': '{}.e5x'.format(file_name),
+                        'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION)
                         'e5y': transport
                     })
 
@@ -308,12 +320,12 @@ def generate(_id):
                                   Fil:\t{4}\n\
                                   Levert via:\t{5}\n\
                                   Instans:\t{6}\n'.format(ors.get('id', ''),
-                                                         ors.get('_version', ''),
-                                                         datetime.datetime.now(),
-                                                         status,
-                                                         '{}.e5x'.format(file_name),
-                                                         'sftp',
-                                                         app.config.get('APP_INSTANCE', ''))
+                                                          ors.get('_version', ''),
+                                                          datetime.datetime.now(),
+                                                          status,
+                                                          '{}.e5x'.format(file_name),
+                                                          'sftp',
+                                                          app.config.get('APP_INSTANCE', ''))
 
                         subject = 'E5X Leveringsbekreftelse ORS {0} v{1}'.format(ors.get('id', ''),
                                                                                  ors.get('_version', ''))
@@ -365,3 +377,4 @@ def download(activity, ors_id, version):
             except Exception as e:
                 print('Download failed', e)
                 return eve_response({'ERR': 'Could not send file'}, 422)
+
