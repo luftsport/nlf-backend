@@ -16,7 +16,7 @@ definition = {
                    },
 
     'versioning': False,
-    'resource_methods': ['GET', 'POST'],
+    'resource_methods': ['GET', 'POST', 'DELETE'],
     'item_methods': ['GET', 'PATCH', 'DELETE'],
     'schema': _schema
 

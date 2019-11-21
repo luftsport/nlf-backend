@@ -27,7 +27,7 @@ definition = {
     },
     'extra_response_fields': ['attribute'],
     'versioning': False,
-    'resource_methods': ['GET', 'POST'],
+    'resource_methods': ['GET', 'POST', 'DELETE'],
     'item_methods': ['GET', 'PATCH', 'DELETE'],
     'mongo_indexes': {'attr': ([('attribute', 1)], {'background': True}),
                       'content': ([('attribute', 'text')], {'background': True}),
