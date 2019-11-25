@@ -124,7 +124,7 @@ agg_events = {
                         }
                     }
                 },
-                {"$sort": {"data.when": -1}} #SON([("data.when", -1)])},
+                {"$sort": {"event_created": -1}} #SON([("data.when", -1)])},
                 
             ]
         }
