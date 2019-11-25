@@ -37,9 +37,9 @@ def get_wf_init(person_id):
             }
 
 
-def get_acl_init(person_id, club_id):
+def get_acl_init(person_id, discipline_id):
     hi_role = ACL_FALLSKJERM_HI.copy()
-    hi_role['club'] = club_id
+    hi_role['org'] = discipline_id
     acl = {
         'read': {
             'users': [person_id],
