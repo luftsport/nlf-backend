@@ -20,8 +20,23 @@ from ext.app.decorators import *
 import ext.auth.acl as acl_helper
 from ext.app.eve_helper import eve_abort, eve_response
 
+
 ACL = Blueprint('Acl', __name__, )
 
+####### SOME ACL STUFF ##########
+@ACL.route("/users/<string:collection>/<objectid:_id>/flat", methods=['GET'])
+@require_token()
+def get_users(collection, _id):
+    status, acl = acl_helper.get_acl(collection, _id)
+    if status is True:
+        res = acl_helper.parse_acl(acl)
+        k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if
+             p != app.globals.get('user_id', 0)]
+
+        return eve_response(k)
+
+    else:
+        return eve_response({})
 
 @ACL.route("/<string:collection>/<int:observation_id>", methods=['GET'])
 @require_token()

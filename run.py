@@ -40,6 +40,8 @@ from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsW
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
+# Notifications blueprint
+from blueprints.notifications import Notifications
 # Misc blueprints
 from blueprints.weather import Weather
 from blueprints.info import Info
@@ -91,7 +93,7 @@ app.register_blueprint(swagger)
 
 # Register custom blueprints
 app.register_blueprint(Authenticate, url_prefix="%s/user" % app.globals.get('prefix'))
-# app.register_blueprint(ACL, url_prefix="%s/users/acl" % app.globals.get('prefix'))
+app.register_blueprint(ACL, url_prefix="%s/acl" % app.globals.get('prefix'))
 
 # ORS NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
@@ -102,6 +104,9 @@ app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watch
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
 app.register_blueprint(Tags, url_prefix="%s/tags" % app.globals.get('prefix'))
 app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" % app.globals.get('prefix'))
+
+app.register_blueprint(Notifications, url_prefix="%s/notifications/bin" % app.globals.get('prefix'))
+
 
 app.register_blueprint(Weather, url_prefix="%s/weather" % app.globals.get('prefix'))
 app.register_blueprint(Info, url_prefix="%s/info" % app.globals.get('prefix'))

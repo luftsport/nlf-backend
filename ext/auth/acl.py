@@ -11,7 +11,63 @@
 
 from flask import current_app as app
 from bson.objectid import ObjectId
+from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
 
+def get_acl(collection, _id):
+    col = app.data.driver.db[collection]
+    # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
+
+    oid = ObjectId(_id)
+    if oid == ObjectId(str(oid)):
+        match = {'_id': oid}
+    else:
+        match = {'id': _id}
+
+    print(match)
+    res = col.find_one({'$and': [match,
+                                 {'$or':
+                                     [
+                                         {'acl.read.users': {'$in': [app.globals['user_id']]}},
+                                         {'acl.read.roles': {'$in': app.globals['acl']['roles']}}
+                                     ]
+                                 }
+                                 ]
+                        },
+                       {'acl': 1}
+                       )
+
+    try:
+        return True, res['acl']
+    except Exception as e:
+        return False, None
+
+
+
+def parse_acl(acl):
+    users = {
+        'read': acl.get('read', {}).get('users', []),
+        'write': acl.get('write', {}).get('users', []),
+        'execute': acl.get('execute', {}).get('users', []),
+        'delete': acl.get('delete', {}).get('users', []),
+    }
+
+    for right in acl.keys():
+        print('RIGHT', right)
+        for role in acl.get(right, {}).get('roles', []):
+            print('ROLE', role)
+
+            if role.get('org', 0) > 0:
+                _orgs = [role.get('org')]
+            elif role.get('club', 0) > 0:
+                _orgs = [role.get('club')]
+            else:
+                _orgs = get_orgs_in_activivity(role.get('activity'))
+
+            users[right] += get_users_from_role(role.get('role'), _orgs)
+
+        acl[right] = list(set(acl[right]))
+
+    return users
 
 def has_permission(id, type, collection):
     """ Checks if current user has type (execute, read, write) permissions on an collection or not
@@ -83,7 +139,7 @@ def get_user_acl_mapping(acl) -> dict:
     return {'r': r, 'w': w, 'x': x, 'd': d}
 
 
-def get_user_permissions(id, collection):
+def get_user_permissions(_id, collection):
     """
     len([pid for pid in app.globals[all_person_ids] if pid in ])
     eller
@@ -99,14 +155,14 @@ def get_user_permissions(id, collection):
         col = app.data.driver.db[collection]
 
         try:
-            o = ObjectId(id)
+            o = ObjectId(_id)
             if o == ObjectId(str(o)):
-                acl = col.find_one({'_id': ObjectId(id)}, {'acl': 1, 'id': 1, '_id': 1})
+                acl = col.find_one({'_id': ObjectId(_id)}, {'acl': 1, 'id': 1, '_id': 1})
             else:
-                acl = col.find_one({'id': id}, {'acl': 1, 'id': 1, '_id': 1})
+                acl = col.find_one({'id': _id}, {'acl': 1, 'id': 1, '_id': 1})
 
         except:
-            acl = col.find_one({'id': id}, {'acl': 1, 'id': 1, '_id': 1})
+            acl = col.find_one({'id': _id}, {'acl': 1, 'id': 1, '_id': 1})
             pass
 
         try:
