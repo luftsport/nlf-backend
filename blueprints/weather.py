@@ -70,6 +70,17 @@ def get_metar_as_dict(metar):
                     m[k] = '{}Z'.format(metar.__dict__[k].isoformat())
                 elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
                     m[k] = metar.__dict__[k].__dict__
+                elif k == 'runway':
+                    print(metar.__dict__[k])
+                    i = 0
+                    for rwy in metar.__dict__[k]:
+                        j = 0
+                        for r in rwy:
+                            if isinstance(r, object):
+                                m[k][i][j] = '{}'.format(r)
+                            j += 1
+                        i += 1
+
                 else:
                     m[k] = metar.__dict__[k]
         except:
