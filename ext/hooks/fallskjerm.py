@@ -73,11 +73,11 @@ def ors_before_insert(items):
                 ors['workflow'] = get_wf_init(app.globals.get('user_id'))
 
                 role_hi = ACL_FALLSKJERM_HI.copy()
-                role_hi['club'] = ors.get('club')
+                role_hi['discipline'] = ors.get('discipline')
                 _, hi = get_person_from_role(role_hi)
                 ors['organization'] = {'hi': hi}
 
-                ors['acl'] = get_acl_init(app.globals.get('user_id'), ors['club'])
+                ors['acl'] = get_acl_init(app.globals.get('user_id'), ors['discipline'])
 
                 items[0] = ors
 
