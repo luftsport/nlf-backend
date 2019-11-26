@@ -13,7 +13,8 @@ from flask import current_app as app
 from bson.objectid import ObjectId
 from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
 
-def get_acl(collection, _id):
+
+def get_acl(collection, _id, projection={'acl': 1}):
     col = app.data.driver.db[collection]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
 
@@ -33,14 +34,13 @@ def get_acl(collection, _id):
                                  }
                                  ]
                         },
-                       {'acl': 1}
+                       projection
                        )
 
     try:
         return True, res['acl']
     except Exception as e:
         return False, None
-
 
 
 def parse_acl(acl):
@@ -68,6 +68,7 @@ def parse_acl(acl):
         acl[right] = list(set(acl[right]))
 
     return users
+
 
 def has_permission(id, type, collection):
     """ Checks if current user has type (execute, read, write) permissions on an collection or not

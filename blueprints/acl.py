@@ -47,6 +47,9 @@ def get_observation_user_acl(collection, observation_id):
     return eve_response(result)
 
 
+##################
+
+
 @ACL.route("/group/<objectid:group_id>", methods=['GET'])
 @require_token()
 def get_users_by_group(group_id):

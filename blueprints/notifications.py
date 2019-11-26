@@ -96,7 +96,11 @@ def message():
         print(event_from, event_from_id, type(event_created), event_created, '{}'.format(datetime.datetime.utcnow()))
 
         # Can't do shit if lukket or trukket!
-        status, acl = get_acl(event_from, event_from_id)
+        status, acl = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
+
+        if acl.get('workflow', {}).get('state', 'closed') == 'closed':
+            eve_abort(403, 'Observation is close')
+
         res = parse_acl(acl)
 
         k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
