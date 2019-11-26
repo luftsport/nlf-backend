@@ -27,7 +27,7 @@ ACL = Blueprint('Acl', __name__, )
 @ACL.route("/users/<string:collection>/<objectid:_id>/flat", methods=['GET'])
 @require_token()
 def get_users(collection, _id):
-    status, acl = acl_helper.get_acl(collection, _id)
+    status, acl, _ = acl_helper.get_acl(collection, _id)
     if status is True:
         res = acl_helper.parse_acl(acl)
         k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if

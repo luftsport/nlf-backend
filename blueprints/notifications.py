@@ -185,7 +185,7 @@ def notify():
 
         print(event_from, event_from_id, type(event_created), event_created, '{}'.format(datetime.datetime.utcnow()))
 
-        status, acl = get_acl(event_from, event_from_id)
+        status, acl, _ = get_acl(event_from, event_from_id)
         res = parse_acl(acl)
 
         k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
