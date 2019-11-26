@@ -38,9 +38,9 @@ def get_acl(collection, _id, projection={'acl': 1}):
                        )
 
     try:
-        return True, res['acl']
+        return True, res['acl'], res.remove('acl')
     except Exception as e:
-        return False, None
+        return False, None, None
 
 
 def parse_acl(acl):
