@@ -185,7 +185,10 @@ def notify():
 
         print(event_from, event_from_id, type(event_created), event_created, '{}'.format(datetime.datetime.utcnow()))
 
-        status, acl, _ = get_acl(event_from, event_from_id)
+        status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
+
+        if rest.get('workflow', {}).get('state', 'closed') == 'closed':
+            return eve_response('Observation is close', 403)
         res = parse_acl(acl)
 
         k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
