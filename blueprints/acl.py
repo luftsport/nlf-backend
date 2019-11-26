@@ -26,7 +26,7 @@ ACL = Blueprint('Acl', __name__, )
 ####### SOME ACL STUFF ##########
 @ACL.route("/users/<string:collection>/<objectid:_id>/flat", methods=['GET'])
 @require_token()
-def get_users(collection, _id):
+def get_users_flat(collection, _id):
     status, acl, _ = acl_helper.get_acl(collection, _id)
     if status is True:
         res = acl_helper.parse_acl(acl)
@@ -37,6 +37,19 @@ def get_users(collection, _id):
 
     else:
         return eve_response({})
+
+@ACL.route("/users/<string:collection>/<objectid:_id>", methods=['GET'])
+@require_token()
+def get_users(collection, _id):
+    status, acl, _ = acl_helper.get_acl(collection, _id)
+    if status is True:
+        res = acl_helper.parse_acl(acl)
+
+        return eve_response(res)
+
+    else:
+        return eve_response({})
+
 
 @ACL.route("/<string:collection>/<int:observation_id>", methods=['GET'])
 @require_token()

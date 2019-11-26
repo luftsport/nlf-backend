@@ -151,8 +151,8 @@ def get_user_permissions(_id, collection):
     :return:
     """
     try:
-        if collection not in ['observations', 'users']:
-            collection = 'observations'
+        if collection not in ['fallskjerm_observations', 'motorfly_observations' 'users']:
+            collection = 'fallskjerm_observations'
 
         col = app.data.driver.db[collection]
 
