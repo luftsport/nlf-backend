@@ -99,7 +99,7 @@ def message():
         status, acl = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
 
         if acl.get('workflow', {}).get('state', 'closed') == 'closed':
-            eve_abort(403, 'Observation is close')
+            return eve_response('Observation is close', 403)
 
         res = parse_acl(acl)
 
