@@ -100,7 +100,7 @@ def message():
         # Can't do shit if lukket or trukket!
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
 
-        if rest.get('workflow', {}).get('state', 'closed') == 'closed':
+        if rest.get('workflow', {}).get('state', 'closed') in ['closed', 'withdrawn']:
             return eve_response_pppd(
                 {'data': 'Observasjonen er {}'.format(rest.get('workflow', {}).get('state', 'closed'))},
                 403,
