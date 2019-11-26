@@ -186,7 +186,7 @@ def notify():
         print(event_from, event_from_id, type(event_created), event_created, '{}'.format(datetime.datetime.utcnow()))
 
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
-
+        print('REST', rest)
         if rest.get('workflow', {}).get('state', 'closed') == 'closed':
             return eve_response('Observation is close', 403)
         res = parse_acl(acl)
