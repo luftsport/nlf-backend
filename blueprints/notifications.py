@@ -99,7 +99,7 @@ def message():
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
 
         if rest.get('workflow', {}).get('state', 'closed') == 'closed':
-            return eve_response('Observation is close', 403)
+            return eve_abort(403, 'Observation is closed')
 
         res = parse_acl(acl)
 
@@ -188,7 +188,7 @@ def notify():
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
         print('REST', rest)
         if rest.get('workflow', {}).get('state', 'closed') == 'closed':
-            return eve_response('Observation is close', 403)
+            return eve_abort(403, 'Observation is closed')
         res = parse_acl(acl)
 
         k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]

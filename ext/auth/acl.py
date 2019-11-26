@@ -38,7 +38,8 @@ def get_acl(collection, _id, projection={'acl': 1}):
                        )
 
     try:
-        return True, res['acl'], res #.remove('acl')
+        acl = res.pop('acl', None)
+        return True, acl, res
     except Exception as e:
         return False, None, None
 
