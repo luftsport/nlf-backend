@@ -61,9 +61,11 @@ def _strip_tags(string, allowed_tags=''):
         string = re.sub(r'<[^>]*?>', '', string)
 
     return string
-def strip_tags(string):
 
+
+def strip_tags(string):
     return _strip_tags(re.sub('<br\s*?>', '\n', string))
+
 
 def _create(payload):
     # resource, payl = None, skip_validation = False
@@ -72,10 +74,10 @@ def _create(payload):
     print('CREATED', response, return_code, location_header)
     return response
 
+
 @Notifications.route("/message", methods=['POST'])
 @require_token()
 def message():
-
     try:
 
         args = request.get_json(force=True)  # use force=True to do anyway!
@@ -99,11 +101,16 @@ def message():
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
 
         if rest.get('workflow', {}).get('state', 'closed') == 'closed':
-            return eve_response_pppd({}, 403, 'Observation is closed')
+            return eve_response_pppd(
+                {'data': 'Observasjonen er {}'.format(rest.get('workflow', {}).get('state', 'closed'))},
+                403,
+                'Observation is {}'.format(rest.get('workflow', {}).get('state', 'closed'))
+            )
 
         res = parse_acl(acl)
 
-        k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
+        k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if
+             p != app.globals.get('user_id', 0)]
 
         # k = res
         for user_id in k:
@@ -168,7 +175,6 @@ def notify():
     """
     try:
 
-
         args = request.get_json(force=True)  # use force=True to do anyway!
 
         event_from = args.get('event_from', None)
@@ -183,15 +189,23 @@ def notify():
         event_id = str(uuid.uuid4())
         event_created = datetime.datetime.utcnow()
 
+        if event_from is None or event_from_id is None or message is None:
+            eve_abort(422, 'Missing parameters')
+
         print(event_from, event_from_id, type(event_created), event_created, '{}'.format(datetime.datetime.utcnow()))
 
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
-        print('REST', rest)
-        if rest.get('workflow', {}).get('state', 'closed') == 'closed':
-            return eve_response('Observation is closed', 403)
+
+        if rest.get('workflow', {}).get('state', 'closed') in ['closed', 'withdrawn']:
+            return eve_response_pppd(
+                {'data': 'Observasjonen er {}'.format(rest.get('workflow', {}).get('state', 'closed'))},
+                403,
+                'Observation is {}'.format(rest.get('workflow', {}).get('state', 'closed'))
+            )
         res = parse_acl(acl)
 
-        k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
+        k = [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if
+             p != app.globals.get('user_id', 0)]
 
         print('K', k)
         k.sort()
@@ -201,10 +215,9 @@ def notify():
         disapproved_users.sort()
         print('Dsort', disapproved_users)
 
-
-        if len(k)==0:
+        if len(k) == 0:
             return eve_response_pppd({'data': 'Fant ingen å sende til'}, 404, 'Found no recepients!')
-        
+
         if disapproved_users == k:
             return eve_response_pppd({'data': 'Please wait for the remaining graceperiod until {}'.format(
                 (datetime.datetime.utcnow() - datetime.timedelta(seconds=REMINDER_DELTA))
@@ -239,7 +252,7 @@ def notify():
         return eve_response({}, 500)
 
 
-def get_within_delay(_id, event_type='notification', persons=[] ):
+def get_within_delay(_id, event_type='notification', persons=[]):
     lookup = {
         'event_from_id': _id,
         'recepient': {'$in': persons},
@@ -252,8 +265,3 @@ def get_within_delay(_id, event_type='notification', persons=[] ):
 
 def generate_event():
     pass
-
-
-
-
-
