@@ -11,6 +11,13 @@ from flask import Blueprint, current_app as app, request, Response, abort, jsoni
 from bson import json_util
 import json
 
+###
+import uuid
+import datetime
+from blueprints.notifications import _create
+####
+
+
 # from eve.methods.patch import patch_internal
 
 from bson.objectid import ObjectId
@@ -59,6 +66,49 @@ def get_observation_user_acl(collection, observation_id):
 
     return eve_response(result)
 
+
+
+@ACL.route("/observations/<string:activity>/<objectid:_id>/<string:right>/<int:person_id>", methods=['DELETE', 'POST'])
+@require_token()
+def acl_toggle(activity, _id, right, person_id):
+    if person_id != app.globals.get('user_id'):
+        # projection={'acl': 1}, right='read'
+        status, acl, _ = acl_helper.get_acl('{}_observations'.format(activity), _id, projection={'acl': 1, 'reporter': 1},
+                                 right='execute')
+
+        if status is True:
+
+            if request.method == 'POST':
+                verb = 'tildelte'
+                update = acl_helper.modify_user_acl('{}_observations'.format(activity), _id, person_id, right, 'add')
+
+            elif request.method == 'DELETE':
+                verb = 'fjernet'
+                update = acl_helper.modify_user_acl('{}_observations'.format(activity), _id, person_id, right, 'remove')
+
+            if update is True:
+                data = {
+                    'type': 'access',
+                    'recepient': person_id,
+                    'sender': app.globals.get('user_id'),
+                    'event_id': str(uuid.uuid4()),
+                    'event_from': '{}_observations'.format(activity),
+                    'event_from_id': _id,
+                    'event_created': datetime.datetime.utcnow(),
+                    'dismissable': True,
+                    'dismissed': None,
+                    'transport': 'email',
+                    'status': 'ready',
+                    'data': {
+                        'message': '{} {}'.format(verb, right),
+                        'verb': 'remove' if verb == 'fjernet' else 'add'
+                    }
+                }
+                _create(data)
+
+                return eve_response(True, 201)
+
+    return eve_response(False, 409)
 
 ##################
 

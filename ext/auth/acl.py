@@ -14,7 +14,7 @@ from bson.objectid import ObjectId
 from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
 
 
-def get_acl(collection, _id, projection={'acl': 1}):
+def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     col = app.data.driver.db[collection]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
 
@@ -28,8 +28,8 @@ def get_acl(collection, _id, projection={'acl': 1}):
     res = col.find_one({'$and': [match,
                                  {'$or':
                                      [
-                                         {'acl.read.users': {'$in': [app.globals['user_id']]}},
-                                         {'acl.read.roles': {'$in': app.globals['acl']['roles']}}
+                                         {'acl.{}.users'.format(right): {'$in': [app.globals['user_id']]}},
+                                         {'acl.{}.roles'.format(right): {'$in': app.globals['acl']['roles']}}
                                      ]
                                  }
                                  ]
@@ -42,6 +42,34 @@ def get_acl(collection, _id, projection={'acl': 1}):
         return True, acl, res
     except Exception as e:
         return False, None, None
+
+
+def modify_user_acl(collection, _id, person_id, right, operation):
+
+    if right not in ['read', 'write'] or int(person_id) != person_id or operation not in ['add', 'delete', 'remove']:
+        return False
+
+    col = app.data.driver.db[collection]
+
+
+    try:
+        oid = ObjectId(_id)
+        if oid == ObjectId(str(oid)):
+            match = {'_id': oid}
+        else:
+            match = {'id': _id}
+
+        if operation == 'add':
+            res = col.update(match, {'$addToSet': {'acl.{}.users'.format(right): int(person_id)}})
+        elif operation in ['delete', 'remove']:
+            res = col.update(match, {'$pull': {'acl.{}.users'.format(right): {'$in': [person_id]}}})
+
+        return True
+    except Exception as e:
+        print('ERRR', e)
+        #pass
+    return False
+
 
 
 def parse_acl(acl):
