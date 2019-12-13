@@ -33,7 +33,7 @@ definition = {
 
     # Make lookup on club id from melwin
     'additional_lookup': {
-        'url': 'regex("[\d{3}\-\w{1}]+")',
+        'url': 'regex("[\d{1,9}]+")',
         'field': 'id',
     },
     'mongo_indexes': {'id': ([('id', 1)], {'background': True}),

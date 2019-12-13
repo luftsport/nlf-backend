@@ -25,6 +25,7 @@ _schema = {
     'ci': {'type': 'integer', 'required': False},  # Embedded or??
     'logo': {'type': 'media', 'required': False},
     'url': {'type': 'string', 'required': False},
+    'owner': {'type': 'integer'}
 }
 
 definition = {

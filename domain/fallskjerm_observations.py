@@ -92,6 +92,13 @@ _schema = {'id': {'type': 'integer',
                                 },
                      'default': []
                      },
+            'categories': {'type': 'list',
+                           'default': []
+                           },
+            'operational': {'type': 'dict',
+                            'default': {}
+                            },
+                           
 
            'related': {'type': 'list',
                        'default': []

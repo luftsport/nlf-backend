@@ -203,6 +203,9 @@ app.on_insert_help += hook.help.on_insert_items
 # Content hooks
 app.on_insert_content += hook.content.before_insert
 
+# CLUBS, add owner
+app.on_insert_legacy_clubs += hook.common.on_insert_set_owner
+app.on_update_legacy_clubs += hook.common.on_update_set_owner
 
 # App error hooks
 @app.errorhandler(401)
