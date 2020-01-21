@@ -239,8 +239,8 @@ if 1 == 1 or not app.debug:
 
     file_handler = RotatingFileHandler('nlf-backend.log', 'a', 1 * 1024 * 1024, 10)
     file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-    app.logger.setLevel(logging.INFO)
-    file_handler.setLevel(logging.INFO)
+    app.logger.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.DEBUG)
     app.logger.addHandler(file_handler)
     app.logger.info('NLF-backend startup on database:\t %s' % app.config['MONGO_DBNAME'].upper())
     app.logger.info('NLF-backend instance:\t %s' % app.config['APP_INSTANCE'].upper())
