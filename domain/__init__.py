@@ -7,6 +7,7 @@ Init for the seperated applications and including those into a Domain
 """
 
 # Import settings files
+import app_config
 
 # User data (avatar, settings, acls etc)
 import users, users_auth
@@ -14,6 +15,9 @@ import acl_groups, acl_roles, users_acl
 
 # FALLSKJERM
 import fallskjerm_observations
+import fallskjerm_quarter_report
+
+# MOTORFLY
 import motorfly_observations
 # import observation_components
 # import observation_comments
@@ -62,6 +66,8 @@ import test
 
 # Build the Domain to be presented
 DOMAIN = {
+    # App config
+    "app_config": app_config.definition,
 
     # Users
     "users": users.definition,
@@ -79,6 +85,8 @@ DOMAIN = {
     "fallskjerm_observations": fallskjerm_observations.definition,
     "fallskjerm_observations_agg": fallskjerm_observations.aggregate_observation_types,
     "fallskjerm_observations_todo": fallskjerm_observations.workflow_todo,
+    "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
+    "fallskjerm_year_report_agg": fallskjerm_quarter_report.agg_sum_year,
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
