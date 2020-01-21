@@ -21,6 +21,8 @@ from ext.notifications.notifications import notify
 
 import pysftp
 
+import traceback
+
 E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
@@ -37,6 +39,7 @@ def has_permission():
                                method=request.method,
                                resource=request.path[len(app.globals.get('prefix')):],
                                allowed_roles=None):
+
             eve_abort(404, 'Please provide proper credentials')
 
     except:
@@ -52,8 +55,7 @@ def execute(cmdArray, workingDir):
 
     try:
         try:
-            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       bufsize=1)
+            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1)
         except OSError:
             return [False, '', 'ERROR : command(' + ' '.join(cmdArray) + ') could not get executed!']
 
@@ -98,11 +100,12 @@ def generate_structure(activity, ors_id, version):
 
                 _, stdout, stderr = execute(['mkdir', '{}/{}'.format(activity, ors_id)], app.config['E5X_WORKING_DIR'])
 
-            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)],
-                                        app.config['E5X_WORKING_DIR'])
+            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)], app.config['E5X_WORKING_DIR'])
         return True
-    except:
-        return False
+    except Exception as e:
+        app.logger.exception('[E5X] Generate structure failed')
+
+    return False
 
 
 def transport_e5x(dir, file_name, sftp_settings):
@@ -134,11 +137,14 @@ def transport_e5x(dir, file_name, sftp_settings):
             'uid': result.st_uid,
             'gid': result.st_gid
         }
+    
+    return False, {}
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
+
     data = request.get_json(force=True)
     col = app.data.driver.db['motorfly_observations']
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
@@ -151,6 +157,7 @@ def generate(_id):
     _items = list(cursor)
 
     if (len(_items) == 1):
+
         # print(_items)
         ors = _items[0]
 
@@ -162,10 +169,13 @@ def generate(_id):
 
         if generate_structure(ors.get('_model', {}).get('type', None), ors.get('id'), ors.get('_version')) is True:
 
+            app.logger.debug('[E5X] Structure ok')
+
             # Process files!
             file_list = []
 
             if len(ors.get('files', [])) > 0:
+                app.logger.debug('[E5X] Adding files')
                 col_files = app.data.driver.db['files']
 
                 # Fix data structures
@@ -180,6 +190,7 @@ def generate(_id):
                 files_working_path = '{}/{}'.format(FILE_WORKING_DIR, file_name)
                 if os.path.exists(files_working_path) is False:
                     _, stdout, stderr = execute(['mkdir', file_name], FILE_WORKING_DIR)
+                    app.logger.debug('[E5X] Created folder for files')
 
                 for key, _file in enumerate(ors.get('files', [])):
                     file = col_files.find_one({'_id': ObjectId(_file['f'])})
@@ -213,9 +224,10 @@ def generate(_id):
                                 pass
 
                     except Exception as e:
-                        app.logger.error("Error generating structure for E5X")
+                        app.logger.exception("[ERR] Getting files")
 
             try:
+                app.logger.debug('[III] In try')
                 json_file_name = '{}.json'.format(file_name)
 
                 # print('PATHS', FILE_WORKING_DIR, json_file_name)
@@ -225,6 +237,7 @@ def generate(_id):
                     json.dump(data.get('e5x', {}), f)
 
                 # 2 Generate xml file
+                # e5x-generate.js will make folder relative to e5x-generate.js
                 _, stdout, stderr = execute(
                     [
                         'node',
@@ -236,6 +249,9 @@ def generate(_id):
 
                     ],
                     app.config['E5X_WORKING_DIR'])
+
+                app.logger.debug('[CMD]', stdout)
+                app.logger.debug('[CMD]', stderr)
 
                 # 3 Zip it! Add files to it!
                 if stderr.rstrip() == '':
@@ -256,8 +272,9 @@ def generate(_id):
                             .get('reportStatus', {}).get('value', 5)
 
                     except Exception as e:
+                        app.logger.exception('Error gettings status {}'.format(status))
                         status = 0
-                        app.logger.error('Error gettings status {}'.format(status))
+
 
                     # SFTP DELIVERY!
                     # Only dev and prod should be able to deliver to LT
@@ -332,20 +349,21 @@ def generate(_id):
 
                         notify(recepients, subject, message)
                     except Exception as e:
-                        app.logger.error('Error delivering e5x delivery notification', e)
+                        app.logger.exception('Error delivering e5x delivery notification')
 
-                    return eve_response({'e5x': {'audit': audit}}, 200)
+                    return eve_response({'e5x': {'audit': audit}, 'err': traceback.format_exc()}, 200)
 
             except Exception as e:
-                app.logger.error('Error processing e5x file')
+                app.logger.exception('Error processing e5x file')
+                return eve_response({'ERR': 'Could not process', 'err': traceback.format_exc()}, 422)
 
-            return eve_response({'ERR': 'Could not process'}, 422)
+    return eve_response({'ERR': 'Could not process e5x', 'err': traceback.format_exc()}, 422)
 
 
 @E5X.route("/download/<string:activity>/<int:ors_id>/<int:version>", methods=['GET'])
 def download(activity, ors_id, version):
     if has_permission() is True:
-        print(app.globals.get('user_id', 'AWDFULLLL'))
+        # print(app.globals.get('user_id', 'AWDFULLLL'))
         col = app.data.driver.db['motorfly_observations']
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
@@ -367,7 +385,7 @@ def download(activity, ors_id, version):
                 file_name = 'nlf_{}_{}_v{}.e5x'.format(activity,
                                                        ors_id,
                                                        version)
-                print('{}/{}'.format(FILE_WORKING_DIR, file_name))
+                app.logger.debug('{}/{}'.format(FILE_WORKING_DIR, file_name))
                 # print('####',
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
@@ -375,6 +393,6 @@ def download(activity, ors_id, version):
                 return send_file('{}/{}'.format(FILE_WORKING_DIR, file_name), as_attachment=True,
                                  attachment_filename=file_name, mimetype="'application/octet-stream'")
             except Exception as e:
-                print('Download failed', e)
+                # print('Download failed', e)
                 return eve_response({'ERR': 'Could not send file'}, 422)
 
