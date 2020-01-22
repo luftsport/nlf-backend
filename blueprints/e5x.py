@@ -123,11 +123,11 @@ def transport_e5x(dir, file_name, sftp_settings):
             try:
                 result = sftp.put('{}/{}.e5x'.format(dir, file_name), file_name)
             except Exception as e:
-                app.logger.error('Could not send file via SFTP', e)
+                app.logger.exception('Could not send file via SFTP')
                 return False, {}
 
     except Exception as e:
-        app.logger.error('Unknown error in SFTP', e)
+        app.logger.exception('Unknown error in SFTP')
         return False, {}
 
     if result:
@@ -250,8 +250,8 @@ def generate(_id):
                     ],
                     app.config['E5X_WORKING_DIR'])
 
-                app.logger.debug('[CMD]', stdout)
-                app.logger.debug('[CMD]', stderr)
+                # app.logger.debug('[CMD]', stdout)
+                # app.logger.debug('[CMD]', stderr)
 
                 # 3 Zip it! Add files to it!
                 if stderr.rstrip() == '':
