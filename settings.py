@@ -152,7 +152,7 @@ SWAGGER_INFO = {
     },
     'license': {
         'name': 'GPLV1',
-        'url': 'https://github.com/FNLF/nlf-backend/',
+        'url': 'https://github.com/luftsport/nlf-backend/',
     }
 }
 
