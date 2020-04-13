@@ -18,9 +18,10 @@ if [[ INVENV == 0 ]]
 then
         source bin/activate
 fi
-
+# Prod
 gunicorn -w 5 -b localhost:8081 run:app --log-level=debug --log-file=unicorn.log --pid gunicorn.pid --capture-output --enable-stdio-inheritance &
-
+# Dev
+# gunicorn -w 4 -b localhost:8082 run:app --log-level=debug --log-file=unicorn.log --pid gunicorn.pid --capture-output --enable-stdio-inheritance &
 if [[ INVENV == 0 ]]
 then
         deactivate

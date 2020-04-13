@@ -45,13 +45,6 @@ def get_person_acl(person_id) -> (bool, dict):
                 'type': item['type']
             })
 
-        # Custom shit
-        from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_AFF
-        hi_tofs = ACL_FALLSKJERM_HI.copy()
-        hi_tofs['org'] = 824404
-        acl.append(hi_tofs)
-        acl.append(ACL_FALLSKJERM_FSJ)
-        acl.append(ACL_FALLSKJERM_SU_AFF)
         # return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
         return True, acl
 
