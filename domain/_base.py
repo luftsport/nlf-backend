@@ -10,6 +10,7 @@
 workflow_schema = {
     'type': 'dict',
     'readonly': True,
+    'schema': {}
 }
 
 watchers_schema = {

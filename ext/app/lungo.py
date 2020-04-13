@@ -45,7 +45,14 @@ def get_person_acl(person_id) -> (bool, dict):
                 'type': item['type']
             })
 
-        #return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
+        # Custom shit
+        from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_AFF
+        hi_tofs = ACL_FALLSKJERM_HI.copy()
+        hi_tofs['org'] = 824404
+        acl.append(hi_tofs)
+        acl.append(ACL_FALLSKJERM_FSJ)
+        acl.append(ACL_FALLSKJERM_SU_AFF)
+        # return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
         return True, acl
 
     return False, None
@@ -186,7 +193,8 @@ def get_users_from_role(type_id, org_type_ids=[6, 14, 19]):
                                                                                    type_id,
                                                                                    org_type_ids),
         headers=LUNGO_HEADERS,
-        verify=app.config.get('REQUESTS_VERIFY', True))
+        #verify=app.config.get('REQUESTS_VERIFY', True)
+    )
 
     if resp.status_code == 200:
         try:
@@ -199,4 +207,53 @@ def get_users_from_role(type_id, org_type_ids=[6, 14, 19]):
     return []
 
 
+def get_recepient(person_id):
+    return get_recepients([person_id])
 
+
+def get_recepients(recepients):
+    persons = []
+
+    try:
+        query = 'where={{"id": {{"$in": {} }}}}&projection={{"full_name": 1, "address.email": 1}}'.format(recepients)
+        print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
+        resp = requests.get('{}/{}?{}'.format(LUNGO_URL, 'persons', query), headers=LUNGO_HEADERS)
+
+        if resp.status_code == 200:
+
+            for person in resp.json()['_items']:
+                if not '_merged_to' in person:
+                    try:
+                        persons.append({
+                            'full_name': person.get('full_name', ''),
+                            'email': person.get('address', {}).get('email', [])[0]})
+                    except Exception as e:
+                        pass
+
+        return list({v['email']: v for v in persons if len(v['email']) > 4}.values())
+
+    except:
+        pass
+
+    return persons
+
+
+def get_recepients_from_roles(roles):
+    persons = []
+
+    try:
+        for role in roles:
+            resp = requests.get(
+                '{}/functions?where={{"org_id": {}, "type_id": {}, "is_deleted": false, "is_passive": false }}&projection={{"person_id": 1}}'.format(
+                    LUNGO_URL, role.get('org', 0), role.get('role', 0)),
+                headers=LUNGO_HEADERS)
+
+            if resp.status_code == 200:
+                for item in resp.json().get('_items', []):
+                    persons.append(item.get('person_id', 0))
+
+        return get_recepients(list(set([i for i in persons if i > 0])))
+    except:
+        pass
+
+    return persons

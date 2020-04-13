@@ -110,7 +110,7 @@ def transition(observation_id, action):
     comment = None
     try:
         args = request.get_json()  # use force=True to do anyway!
-        comment = args.get('comment')
+        comment = args.get('comment', '')
     except:
         # Could try form etc
         pass
@@ -129,7 +129,9 @@ def transition(observation_id, action):
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
-    return eve_response(wf.state, 200)
+        return eve_response(wf.state, 200)
+
+    return eve_abort(500, 'Error in transitioning observation in workflow')
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
@@ -142,7 +144,10 @@ def graphit(observation_id, state):
         import io
         from transitions.extensions import GraphMachine as Machine
 
-        machine = Machine(model=wf, states=WF_MOTORFLY_STATES, transitions=WF_MOTORFLY_TRANSITIONS, initial=state,
+        machine = Machine(model=wf,
+                          states=WF_MOTORFLY_STATES,
+                          transitions=WF_MOTORFLY_TRANSITIONS,
+                          initial=state,
                           title='Workflow graph')
         stream = io.BytesIO()
         wf.get_graph().draw(stream, prog='dot', format='png')

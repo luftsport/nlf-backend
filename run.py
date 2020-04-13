@@ -58,6 +58,9 @@ from ext.app.url_maps import ObjectIDConverter, RegexConverter
 # Custom auth extensions
 from ext.auth.tokenauth import TokenAuth
 
+# From notfication
+import ext.hooks.notifications as notifications
+
 # Verify startup inside virtualenv
 if not hasattr(sys, 'real_prefix'):
     print("Outside virtualenv, aborting....")
@@ -107,7 +110,6 @@ app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" %
 
 app.register_blueprint(Notifications, url_prefix="%s/notifications/bin" % app.globals.get('prefix'))
 
-
 app.register_blueprint(Weather, url_prefix="%s/weather" % app.globals.get('prefix'))
 app.register_blueprint(Info, url_prefix="%s/info" % app.globals.get('prefix'))
 app.register_blueprint(Files, url_prefix="%s/download" % app.globals.get('prefix'))
@@ -135,34 +137,46 @@ def dump_request(request):
     except Exception as e:
         pass
 
+def _aggregation(endpoint, pipeline):
+    """All aggregation endpoints ends up here"""
+    if endpoint == 'notifications_events':
+        notifications.before_aggregation(endpoint, pipeline)
 
-# ORS
-# Fallskjerm
-# POST
+# Before any aggregation run this
+app.before_aggregation += _aggregation
+
+# FALLSKJERM ORS
+# POST/DB Insert
 app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
+app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
-app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.before_get
-app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.before_get_todo
+app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
-app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.after_fetched
-app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.after_fetched
-app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_diffs
+app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.ors_after_fetched
+app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fetched
+app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_diffs
 # BEFORE PATCH/PUT
-app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
+app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
+# AFTER update db layer
+app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
 
-## MOTOR
+## MOTOR ORS
 # BEFORE AND AFTER POST INSERT
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
-app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert  # no id??
+app.on_inserted_motorfly_observations += hook.motorfly.ors_after_inserted
 # BEFORE GET
-app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
-app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
+app.on_pre_GET_motorfly_observations += hook.motorfly.ors_before_get
+app.on_pre_GET_motorfly_observations_todo += hook.motorfly.ors_before_get_todo
 # AFTER FETCHED (GET)
-app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
-app.on_fetched_item_motorfly_observations_todo += hook.motorfly.after_fetched
-app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
+app.on_fetched_item_motorfly_observations += hook.motorfly.ors_after_fetched
+app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
+app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_diffs
 # BEFORE PATCH/PUT
-app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
+app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
+# AFTER update db layer
+app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
+
 
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
@@ -190,7 +204,7 @@ app.on_pre_DELETE_e5x_tree += hook.e5x.add_delete_filters
 
 
 # app.on_insert += hook.observations.before_post_comments
-app.on_insert_f_observation_comments += hook.fallskjerm.before_post_comments
+app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
 
 # app.on_post_GET_fallskjerm_observations += hook.observations.after_get
 # app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched

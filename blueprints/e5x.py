@@ -17,8 +17,9 @@ from ext.app.eve_helper import eve_abort, eve_response
 
 import base64
 from ext.auth.tokenauth import TokenAuth
+from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
-
+from ext.app.notifications import ors_e5x
 import pysftp
 
 import traceback
@@ -27,6 +28,7 @@ E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
+RESOURCE_COLLECTION = 'motorfly_observations'
 
 def has_permission():
     try:
@@ -146,7 +148,7 @@ def transport_e5x(dir, file_name, sftp_settings):
 def generate(_id):
 
     data = request.get_json(force=True)
-    col = app.data.driver.db['motorfly_observations']
+    col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
@@ -324,6 +326,18 @@ def generate(_id):
 
                     # print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
                     try:
+                        recepients = parse_acl_flat(ors.get('acl', {}))
+                        ors_e5x(recepients=recepients,
+                                event_from=RESOURCE_COLLECTION,
+                                event_from_id=ors.get('_id', ''),
+                                source=ors.get('_version', ''),
+                                status=status,
+                                file_name='{}.e5x'.format(file_name),
+                                transport='sftp',
+                                context='sent'
+                                )
+                        """
+                        
                         #### TEST EMAIL!
                         recepients = list(set([app.globals.get('user_id')]
                                               + ors.get('organization', {}).get('ors', [])
@@ -348,6 +362,7 @@ def generate(_id):
                                                                                  ors.get('_version', ''))
 
                         notify(recepients, subject, message)
+                        """
                     except Exception as e:
                         app.logger.exception('Error delivering e5x delivery notification')
 

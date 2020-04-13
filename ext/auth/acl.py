@@ -12,9 +12,11 @@
 from flask import current_app as app
 from bson.objectid import ObjectId
 from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
-
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_GROUP_LIST
 
 def get_acl(collection, _id, projection={'acl': 1}, right='read'):
+    acl = {}
+    res = {}
     col = app.data.driver.db[collection]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
 
@@ -24,7 +26,7 @@ def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     else:
         match = {'id': _id}
 
-    print(match)
+    print('MATCH', match)
     res = col.find_one({'$and': [match,
                                  {'$or':
                                      [
@@ -45,12 +47,10 @@ def get_acl(collection, _id, projection={'acl': 1}, right='read'):
 
 
 def modify_user_acl(collection, _id, person_id, right, operation):
-
     if right not in ['read', 'write'] or int(person_id) != person_id or operation not in ['add', 'delete', 'remove']:
         return False
 
     col = app.data.driver.db[collection]
-
 
     try:
         oid = ObjectId(_id)
@@ -67,12 +67,12 @@ def modify_user_acl(collection, _id, person_id, right, operation):
         return True
     except Exception as e:
         print('ERRR', e)
-        #pass
+        # pass
     return False
 
 
-
 def parse_acl(acl):
+    print('AAAAAAAAAACL', acl)
     users = {
         'read': acl.get('read', {}).get('users', []),
         'write': acl.get('write', {}).get('users', []),
@@ -96,7 +96,18 @@ def parse_acl(acl):
 
         acl[right] = list(set(acl[right]))
 
+    print('USERS Acl', users)
     return users
+
+
+def parse_acl_flat(acl, exclude_current_user=False):
+    """Parses acl then flattens to list of users"""
+    res = parse_acl(acl)
+
+    if exclude_current_user is True:
+        return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
+
+    return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete']))]
 
 
 def has_permission(id, type, collection):
@@ -210,3 +221,40 @@ def get_user_permissions(_id, collection):
                 '_status': 'ERR'}
 
     return result
+
+
+def user_persmissions(resource_acl, state):
+    permissions = {
+        'read': False,
+        'write': False,
+        'delete': False,
+        'execute': False,
+    }
+
+    for perm in permissions.keys():
+        permissions[perm] = has_nanon_permission(resource_acl, perm, state)
+
+    return permissions
+
+
+def has_permission(resource_acl, perm):
+    """@TODO Global"""
+    if (
+            any(pid for pid in app.globals['acl']['roles'] if pid in resource_acl[perm]['roles']) is True
+            or (app.globals['user_id'] in resource_acl[perm]['users']) is True
+    ):
+        return True
+    return False
+
+
+def has_nanon_permission(resource_acl, perm, state):
+    # Closed and should be able to see
+    if state == 'closed' and perm == 'execute':
+        if (
+                any(pid for pid in app.globals['acl']['roles'] if
+                    pid in [ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST) is True
+                or app.globals['user_id'] in resource_acl[perm]['roles'] is True
+        ):
+            return True
+
+    return has_permission(resource_acl, perm)

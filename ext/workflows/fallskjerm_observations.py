@@ -9,11 +9,14 @@ from datetime import datetime, timedelta
 
 import re
 
-from ext.auth.helpers import Helpers
 from ext.auth.acl import has_permission as acl_has_permission
+from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
+    get_person_name_text
 from ext.notifications.email import Email  # , Sms
-from ext.scf import ACL_CLOSED_ALL, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP
-import arrow
+from ext.scf import ACL_CLOSED_ALL_LIST, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST
+
+from ext.app.notifications import ors_workflow
+from ext.auth.acl import parse_acl_flat
 
 RESOURCE_COLLECTION = 'fallskjerm_observations'
 
@@ -250,7 +253,6 @@ class ObservationWorkflow(Machine):
     This fork will support the requirements in this project and also keep track of origin
     @todo: add https://github.com/einarhuseby/transitions to site-packages
     @todo: pip install git+https://github.com/einarhuseby/transitions
-    @todo: state groups -> then you can see if "in review", "is open" etc
     """
 
     def __init__(self, object_id=None, initial_state=None, user_id=None, comment=None):
@@ -326,7 +328,7 @@ class ObservationWorkflow(Machine):
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
                                   {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
                                    '_version': 1, 'owner': 1,
-                                   'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
+                                   'reporter': 1, 'organization': 1, 'tags': 1})
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)
 
@@ -340,9 +342,10 @@ class ObservationWorkflow(Machine):
         self.reporter = self.db_wf.get('reporter', None)
         self.owner = self.db_wf.get('owner', None)
         self.club = self.db_wf.get('club', None)
+        self.discipline = self.db_wf.get('discipline', None)
         self.acl_hi = ACL_FALLSKJERM_HI.copy()
-        self.acl_hi['club'] = self.club
-        self.acl = self.db_wf.get('acl', {})
+        self.acl_hi['org'] = self.discipline
+        self.initial_acl = self.db_wf.get('acl', {}).copy()
 
         self.comment = '' if comment is None else '{}'.format(comment).strip()
 
@@ -405,9 +408,13 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
-        if len([i for i in app.globals['acl'].get('roles', []) if i in self.acl['execute']['roles']]) > 0 \
-                or app.globals['user_id'] in self.acl['execute']['users']:
-            return True
+        try:
+            if len([i for i in app.globals['acl'].get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
+                    or app.globals['user_id'] in self.initial_acl['execute']['users']:
+                return True
+        except Exception as e:
+            print('ERRRRR', e)
+            pass
 
         return False
 
@@ -442,10 +449,7 @@ class ObservationWorkflow(Machine):
 
         """Use self.initial_state as from state!"""
 
-        acl = self.db_wf.get('acl')
-        club = self.db_wf.get('club')
-        reporter = self.db_wf.get('reporter')
-        owner = self.db_wf.get('owner')
+        acl = self.db_wf.get('acl', {})
         reporter = self.db_wf.get('reporter')
 
         if self.state == 'draft':
@@ -465,10 +469,6 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['read']['users'] = [reporter]
             acl['execute']['users'] = [reporter]
-
-            acl['write']['groups'] = []
-            acl['read']['groups'] = []
-            acl['execute']['groups'] = []
 
             acl['write']['roles'] = []
             acl['read']['roles'] = []
@@ -492,7 +492,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [ACL_FALLSKJERM_FSJ]
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_GROUP]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
             acl['execute']['roles'] = [ACL_FALLSKJERM_FSJ]
 
         elif self.state == 'pending_review_su':
@@ -501,9 +501,9 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ]
-            acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_GROUP]
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['write']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
 
         elif self.state == 'closed':
             """ everybody read, su execute """
@@ -512,14 +512,10 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [ACL_CLOSED_ALL]
+            acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_GROUP]
+            acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
 
-            # Fjernet hele f fallskjermnorge her! Kanskje egen klubb bare?
-            self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['write']['groups'] + acl['execute']['groups'],
-                              acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))
@@ -528,11 +524,8 @@ class ObservationWorkflow(Machine):
 
         acl['read']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['read']['roles'])]
         acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
-        acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
-        if self.state != 'closed':
-            self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
+        acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
         return acl
 
@@ -577,49 +570,53 @@ class ObservationWorkflow(Machine):
         # Should really supply the e-tag here, will work! , '_etag': _etag
         # Can also use test_client to do this but it's rubbish or?
         # This will ignore the readonly field skip_validation AND you do not need another domain file for it!!
-        result = patch_internal(RESOURCE_COLLECTION, payload=new,
-                                concurrency_check=False,
-                                skip_validation=True,
-                                **{'_id': "%s" % _id, '_etag': "%s" % _etag})
+        response, last_modified, etag, status = patch_internal(RESOURCE_COLLECTION,
+                                                               payload=new,
+                                                               concurrency_check=False,
+                                                               skip_validation=True,
+                                                               **{'_id': "%s" % _id, '_etag': "%s" % _etag})
         # test_client().post('/add', data = {'input1': 'a'}}
         # app.test_client().patch('/observations/%s' % _id, data=new, headers=[('If-Match', _etag)])
 
         # if self.state != self.initial_state:
 
-        if result:
+        if status in [200, 201]:
+            self.notification()
             return True
 
         return False
 
-    def notification(self, users=[], groups=[], roles=[]):
-        """ A wrapper around notifications
-        """
-        return
+    def notify_created(self):
+        self.notification(action='init',
+                          context='created')
 
-        mail = Email()
+    def notification(self, action=None, context='transition'):
 
-        """
-        recepients = get_recepients(
-        """
-        recepients = [{'name': 'Einar Huseby', 'email': 'einar.huseby@gmail.com', 'id': 301041}]
-        message = {}
+        # get users from roles
+        # ors_workflow(recepients, activity, _id, action, source, destination, comment, context='transition')
 
-        subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), self._trigger_attrs[self.action]['descr'])
+        if action is None:
+            action = WF_FALLSKJERM_TRANSITIONS_ATTR[self.action]['resource']
 
-        message.update({'observation_id': self.db_wf['id']})
-        message.update({'action_by': self.helper.get_user_name(app.globals['user_id'])})
-        message.update({'action': self._trigger_attrs[self.action]['descr']})
-        message.update({'title': '%s' % ' '.join(self.db_wf.get('tags'))})
-        message.update({'wf_from': self._state_attrs[self.initial_state]['description']})
-        message.update({'wf_to': self._state_attrs[self.state]['description']})
-        message.update({'club': self.helper.get_melwin_club_name(self.db_wf.get('club'))})
-        message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
-        message.update({'url': 'app/obs/#!/observation/report/%i\n' % int(self.db_wf.get('id'))})
-        message.update({'url_root': request.url_root})
-        message.update({'comment': self.comment})
-        message.update({'context': 'transition'})
+        # Not to self!
+        # If closed - notify ONLY existing acl's
 
-        mail.add_message_html(message, 'ors')
-        mail.add_message_plain(message, 'ors')
+        if self.state == 'closed':
+            tmp = self.db_wf.get('acl', {})
+            tmp['read']['roles'] = [x for x in tmp['read']['roles'] if x not in ACL_CLOSED_ALL_LIST]
+            acl = parse_acl_flat(tmp)
+        else:
+            acl = parse_acl_flat(self.db_wf.get('acl', {}))
 
-        mail.send(recepients, subject, prefix='ORS')
+        ors_workflow(
+            recepients=acl,  # notify self too!
+            event_from=RESOURCE_COLLECTION,
+            event_from_id=self.db_wf['_id'],
+            ors_id=self.db_wf['id'],
+            org_id=self.db_wf.get('discipline'),
+            action=action,
+            source=self.initial_state,  # self._state_attrs[self.initial_state]['description'],
+            destination=self.state,  # self._state_attrs[self.state]['description'],
+            comment=self.comment,
+            context=context
+        )

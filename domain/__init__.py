@@ -2,8 +2,6 @@
 
 Init for the seperated applications and including those into a Domain
 
-@author: Einar Huseby <einar.huseby@gmail.com>
-
 """
 
 # Import settings files
@@ -33,8 +31,8 @@ import content, content_aggregations
 import dev
 
 # NOTIFICATIONS
-#from notifications import definition as notification_definition
-#from notifications import agg_events as notification_agg_events
+# from notifications import definition as notification_definition
+# from notifications import agg_events as notification_agg_events
 import app_notifications
 
 # LEGACY
@@ -77,9 +75,10 @@ DOMAIN = {
     # Notfication
     "notifications": app_notifications.definition,
     "notifications_events": app_notifications.agg_events,
-    # ACL
-    "acl_groups": acl_groups.definition,
-    "acl_roles": acl_roles.definition,
+
+    # ACL - Legacy @TODO remove
+    # "acl_groups": acl_groups.definition,
+    # "acl_roles": acl_roles.definition,
 
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
@@ -120,6 +119,7 @@ DOMAIN = {
 
     # Help system
     "help": help.definition,
+
     # Aircrafts
     "aircrafts": aircrafts.definition,
     "aircrafts_types": aircrafts.agg_count_types,

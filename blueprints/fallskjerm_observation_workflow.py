@@ -11,7 +11,7 @@
 from flask import Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
-from ext.workflows.motorfly_observations import ObservationWorkflow
+from ext.workflows.fallskjerm_observations import ObservationWorkflow
 
 # Need custom decorators
 from ext.app.decorators import *
@@ -19,6 +19,7 @@ from ext.app.eve_helper import eve_response
 
 OrsWorkflow = Blueprint('Fallskjerm Observation Workflow', __name__, )
 
+RESOURCE_COLLECTION = 'fallskjerm_observations'
 
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
 @OrsWorkflow.route("/<objectid:observation_id>/state", methods=['GET'])
@@ -62,7 +63,7 @@ def get_observations():
         sort['field'] = sort_tmp
         sort['direction'] = 1
 
-    col = app.data.driver.db['fallskjerm_observations']
+    col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
     cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
@@ -102,9 +103,10 @@ def transition(observation_id, action):
     comment = ''
     try:
         args = request.get_json()  # use force=True to do anyway!
-        comment = args.get('comment')
-    except:
+        comment = args.get('comment', '')
+    except Exception as e:
         # Could try form etc
+        print('ERR', e)
         pass
 
     # Instantiate with observation_id and current user (user is from app.globals.user_id
@@ -118,10 +120,13 @@ def transition(observation_id, action):
         # This is actually safe!
         result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
+        # ors_workflow(recepients, activity, _id, action, source, destination, what, comment, context='transition'
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
-    return eve_response(wf.state, 200)
+        return eve_response(wf.state, 200)
+
+    return eve_abort(500, 'Error in transitioning observation in workflow')
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
