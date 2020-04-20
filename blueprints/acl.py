@@ -72,9 +72,9 @@ def get_observation_user_acl(collection, observation_id):
 def acl_toggle(activity, _id, right, person_id):
     if person_id != app.globals.get('user_id'):
         # projection={'acl': 1}, right='read'
-        status, acl, _ = acl_helper.get_acl('{}_observations'.format(activity), _id,
-                                            projection={'acl': 1, 'reporter': 1},
-                                            right='execute')
+        status, acl, ors = acl_helper.get_acl('{}_observations'.format(activity), _id,
+                                              projection={'acl': 1, 'reporter': 1, 'id': 1, 'discipline': 1, 'tags': 1},
+                                              right='execute')
 
         if status is True:
 
@@ -87,12 +87,16 @@ def acl_toggle(activity, _id, right, person_id):
                 update = acl_helper.modify_user_acl('{}_observations'.format(activity), _id, person_id, right, 'remove')
 
             if update is True:
+                # recepients, event_from, event_from_id, right, verb,
                 ors_acl(
                     recepients=person_id,
                     event_from='{}_observations'.format(activity),
                     event_from_id=_id,
                     right=right,
-                    verb='remove' if verb == 'fjernet' else 'add'
+                    verb='remove' if verb == 'fjernet' else 'add',
+                    ors_id=ors.get('id', None),
+                    org_id=ors.get('discipline', None),
+                    ors_tags=ors.get('tags', [])
                 )
 
                 return eve_response(True, 201)

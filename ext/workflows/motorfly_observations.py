@@ -663,6 +663,7 @@ class ObservationWorkflow(Machine):
             event_from_id=self.db_wf['_id'],
             ors_id=self.db_wf['id'],
             org_id=self.db_wf.get('discipline'),
+            ors_tags=self.db_wf.get('tags', []),
             action=action,
             source=self.initial_state,  # self._state_attrs[self.initial_state]['description'],
             destination=self.state,  # self._state_attrs[self.state]['description'],

@@ -134,7 +134,3 @@ def get_within_delay(_id, event_type='ors_reminder', persons=[]):
     }
     response, _, _, status, _ = get_internal('notifications', **lookup)
     return list(set([notification['recepient'] for notification in response['_items']]))
-
-
-def generate_event():
-    pass

@@ -23,6 +23,7 @@ ors_reminder
 ors_message
 '''
 
+
 @async
 def broadcast(message):
     try:
@@ -81,39 +82,59 @@ class Notification:
 
 
 # Specific
-def ors_message(recepients, event_from, event_from_id, message):
+def ors_message(recepients, event_from, event_from_id, message, ors_id, org_id, ors_tags):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_message',
                      dismissable=True, acl={})
 
-    n.notify_all(recepients, {'message': message})
+    data = {
+        'id': ors_id,
+        'title': '/'.join(ors_tags),
+        'org_id': org_id,
+        'message': message
+    }
+
+    n.notify_all(recepients, data)
 
 
-def ors_reminder(recepients, event_from, event_from_id):
+def ors_reminder(recepients, event_from, event_from_id, ors_id, org_id, ors_tags):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_reminder',
                      dismissable=True, acl={})
 
-    n.notify_all(recepients, {})
+    data = {
+        'id': ors_id,
+        'title': '/'.join(ors_tags),
+        'org_id': org_id,
+    }
+
+    n.notify_all(recepients, data)
 
 
-def ors_acl(recepients, event_from, event_from_id, right, verb):
+def ors_acl(recepients, event_from, event_from_id, right, verb, ors_id, org_id, ors_tags):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_acl',
                      dismissable=True, acl={})
+    data = {
+        'id': ors_id,
+        'title': '/'.join(ors_tags),
+        'org_id': org_id,
+        'right': right,
+        'verb': verb
+    }
+    n.notify_all(recepients, data)
 
-    n.notify_all(recepients, {'right': right, 'verb': verb})
 
-
-def ors_workflow(recepients, event_from, event_from_id, ors_id, org_id, action, source, destination, comment,
+def ors_workflow(recepients, event_from, event_from_id, ors_id, org_id, ors_tags, action, source, destination, comment,
                  context='transition'):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_workflow',
                      dismissable=True, acl={})
 
     data = {
         'id': ors_id,
+        'title': '/'.join(ors_tags),
         'org_id': org_id,
         'action': action,
+        'comment': comment,
         'source': source,
         'destination': destination,
-        'comment': comment,
         'context': context
     }
     n.notify_all(recepients, data)
@@ -136,11 +157,14 @@ def ors_save(recepients, event_from, event_from_id, source, destination, context
     n.notify_all(recepients=recepients, data=data)
 
 
-def ors_e5x(recepients, event_from, event_from_id, source, status, file_name, transport='sftp', context='send'):
+def ors_e5x(recepients, event_from, event_from_id, source, ors_id, ors_tags, status, file_name, transport='sftp',
+            context='send'):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_e5x',
                      dismissable=True, acl={})
 
     data = {
+        'id': ors_id,
+        'title': '/'.join(ors_tags),
         'action': 'save',
         'source': source,
         'status': status,
@@ -149,6 +173,7 @@ def ors_e5x(recepients, event_from, event_from_id, source, status, file_name, tr
         'context': context
     }
     n.notify_all(recepients=recepients, data=data)
+
 
 ## Remove xml style tags from an input string.
 #

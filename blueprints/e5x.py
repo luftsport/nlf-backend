@@ -327,11 +327,14 @@ def generate(_id):
                     # print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
                     try:
                         recepients = parse_acl_flat(ors.get('acl', {}))
+
                         ors_e5x(recepients=recepients,
                                 event_from=RESOURCE_COLLECTION,
                                 event_from_id=ors.get('_id', ''),
                                 source=ors.get('_version', ''),
                                 status=status,
+                                ors_id=ors.get('id',None),
+                                ors_tags=ors.get('tags', []),
                                 file_name='{}.e5x'.format(file_name),
                                 transport='sftp',
                                 context='sent'
