@@ -39,7 +39,7 @@ def message():
             eve_abort(422, 'Missing parameters')
 
         # Can't do if closed or withdrawn
-        status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
+        status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1, 'id': 1, 'discipline': 1, 'tags': 1})
 
         if rest.get('workflow', {}).get('state', 'closed') in ['closed', 'withdrawn']:
             return eve_response_pppd(
@@ -51,7 +51,7 @@ def message():
         k = parse_acl_flat(acl)
         # If not self too
         recepients = [x for x in k if x != app.globals.get('user_id', None)]
-        ors_message(recepients, event_from, event_from_id, msg)
+        ors_message(recepients=recepients, event_from=event_from, event_from_id=event_from_id, message=msg, ors_id=rest.get('id', None), org_id=rest.get('discipline', None), ors_tags=rest.get('tags', []))
 
         return eve_response(recepients, 200)
 
@@ -87,7 +87,7 @@ def reminder():
         if event_from is None or event_from_id is None or message is None:
             eve_abort(422, 'Missing parameters')
 
-        status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1})
+        status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1, 'id': 1, 'discipline': 1, 'tags': 1})
         print('ACLS', acl)
         if rest.get('workflow', {}).get('state', 'closed') in ['closed', 'withdrawn']:
             return eve_response_pppd(
@@ -117,7 +117,7 @@ def reminder():
             return eve_response_pppd({'data': 'Fant ingen å sende til'}, 404, 'Found no recepients!')
 
         # Create notification
-        ors_reminder(recepients, event_from=event_from, event_from_id=event_from_id)
+        ors_reminder(recepients, event_from=event_from, event_from_id=event_from_id, ors_id=rest.get('id', None), org_id=rest.get('discipline', None), ors_tags=rest.get('tags', []))
         return eve_response(recepients, 200)
 
     except Exception as e:
