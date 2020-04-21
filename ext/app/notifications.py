@@ -12,7 +12,7 @@ import time
 from ext.app.lungo import get_recepients, get_recepients_from_roles, get_users_from_role
 
 RESOURCE_COLLECTION = 'notifications'
-REMINDER_DELTA = 3600  # 1 hour?
+
 
 '''
 ORS:
@@ -58,6 +58,11 @@ class Notification:
         }
 
     def _create(self, payload):
+
+        if 'comment' in payload.get('data', {}) and payload['data']['comment'] is None:
+            payload['data']['comment'] = ''
+
+
         print('CREATE NOTIFICATION!!!!')
         response, _, _, return_code, location_header = post_internal('notifications', payload)
         print('Response from', response, return_code)
@@ -88,7 +93,7 @@ def ors_message(recepients, event_from, event_from_id, message, ors_id, org_id, 
 
     data = {
         'id': ors_id,
-        'title': '/'.join(ors_tags),
+        'tags': ors_tags,
         'org_id': org_id,
         'message': message
     }
@@ -102,7 +107,7 @@ def ors_reminder(recepients, event_from, event_from_id, ors_id, org_id, ors_tags
 
     data = {
         'id': ors_id,
-        'title': '/'.join(ors_tags),
+        'tags': ors_tags,
         'org_id': org_id,
     }
 
@@ -114,7 +119,7 @@ def ors_acl(recepients, event_from, event_from_id, right, verb, ors_id, org_id, 
                      dismissable=True, acl={})
     data = {
         'id': ors_id,
-        'title': '/'.join(ors_tags),
+        'tags': ors_tags,
         'org_id': org_id,
         'right': right,
         'verb': verb
@@ -129,7 +134,7 @@ def ors_workflow(recepients, event_from, event_from_id, ors_id, org_id, ors_tags
 
     data = {
         'id': ors_id,
-        'title': '/'.join(ors_tags),
+        'tags': ors_tags,
         'org_id': org_id,
         'action': action,
         'comment': comment,
@@ -164,7 +169,7 @@ def ors_e5x(recepients, event_from, event_from_id, source, ors_id, ors_tags, sta
 
     data = {
         'id': ors_id,
-        'title': '/'.join(ors_tags),
+        'tags': ors_tags,
         'action': 'save',
         'source': source,
         'status': status,

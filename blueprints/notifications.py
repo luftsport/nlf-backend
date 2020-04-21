@@ -12,8 +12,8 @@ from flask import Blueprint, current_app as app  # , Response, abort, jsonify, m
 import datetime
 
 # Notification
-from ext.app.notifications import strip_tags, REMINDER_DELTA
-
+from ext.app.notifications import strip_tags
+from ext.scf import REMINDER_DELTA
 # Need custom decorators
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response, eve_response_pppd
@@ -51,7 +51,12 @@ def message():
         k = parse_acl_flat(acl)
         # If not self too
         recepients = [x for x in k if x != app.globals.get('user_id', None)]
-        ors_message(recepients=recepients, event_from=event_from, event_from_id=event_from_id, message=msg, ors_id=rest.get('id', None), org_id=rest.get('discipline', None), ors_tags=rest.get('tags', []))
+        ors_message(recepients=recepients,
+                    event_from=event_from,
+                    event_from_id=event_from_id,
+                    message=msg, ors_id=rest.get('id', None),
+                    org_id=rest.get('discipline', None),
+                    ors_tags=rest.get('tags', []))
 
         return eve_response(recepients, 200)
 
@@ -117,7 +122,13 @@ def reminder():
             return eve_response_pppd({'data': 'Fant ingen å sende til'}, 404, 'Found no recepients!')
 
         # Create notification
-        ors_reminder(recepients, event_from=event_from, event_from_id=event_from_id, ors_id=rest.get('id', None), org_id=rest.get('discipline', None), ors_tags=rest.get('tags', []))
+        ors_reminder(recepients,
+                     event_from=event_from,
+                     event_from_id=event_from_id,
+                     ors_id=rest.get('id', None),
+                     org_id=rest.get('discipline', None),
+                     ors_tags=rest.get('tags', []))
+
         return eve_response(recepients, 200)
 
     except Exception as e:

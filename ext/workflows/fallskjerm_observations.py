@@ -615,9 +615,9 @@ class ObservationWorkflow(Machine):
             ors_id=self.db_wf['id'],
             ors_tags=self.db_wf.get('tags', []),
             org_id=self.db_wf.get('discipline'),
-            action=action,
-            source=self.initial_state,  # self._state_attrs[self.initial_state]['description'],
-            destination=self.state,  # self._state_attrs[self.state]['description'],
+            action=action, #WF_FALLSKJERM_TRANSITIONS_ATTR[action]['action'],
+            source=self.initial_state,  # self._state_attrs[self.initial_state]['description'], #
+            destination=self.state,  #self._state_attrs[self.state]['description'], #
             comment=self.comment,
             context=context
         )

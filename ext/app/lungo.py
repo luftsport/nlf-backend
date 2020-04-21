@@ -2,14 +2,21 @@
 Lungo functions defined here
 """
 import requests
-from flask import current_app as app
 from ext.scf import LUNGO_HEADERS, LUNGO_URL
+
+# To be able to use this standalone outside of flask context
+from flask import current_app as app
+try:
+    if app.config:
+        pass
+except:
+    app = {'config': {'REQUESTS_VERIFY': False}}
 
 
 def get_person(person_id) -> (bool, dict):
     resp = requests.get('{}/persons/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json()
@@ -21,7 +28,7 @@ def get_person_acl(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -55,7 +62,7 @@ def get_person_acl_simple(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/simple/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -65,7 +72,7 @@ def get_person_activities(person_id):
     activities = []
     resp = requests.get('{}/acl/activities/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
 
@@ -83,7 +90,7 @@ def get_person_merged_from(person_id):
 
     resp = requests.get('%s/persons/merged?aggregate={"$person_id":%s}' % (LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -99,7 +106,7 @@ def get_person_from_role(role) -> (bool, [int]):
     resp = requests.get(
         '%s/functions?where={"active_in_org_id": %s, "type_id": %s, "is_deleted": false, "is_passive": false}&projection={"person_id": 1}'
         % (LUNGO_URL, role.get('org'), role.get('role')),
-        headers=LUNGO_HEADERS, verify=app.config.get('REQUESTS_VERIFY', True))
+        headers=LUNGO_HEADERS, verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -115,7 +122,7 @@ def get_person_from_role(role) -> (bool, [int]):
 def get_person_email(person_id) -> (bool, dict):
     resp = requests.get('{}/persons/{}?projection={{"full_name": 1, "address.email": 1}}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -130,7 +137,7 @@ def get_org_name(org_id):
     print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
     resp = requests.get('{}/{}/{}?projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json().get('name', 'Ukjent Klubb')
@@ -141,7 +148,7 @@ def get_org_name(org_id):
 def get_person_name(person_id):
     resp = requests.get('{}/{}/{}?projection={{"full_name": 1}}'.format(LUNGO_URL, 'persons', person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json().get('full_name', 'Ukjent person')
@@ -161,7 +168,7 @@ def get_orgs_in_activivity(activity_id, org_type_ids=[6, 14, 19]):
                                                                                           activity_id,
                                                                                           org_type_ids),
         headers=LUNGO_HEADERS,
-        verify=app.config.get('REQUESTS_VERIFY', True))
+        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         try:
@@ -186,7 +193,7 @@ def get_users_from_role(type_id, org_type_ids=[6, 14, 19]):
                                                                                    type_id,
                                                                                    org_type_ids),
         headers=LUNGO_HEADERS,
-        #verify=app.config.get('REQUESTS_VERIFY', True)
+        # verify=app['config'].get('REQUESTS_VERIFY', True)
     )
 
     if resp.status_code == 200:
