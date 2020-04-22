@@ -1,5 +1,6 @@
 from _base import acl_item_schema
 from bson import SON, ObjectId
+from flask import current_app as app
 
 RESOURCE_COLLECTION = 'notifications'
 BASE_URL = 'notifications'
@@ -28,6 +29,8 @@ definition = {
     'item_title': 'content',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
+                   # Only current users messages can be GET'ed
+                   'filter': {'recepient': app.globals['user_id']}
                    },
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET'],
