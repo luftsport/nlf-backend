@@ -25,6 +25,18 @@
                                                             you to edit certain row. It makes it easy for you to quickly edit row sections.
                                                             http://kb.mailchimp.com/templates/code/create-editable-content-areas-with-mailchimps-template-language
                                                         -->
+                                                        {% if action == 'init' %}
+                                                        <h3 mc:edit="header"
+                                                            style="color:#5F5F5F;line-height:125%;font-family:Helvetica,Arial,sans-serif;font-size:20px;font-weight:normal;margin-top:0;margin-bottom:3px;text-align:center;">
+                                                            ORS OPPRETTET</h3>
+                                                        <h3 mc:edit="header"
+                                                            style="color:#5F5F5F;line-height:125%;font-family:Helvetica,Arial,sans-serif;font-size:20px;font-weight:normal;margin-top:0;margin-bottom:3px;text-align:center;">
+                                                            {{ from }} har opprettet ors #{{ id }}
+                                                        </h3>
+
+                                                        {% endif %}
+
+                                                        {% if action != 'init' %}
                                                         <h3 mc:edit="header"
                                                             style="color:#5F5F5F;line-height:125%;font-family:Helvetica,Arial,sans-serif;font-size:20px;font-weight:normal;margin-top:0;margin-bottom:3px;text-align:center;">
                                                             ARBEIDSFLYT</h3>
@@ -35,14 +47,17 @@
                                                              style="text-align:left;font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:0;color:#5F5F5F;line-height:135%;">
                                                             <p></p>
                                                             <h4 style="text-align:center;">
-                                                                {{ from }} {{ action }} ors #{{ id }} fra {{ source }} til {{ destination }}
+                                                                {{ from }} {{ action }} ors #{{ id }} fra {{ source }}
+                                                                til {{ destination }}
                                                             </h4>
                                                             {% if comment != '' %}
-                                                            <h5 style="text-align:left;background-color:#e1e1e1;padding:10px;">{{ comment | nl2br }}
+                                                            <h5 style="text-align:left;background-color:#e1e1e1;padding:10px;">
+                                                                {{ comment | nl2br }}
                                                             </h5>
                                                             {% endif %}
                                                             {{ info_table }}
                                                         </div>
+                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                             </table>

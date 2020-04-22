@@ -4,11 +4,10 @@ Lungo functions defined here
 import requests
 from ext.scf import LUNGO_HEADERS, LUNGO_URL
 
-# To be able to use this standalone outside of flask context
+# To be able to use this standalone
 from flask import current_app as app
 try:
-    if app.config:
-        pass
+    if app.coni
 except:
     app = {'config': {'REQUESTS_VERIFY': False}}
 
