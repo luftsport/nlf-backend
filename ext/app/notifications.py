@@ -1,7 +1,7 @@
 from flask import current_app as app
 from eve.methods.post import post_internal
 import datetime
-import uuid
+from uuid import uuid4
 import re
 
 # Broadcast socketio
@@ -41,7 +41,7 @@ class Notification:
 
     def __init__(self, event_from, event_from_id, event_type, dismissable=True, acl={}):
         self.event_data = {
-            'event_id': str(uuid.uuid4()),
+            'event_id': str(uuid4()),
             'type': event_type,
             'recepient': None,  # person_id
             'sender': app.globals.get('user_id'),  # person_id
@@ -62,6 +62,7 @@ class Notification:
         if 'comment' in payload.get('data', {}) and payload['data']['comment'] is None:
             payload['data']['comment'] = ''
 
+        payload['uuid'] = str(uuid4())
 
         print('CREATE NOTIFICATION!!!!')
         response, _, _, return_code, location_header = post_internal('notifications', payload)
