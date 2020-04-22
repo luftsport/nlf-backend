@@ -9,6 +9,11 @@ from ext.auth.acl import has_permission
 
 # from ext.app.decorators import require_token # Already authenticated
 
+
+def before_get(request, lookup):
+    lookup['recepient'] = app.globals['user_id']
+
+
 def before_insert(items):
     print('Before POST content to database')
     print(items)

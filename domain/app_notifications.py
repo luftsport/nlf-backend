@@ -29,8 +29,6 @@ definition = {
     'item_title': 'content',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
-                   # Only current users messages can be GET'ed
-                   'filter': {'recepient': app.globals['user_id']}
                    },
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET'],
@@ -42,7 +40,7 @@ definition = {
     },
     'additional_lookup': {
         'url': 'regex("[a-fA-F0-9-]+")',
-        'field': 'slug',
+        'field': 'uuid',
     },
     'schema': _schema
 

@@ -177,6 +177,8 @@ app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
+# Notifications
+app.on_pre_GET_notifications += hook.notifications.before_get
 
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
