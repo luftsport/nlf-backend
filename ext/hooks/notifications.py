@@ -11,6 +11,7 @@ from ext.auth.acl import has_permission
 
 
 def before_get(request, lookup):
+    """Make sure only recepient can read own messages"""
     lookup['recepient'] = app.globals['user_id']
 
 
