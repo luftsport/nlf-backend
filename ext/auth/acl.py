@@ -72,7 +72,7 @@ def modify_user_acl(collection, _id, person_id, right, operation):
 
 
 def parse_acl(acl):
-    print('AAAAAAAAAACL', acl)
+
     users = {
         'read': acl.get('read', {}).get('users', []),
         'write': acl.get('write', {}).get('users', []),
@@ -96,7 +96,7 @@ def parse_acl(acl):
 
         acl[right] = list(set(acl[right]))
 
-    print('USERS Acl', users)
+
     return users
 
 

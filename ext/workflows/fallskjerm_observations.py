@@ -24,7 +24,7 @@ RESOURCE_COLLECTION = 'fallskjerm_observations'
 def get_wf_init(person_id):
     utc = datetime.utcnow()
 
-    return {'name': 'ObservationWorkflow',
+    return {'name': 'fallskjerm_observations_workflow',
             'comment': 'Initialized workflow',
             'state': 'draft',
             'last_transition': utc,
