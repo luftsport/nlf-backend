@@ -69,7 +69,7 @@ _schema = {'id': {'type': 'integer',
            'rating': {'type': 'dict',
                       'schema': {'actual': {'type': 'integer'},
                                  'potential': {'type': 'integer'},
-                                 'calculated': {'type': 'integer', 'default': 1}
+                                 '_rating': {'type': 'integer', 'default': 1}
                                  },
                       'default': {'actual': 1, 'potential': 1}
                       },
