@@ -43,6 +43,7 @@ if APP_INSTANCE == 'prod':
     APP_INSTANCE_PEM = 'app-public.pem'
 
 
+
 elif APP_INSTANCE == 'beta':
     MONGO_HOST = 'localhost'
     MONGO_PORT = 27017
@@ -100,8 +101,8 @@ ITEM_METHODS = ['GET', 'PATCH', 'DELETE', 'PUT']
 CACHE_CONTROL = 'max-age=20'
 CACHE_EXPIRES = 20
 
-# Support only json response 'eve.render.XMLRenderer'
-RENDERERS = ['eve.render.JSONRenderer']
+# Support json and xml renderer
+RENDERERS = ['eve.render.JSONRenderer', 'eve.render.XMLRenderer']
 
 ALLOW_UNKNOWN = False
 

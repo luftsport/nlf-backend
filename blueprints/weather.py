@@ -275,5 +275,5 @@ def met_nearest_metar(icao, date):
         parsed = parse_metar(metar)
         return eve_response({'metar': metar, 'parsed': '{}'.format(parsed)}, 200)
     except Exception as e:
-        ppp.logger.error(e)
+        app.logger.error(e)
         return eve_abort(404, 'Could not process {}'.format(e))

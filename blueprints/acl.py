@@ -14,7 +14,6 @@ import json
 ###
 import uuid
 import datetime
-from blueprints.notifications import _create
 ####
 
 
@@ -26,9 +25,10 @@ from ext.app.decorators import *
 
 import ext.auth.acl as acl_helper
 from ext.app.eve_helper import eve_abort, eve_response
-
+from ext.app.notifications import ors_acl
 
 ACL = Blueprint('Acl', __name__, )
+
 
 ####### SOME ACL STUFF ##########
 @ACL.route("/users/<string:collection>/<objectid:_id>/flat", methods=['GET'])
@@ -44,6 +44,7 @@ def get_users_flat(collection, _id):
 
     else:
         return eve_response({})
+
 
 @ACL.route("/users/<string:collection>/<objectid:_id>", methods=['GET'])
 @require_token()
@@ -61,11 +62,9 @@ def get_users(collection, _id):
 @ACL.route("/<string:collection>/<int:observation_id>", methods=['GET'])
 @require_token()
 def get_observation_user_acl(collection, observation_id):
-
     result = acl_helper.get_user_permissions(observation_id, collection)
 
     return eve_response(result)
-
 
 
 @ACL.route("/observations/<string:activity>/<objectid:_id>/<string:right>/<int:person_id>", methods=['DELETE', 'POST'])
@@ -73,8 +72,9 @@ def get_observation_user_acl(collection, observation_id):
 def acl_toggle(activity, _id, right, person_id):
     if person_id != app.globals.get('user_id'):
         # projection={'acl': 1}, right='read'
-        status, acl, _ = acl_helper.get_acl('{}_observations'.format(activity), _id, projection={'acl': 1, 'reporter': 1},
-                                 right='execute')
+        status, acl, ors = acl_helper.get_acl('{}_observations'.format(activity), _id,
+                                              projection={'acl': 1, 'reporter': 1, 'id': 1, 'discipline': 1, 'tags': 1},
+                                              right='execute')
 
         if status is True:
 
@@ -87,28 +87,22 @@ def acl_toggle(activity, _id, right, person_id):
                 update = acl_helper.modify_user_acl('{}_observations'.format(activity), _id, person_id, right, 'remove')
 
             if update is True:
-                data = {
-                    'type': 'access',
-                    'recepient': person_id,
-                    'sender': app.globals.get('user_id'),
-                    'event_id': str(uuid.uuid4()),
-                    'event_from': '{}_observations'.format(activity),
-                    'event_from_id': _id,
-                    'event_created': datetime.datetime.utcnow(),
-                    'dismissable': True,
-                    'dismissed': None,
-                    'transport': 'email',
-                    'status': 'ready',
-                    'data': {
-                        'message': '{} {}'.format(verb, right),
-                        'verb': 'remove' if verb == 'fjernet' else 'add'
-                    }
-                }
-                _create(data)
+                # recepients, event_from, event_from_id, right, verb,
+                ors_acl(
+                    recepients=person_id,
+                    event_from='{}_observations'.format(activity),
+                    event_from_id=_id,
+                    right=right,
+                    verb='remove' if verb == 'fjernet' else 'add',
+                    ors_id=ors.get('id', None),
+                    org_id=ors.get('discipline', None),
+                    ors_tags=ors.get('tags', [])
+                )
 
                 return eve_response(True, 201)
 
     return eve_response(False, 409)
+
 
 ##################
 
@@ -116,7 +110,6 @@ def acl_toggle(activity, _id, right, person_id):
 @ACL.route("/group/<objectid:group_id>", methods=['GET'])
 @require_token()
 def get_users_by_group(group_id):
-
     col = app.data.driver.db['users']
     r = col.find({'acl.groups': {'$in': [group_id]}})
 

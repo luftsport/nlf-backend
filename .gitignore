@@ -3,6 +3,7 @@ share/
 *.log
 *.log*
 *.png
+resume.token
 */.directory
 .directory
 #Custom files

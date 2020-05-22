@@ -68,7 +68,8 @@ _schema = {'id': {'type': 'integer',
 
            'rating': {'type': 'dict',
                       'schema': {'actual': {'type': 'integer'},
-                                 'potential': {'type': 'integer'}
+                                 'potential': {'type': 'integer'},
+                                 '_rating': {'type': 'integer', 'default': 1}
                                  },
                       'default': {'actual': 1, 'potential': 1}
                       },

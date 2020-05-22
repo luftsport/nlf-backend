@@ -18,7 +18,7 @@ from ext.app.lungo import get_person_from_role, get_org_name, get_person_name
 def get_recepients(recepients):
     result = []
     query = 'where={{"id": {{"$in": {} }}}}&projection={{"full_name": 1, "address.email": 1}}'.format(recepients)
-    print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
+    # print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
     resp = requests.get('{}/{}?{}'.format(LUNGO_URL, 'persons', query), headers=LUNGO_HEADERS)
 
     if resp.status_code == 200:

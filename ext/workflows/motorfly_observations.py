@@ -11,9 +11,11 @@ from ext.notifications.email import Email  # , Sms
 from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
     get_person_name_text
 
-from ext.scf import ACL_CLOSED_ALL, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
+from ext.scf import ACL_CLOSED_ALL_LIST, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
     ACL_MOTORFLY_TEKNISK_LEDER
-import arrow
+
+from ext.app.notifications import ors_workflow
+from ext.auth.acl import parse_acl_flat
 
 RESOURCE_COLLECTION = 'motorfly_observations'
 
@@ -21,7 +23,7 @@ RESOURCE_COLLECTION = 'motorfly_observations'
 def get_wf_init(person_id):
     utc = datetime.utcnow()
 
-    return {'name': 'ObservationWorkflow',
+    return {'name': 'motorfly_observations_workflow',
             'comment': 'Initialized workflow',
             'state': 'draft',
             'last_transition': utc,
@@ -285,7 +287,6 @@ class ObservationWorkflow(Machine):
     This fork will support the requirements in this project and also keep track of origin
     @todo: add https://github.com/einarhuseby/transitions to site-packages
     @todo: pip install git+https://github.com/einarhuseby/transitions
-    @todo: state groups -> then you can see if "in review", "is open" etc
     """
 
     def __init__(self, object_id=None, initial_state=None, user_id=None, comment=None):
@@ -357,6 +358,7 @@ class ObservationWorkflow(Machine):
         """ Make sure to start with a defined state!
         """
         col = app.data.driver.db[RESOURCE_COLLECTION]
+
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
                                   {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
                                    '_version': 1, 'owner': 1,
@@ -388,11 +390,14 @@ class ObservationWorkflow(Machine):
         self.acl_TEKNISK = ACL_MOTORFLY_TEKNISK_LEDER.copy()
         self.acl_TEKNISK['org'] = self.discipline
 
-        self.current_acl = self.db_wf.get('acl', {})
+        self.initial_acl = self.db_wf.get('acl', {}).copy()
 
         self.comment = '' if comment is None else '{}'.format(comment).strip()
 
-        Machine.__init__(self, states=self._states, send_event=True, transitions=self._transitions,
+        Machine.__init__(self,
+                         states=self._states,
+                         send_event=True,
+                         transitions=self._transitions,
                          initial=self.initial_state)
 
     def get_actions(self):
@@ -422,8 +427,6 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            print('Event', event)
-            print('TMP', tmp)
             tmp['permission'] = self.has_permission(None)
 
             resources.append(tmp)
@@ -451,10 +454,11 @@ class ObservationWorkflow(Machine):
         check if in execute!
         """
         try:
-            if len([i for i in app.globals['acl'].get('roles', []) if i in self.current_acl['execute']['roles']]) > 0 \
-                    or app.globals['user_id'] in self.current_acl['execute']['users']:
+            if len([i for i in app.globals['acl'].get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
+                    or app.globals['user_id'] in self.initial_acl['execute']['users']:
                 return True
-        except:
+        except Exception as e:
+            print('ERRRRR', e)
             pass
 
         return False
@@ -490,10 +494,7 @@ class ObservationWorkflow(Machine):
 
         """Use self.initial_state as from state!"""
 
-        acl = self.db_wf.get('acl')
-        club = self.db_wf.get('club')
-        reporter = self.db_wf.get('reporter')
-        owner = self.db_wf.get('owner')
+        acl = self.db_wf.get('acl', {})
         reporter = self.db_wf.get('reporter')
 
         if self.state == 'draft':
@@ -513,10 +514,6 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['read']['users'] = [reporter]
             acl['execute']['users'] = [reporter]
-
-            acl['write']['groups'] = []
-            acl['read']['groups'] = []
-            acl['execute']['groups'] = []
 
             acl['write']['roles'] = []
             acl['read']['roles'] = []
@@ -566,13 +563,9 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = ACL_CLOSED_ALL
+            acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
             acl['execute']['roles'] = [self.acl_ORS]
-
-            # Notify closed
-            self.notification(acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE])
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))
@@ -582,11 +575,6 @@ class ObservationWorkflow(Machine):
         acl['read']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['read']['roles'])]
         acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
         acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
-
-        # NOTIFY
-        if self.state != 'closed':
-            self.notification(users=acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                              roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'])
 
         return acl
 
@@ -631,64 +619,54 @@ class ObservationWorkflow(Machine):
         # Should really supply the e-tag here, will work! , '_etag': _etag
         # Can also use test_client to do this but it's rubbish or?
         # This will ignore the readonly field skip_validation AND you do not need another domain file for it!!
-        result = patch_internal(RESOURCE_COLLECTION, payload=new,
-                                concurrency_check=False,
-                                skip_validation=True,
-                                **{'_id': "%s" % _id, '_etag': "%s" % _etag})
+        response, last_modified, etag, status = patch_internal(RESOURCE_COLLECTION,
+                                                               payload=new,
+                                                               concurrency_check=False,
+                                                               skip_validation=True,
+                                                               **{'_id': "%s" % _id, '_etag': "%s" % _etag})
         # test_client().post('/add', data = {'input1': 'a'}}
         # app.test_client().patch('/observations/%s' % _id, data=new, headers=[('If-Match', _etag)])
 
         # if self.state != self.initial_state:
 
-        if result:
+        if status in [200, 201]:
+            self.notification()
             return True
 
         return False
 
     def notify_created(self):
-        acl = self.db_wf.get('acl')
-        print(acl)
-        self.notification(users=acl['read']['users'] + acl['execute']['users'] + acl['write']['users'],
-                          roles=acl['read']['roles'] + acl['write']['roles'] + acl['execute']['roles'],
+        self.notification(action='init',
                           context='created')
 
-    def notification(self, users=[], roles=[], context='transition'):
-        """ A wrapper around notifications
-        """
+    def notification(self, action=None, context='transition'):
 
-        mail = Email()
+        # get users from roles
+        # ors_workflow(recepients, activity, _id, action, source, destination, comment, context='transition')
 
-        """
-        recepients = self.helper.get_melwin_users_email(
-            self.helper.collect_users(users=users, roles=roles, groups=groups))
-        """
+        if action is None:
+            action = WF_MOTORFLY_TRANSITIONS_ATTR[self.action]['resource']
 
-        recepients = get_recepients_from_roles(roles) + get_recepients(users)
+        # Not to self!
+        # If closed - notify ONLY existing acl's
 
-        message = {}
-
-        action = ''
-        if self.action is not None:
-            action = self._trigger_attrs[self.action]['descr']
+        if self.state == 'closed':
+            tmp = self.db_wf.get('acl', {})
+            tmp['read']['roles'] = [x for x in tmp['read']['roles'] if x not in ACL_CLOSED_ALL_LIST]
+            acl = parse_acl_flat(tmp)
         else:
-            action = 'Opprettet'
+            acl = parse_acl_flat(self.db_wf.get('acl', {}))
 
-        subject = 'Observasjon #%s %s' % (int(self.db_wf.get('id')), action)
-
-        message.update({'observation_id': self.db_wf['id']})
-        message.update({'action_by': get_person_name_text(app.globals['id'])})
-        message.update({'action': action})
-        message.update({'title': '%s' % ' '.join(self.db_wf.get('tags'))})
-        message.update({'wf_from': self._state_attrs[self.initial_state]['description']})
-        message.update({'wf_to': self._state_attrs[self.state]['description']})
-        message.update({'club': get_org_name_text(self.db_wf.get('discipline'))})
-        message.update({'date': datetime.today().strftime('%Y-%m-%d %H:%M')})
-        message.update({'url': 'ors/motorfly/edit/%i\n' % int(self.db_wf.get('id'))})
-        message.update({'url_root': request.url_root})
-        message.update({'comment': '{}'.format(self.comment)})
-        message.update({'context': context})
-
-        mail.add_message_html(message, 'ors')
-        mail.add_message_plain(message, 'ors')
-
-        mail.send(recepients, subject, prefix='ORS')
+        ors_workflow(
+            recepients=acl,  # notify self too!
+            event_from=RESOURCE_COLLECTION,
+            event_from_id=self.db_wf['_id'],
+            ors_id=self.db_wf['id'],
+            org_id=self.db_wf.get('discipline'),
+            ors_tags=self.db_wf.get('tags', []),
+            action=action,
+            source=self.initial_state,  # self._state_attrs[self.initial_state]['description'],
+            destination=self.state,  # self._state_attrs[self.state]['description'],
+            comment=self.comment,
+            context=context
+        )

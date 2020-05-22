@@ -23,20 +23,17 @@
 
 """
 import ext.auth.anonymizer as anon
-from ext.auth.acl import get_user_acl_mapping
+from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permission
 import ext.app.eve_helper as eve_helper
 from ext.app.decorators import *
 import json
-# import signals from hooks
-from ext.hooks.motorfly_signals import signal_activity_log, \
-    signal_change_owner  # signal_init_acl signal_insert_workflow,
-from ext.hooks.motorfly_signals import signal_g_init_acl, signal_motorfly_insert_workflow
 
 from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
 from ext.workflows.motorfly_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
+from ext.app.notifications import ors_save, ors_workflow, broadcast
 
 
 def ors_before_insert(items):
@@ -45,10 +42,7 @@ def ors_before_insert(items):
 
 
 def ors_before_insert_item(item):
-    """Do everything needed before processing
-    Add WF
-    Add other known...
-    """
+
     try:
         if 'discipline' in item and item.get('discipline', 0) > 0:
 
@@ -78,16 +72,15 @@ def ors_before_insert_item(item):
 
 
     except Exception as e:
-        print('Error', e)
         eve_abort(422, 'Could not create ORS')
 
 
-def ors_after_insert(items):
+def ors_after_inserted(items):
     for item in items:
-        ors_after_insert_item(item)
+        ors_after_inserted_item(item)
 
 
-def ors_after_insert_item(item):
+def ors_after_inserted_item(item):
     wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=app.globals.get('user_id'))
     if wf.get_current_state().get('state', '') == 'draft':
         wf.notify_created()
@@ -107,32 +100,7 @@ def ors_after_insert_item(item):
     """
 
 
-def after_g_post(request, response):
-    payload = json.loads(response.get_data().decode('UTF-8'))
-
-    signal_motorfly_insert_workflow.send({'app': app, 'payload': payload})
-
-    signal_g_init_acl.send({'app': app, 'payload': payload})
-
-
-@require_token()
-def before_post(request, payload=None):
-    pass
-
-
-def after_patch(request, response):
-    """ Change owner, owner is readonly
-    """
-    signal_change_owner.send(app, response=response)
-
-
-def after_fetched_p(response, _id):
-    # print('##### RESPONSE ####')
-    # print(response)
-    pass
-
-
-def after_fetched_diffs(response):
+def ors_after_fetched_diffs(response):
     # print('########', response)
     if isinstance(response, list):
 
@@ -141,46 +109,11 @@ def after_fetched_diffs(response):
                 for index, val in enumerate(response):
                     response[index] = anon.anonymize_ors(response[index])
     else:
-        after_fetched(response)
+        ors_after_fetched(response)
 
 
-def user_persmissions(resource_acl, state):
-    permissions = {
-        'read': False,
-        'write': False,
-        'delete': False,
-        'execute': False,
-    }
 
-    for perm in permissions.keys():
-        permissions[perm] = has_nanon_permission(resource_acl, perm, state)
-
-    return permissions
-
-
-def has_permission(resource_acl, perm):
-    if (
-            any(pid for pid in app.globals['acl']['roles'] if pid in resource_acl[perm]['roles']) is True
-            or app.globals['user_id'] in resource_acl[perm]['roles'] is True
-    ):
-        return True
-    return False
-
-
-def has_nanon_permission(resource_acl, perm, state):
-    # Closed and should be able to see
-    if state == 'closed' and perm == 'execute':
-        if (
-                any(pid for pid in app.globals['acl']['roles'] if
-                    pid in [ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS]) is True
-                or app.globals['user_id'] in resource_acl[perm]['roles'] is True
-        ):
-            return True
-
-    return has_permission(resource_acl, perm)
-
-
-def after_fetched(response):
+def ors_after_fetched(response):
     """ Modify response after GETing an observation
     This hook checks if permission on each observation
     If closed, then it will anonymize each observation wo w or x rights
@@ -231,28 +164,42 @@ def after_fetched(response):
                                  e))
 
 
-def before_get_todo(request, lookup):
+@require_token()
+def ors_before_get_todo(request, lookup):
     lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
                             {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                      {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
 
 
 @require_token()
-def before_get(request, lookup):
-    # print('################')
-    # print('REQ', request)
-    # print('LOOKUP', lookup)
+def ors_before_get(request, lookup):
     lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.read.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
 @require_token()
-def before_patch(request, lookup):
+def ors_before_patch(request, lookup):
     lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
 
 
+def ors_after_update(updates, original):
+    """After DB update, updates is just changed data"""
+
+    # Only when not doing workflow transitions
+    if updates.get('workflow', {}).get('state', None) is None:
+        if original.get('workflow', {}).get('state', 'original') not in ['closed', 'withdrawn']:
+            ors_save(
+                recepients=parse_acl_flat(original.get('acl', {}), exclude_current_user=False),
+                event_from='motorfly_observations',
+                event_from_id=original.get('_id', None),
+                source=original.get('_version', 1),
+                destination=original.get('_version', 2) + 1,
+                context='save'
+            )
+
+
 @require_token()
-def before_post_comments(resource, items):
-    if resource == 'fallskjerm/observation/comments':
+def ors_before_post_comments(resource, items):
+    if resource == 'motorfly/observation/comments':
         items[0].update({'user': int(app.globals.get('user_id'))})

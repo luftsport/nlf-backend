@@ -14,13 +14,15 @@ _schema = {'title': {'type': 'string',
            'space_key': {'type': 'string',
                          'required': True},
            'parent': {'type': 'objectid',
+                      'nullable': True,
                       'default': None},
            'order': {'type': 'integer'},
            'ref': {'type': 'string'},
            'owner': {'type': 'integer',
                      'required': False,
-                     'readonly': True}
-           # 'acl': acl_item_schema
+                     'readonly': True},
+           'published': {'type': 'boolean'},
+           'acl': acl_item_schema
            }
 
 definition = {
@@ -40,6 +42,8 @@ definition = {
     'mongo_indexes': {'slug': ([('slug', 1)], {'background': True}),
                       'space': ([('space_key', 1)], {'background': True}),
                       'parent': ([('parent', 1)], {'background': True}),
+                      'acl': ([('acl', 1)], {'background': True}),
+                      'published': ([('published', 1)], {'background': True}),
                       'owner': ([('owner', 1)], {'background': True}),
                       'content': ([('title', 'text'), ('body', 'text')], {'background': True})
                       },

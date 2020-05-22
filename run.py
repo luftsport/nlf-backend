@@ -47,6 +47,7 @@ from blueprints.weather import Weather
 from blueprints.info import Info
 from blueprints.files import Files
 from blueprints.tags import Tags
+from blueprints.content import Content
 # Membership integration blueprint
 from blueprints.lungo import Lungo
 from blueprints.e5x import E5X
@@ -57,6 +58,9 @@ from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
 # Custom auth extensions
 from ext.auth.tokenauth import TokenAuth
+
+# From notfication
+import ext.hooks.notifications as notifications
 
 # Verify startup inside virtualenv
 if not hasattr(sys, 'real_prefix'):
@@ -107,10 +111,11 @@ app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" %
 
 app.register_blueprint(Notifications, url_prefix="%s/notifications/bin" % app.globals.get('prefix'))
 
-
 app.register_blueprint(Weather, url_prefix="%s/weather" % app.globals.get('prefix'))
 app.register_blueprint(Info, url_prefix="%s/info" % app.globals.get('prefix'))
 app.register_blueprint(Files, url_prefix="%s/download" % app.globals.get('prefix'))
+
+app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefix'))
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
@@ -136,34 +141,48 @@ def dump_request(request):
         pass
 
 
-# ORS
-# Fallskjerm
-# POST
-app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
-# BEFORE GET
-app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.before_get
-app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.before_get_todo
-# AFTER FETCHED (GET)
-app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.after_fetched
-app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.after_fetched
-app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.after_fetched_diffs
-# BEFORE PATCH/PUT
-app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
 
-## MOTOR
+# ##############
+# FALLSKJERM ORS
+#
+# POST/DB Insert
+app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
+app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.ors_after_fetched
+app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fetched
+app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_diffs
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
+# AFTER update db layer
+app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
+
+# ################
+# MOTOR ORS
+#
 # BEFORE AND AFTER POST INSERT
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
-app.on_inserted_motorfly_observations += hook.motorfly.ors_after_insert  # no id??
+app.on_inserted_motorfly_observations += hook.motorfly.ors_after_inserted
 # BEFORE GET
-app.on_pre_GET_motorfly_observations += hook.motorfly.before_get
-app.on_pre_GET_motorfly_observations_todo += hook.motorfly.before_get_todo
+app.on_pre_GET_motorfly_observations += hook.motorfly.ors_before_get
+app.on_pre_GET_motorfly_observations_todo += hook.motorfly.ors_before_get_todo
 # AFTER FETCHED (GET)
-app.on_fetched_item_motorfly_observations += hook.motorfly.after_fetched
-app.on_fetched_item_motorfly_observations_todo += hook.motorfly.after_fetched
-app.on_fetched_diffs_motorfly_observations += hook.motorfly.after_fetched_diffs
+app.on_fetched_item_motorfly_observations += hook.motorfly.ors_after_fetched
+app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
+app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_diffs
 # BEFORE PATCH/PUT
-app.on_pre_PATCH_motorfly_observations += hook.motorfly.before_patch
+app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
+# AFTER update db layer
+app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
+###############
+# Notifications
+app.on_pre_GET_notifications += hook.notifications.before_get
+
+###############
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
@@ -173,6 +192,40 @@ app.on_pre_DELETE_e5x_attributes += hook.e5x.add_delete_filters
 app.on_pre_DELETE_e5x_choices += hook.e5x.add_delete_filters
 app.on_pre_DELETE_e5x_tree += hook.e5x.add_delete_filters
 
+# CLUBS, add owner
+app.on_insert_legacy_clubs += hook.common.on_insert_set_owner
+app.on_update_legacy_clubs += hook.common.on_update_set_owner
+
+#############
+# CONTENT
+app.on_pre_GET_content += hook.content.pre_GET
+app.on_pre_PATCH_content += hook.content.pre_PATCH
+app.on_pre_DELETE_content += hook.content.pre_DELETE
+app.on_insert_content += hook.content.before_insert
+app.on_replace_content += hook.content.on_before_replace
+app.on_update_content += hook.content.on_before_update
+#############
+# HELP
+app.on_pre_GET_help += hook.help.pre_GET
+app.on_pre_PATCH_help += hook.help.pre_PATCH
+app.on_pre_DELETE_help += hook.help.pre_DELETE
+app.on_insert_help += hook.help.before_insert
+app.on_replace_help += hook.help.on_before_replace
+app.on_update_help += hook.help.on_before_update
+
+
+# TEST
+def _aggregation(endpoint, pipeline):
+    """All aggregation endpoints ends up here"""
+    if endpoint == 'notifications_events':
+        notifications.before_aggregation(endpoint, pipeline)
+
+# Before any aggregation run this
+app.before_aggregation += _aggregation
+
+def ooh(request, lookup):
+    print('[AGGG]', request, lookup)
+# app.on_pre_GET_notifications_events += ooh
 # Motor
 
 # app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
@@ -190,22 +243,11 @@ app.on_pre_DELETE_e5x_tree += hook.e5x.add_delete_filters
 
 
 # app.on_insert += hook.observations.before_post_comments
-app.on_insert_f_observation_comments += hook.fallskjerm.before_post_comments
+#app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
 
 # app.on_post_GET_fallskjerm_observations += hook.observations.after_get
 # app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
 
-
-# Help hooks
-app.on_insert_help += hook.help.on_insert_items
-# app.on_pre_PATCH_help += hook.help.before_patch
-# app.on_post_POST_help += hook.help.after_post
-# Content hooks
-app.on_insert_content += hook.content.before_insert
-
-# CLUBS, add owner
-app.on_insert_legacy_clubs += hook.common.on_insert_set_owner
-app.on_update_legacy_clubs += hook.common.on_update_set_owner
 
 # App error hooks
 @app.errorhandler(401)

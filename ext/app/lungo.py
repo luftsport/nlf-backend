@@ -2,14 +2,21 @@
 Lungo functions defined here
 """
 import requests
-from flask import current_app as app
 from ext.scf import LUNGO_HEADERS, LUNGO_URL
+
+# To be able to use this standalone
+from flask import current_app as app
+try:
+    if app.config:
+        pass
+except:
+    app = {'config': {'REQUESTS_VERIFY': False}}
 
 
 def get_person(person_id) -> (bool, dict):
     resp = requests.get('{}/persons/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json()
@@ -21,7 +28,7 @@ def get_person_acl(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -45,7 +52,7 @@ def get_person_acl(person_id) -> (bool, dict):
                 'type': item['type']
             })
 
-        #return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
+        # return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
         return True, acl
 
     return False, None
@@ -55,7 +62,7 @@ def get_person_acl_simple(person_id) -> (bool, dict):
     acl = []
     resp = requests.get('{}/acl/simple/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -65,7 +72,7 @@ def get_person_activities(person_id):
     activities = []
     resp = requests.get('{}/acl/activities/{}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
 
@@ -83,7 +90,7 @@ def get_person_merged_from(person_id):
 
     resp = requests.get('%s/persons/merged?aggregate={"$person_id":%s}' % (LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -99,7 +106,7 @@ def get_person_from_role(role) -> (bool, [int]):
     resp = requests.get(
         '%s/functions?where={"active_in_org_id": %s, "type_id": %s, "is_deleted": false, "is_passive": false}&projection={"person_id": 1}'
         % (LUNGO_URL, role.get('org'), role.get('role')),
-        headers=LUNGO_HEADERS, verify=app.config.get('REQUESTS_VERIFY', True))
+        headers=LUNGO_HEADERS, verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -115,7 +122,7 @@ def get_person_from_role(role) -> (bool, [int]):
 def get_person_email(person_id) -> (bool, dict):
     resp = requests.get('{}/persons/{}?projection={{"full_name": 1, "address.email": 1}}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         r = resp.json()
@@ -127,10 +134,10 @@ def get_person_email(person_id) -> (bool, dict):
 
 
 def get_org_name(org_id):
-    print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
+    # print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
     resp = requests.get('{}/{}/{}?projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json().get('name', 'Ukjent Klubb')
@@ -141,7 +148,7 @@ def get_org_name(org_id):
 def get_person_name(person_id):
     resp = requests.get('{}/{}/{}?projection={{"full_name": 1}}'.format(LUNGO_URL, 'persons', person_id),
                         headers=LUNGO_HEADERS,
-                        verify=app.config.get('REQUESTS_VERIFY', True))
+                        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         return True, resp.json().get('full_name', 'Ukjent person')
@@ -161,16 +168,16 @@ def get_orgs_in_activivity(activity_id, org_type_ids=[6, 14, 19]):
                                                                                           activity_id,
                                                                                           org_type_ids),
         headers=LUNGO_HEADERS,
-        verify=app.config.get('REQUESTS_VERIFY', True))
+        verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         try:
-            print(resp.json())
+            # print(resp.json())
             return resp.json().get('_items', [{}])[0].get('org_ids', [])
         except IndexError as e:
             pass
 
-    print(resp.text)
+    # print(resp.text)
     return []
 
 
@@ -186,17 +193,67 @@ def get_users_from_role(type_id, org_type_ids=[6, 14, 19]):
                                                                                    type_id,
                                                                                    org_type_ids),
         headers=LUNGO_HEADERS,
-        verify=app.config.get('REQUESTS_VERIFY', True))
+        # verify=app['config'].get('REQUESTS_VERIFY', True)
+    )
 
     if resp.status_code == 200:
         try:
-            print(resp.json())
+            # print(resp.json())
             return resp.json().get('_items', [{}])[0].get('person_ids', [])
         except IndexError as e:
             pass
 
-    print(resp.text)
+    # print(resp.text)
     return []
 
 
+def get_recepient(person_id):
+    return get_recepients([person_id])
 
+
+def get_recepients(recepients):
+    persons = []
+
+    try:
+        query = 'where={{"id": {{"$in": {} }}}}&projection={{"full_name": 1, "address.email": 1}}'.format(recepients)
+        # print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
+        resp = requests.get('{}/{}?{}'.format(LUNGO_URL, 'persons', query), headers=LUNGO_HEADERS)
+
+        if resp.status_code == 200:
+
+            for person in resp.json()['_items']:
+                if not '_merged_to' in person:
+                    try:
+                        persons.append({
+                            'full_name': person.get('full_name', ''),
+                            'email': person.get('address', {}).get('email', [])[0]})
+                    except Exception as e:
+                        pass
+
+        return list({v['email']: v for v in persons if len(v['email']) > 4}.values())
+
+    except:
+        pass
+
+    return persons
+
+
+def get_recepients_from_roles(roles):
+    persons = []
+
+    try:
+        for role in roles:
+            resp = requests.get(
+                '{}/functions?where={{"org_id": {}, "type_id": {}, "is_deleted": false, "is_passive": false }}&projection={{"person_id": 1}}'.format(
+                    LUNGO_URL, role.get('org', 0), role.get('role', 0)),
+                headers=LUNGO_HEADERS)
+
+            if resp.status_code == 200:
+                for item in resp.json().get('_items', []):
+                    persons.append(item.get('person_id', 0))
+
+        return get_recepients(list(set([i for i in persons if i > 0])))
+    except:
+        pass
+
+    return persons
