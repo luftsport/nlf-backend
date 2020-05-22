@@ -1,0 +1,15 @@
+{% macro footer(url) -%}
+-------------------------------------------
+ Dette er en automatisk generert epost fra:
+ {{url}}
+-------------------------------------------
+
+ Norges Luftsportforbund                   
+ Møllergata 39                             
+ 0179 Oslo                                 
+                                           
+ Tlf:	23 01 04 50
+ Epost:	post@nlf.no
+ Url:	http://www.nlf.no
+-------------------------------------------
+{%- endmacro %}
