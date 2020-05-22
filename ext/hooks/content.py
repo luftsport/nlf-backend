@@ -1,48 +1,35 @@
-
 from flask import current_app as app
-import ext.app.eve_helper as eve_helper
-import json
-from bson.objectid import ObjectId
-
-"""
-
-on_insert_<resource_name>
-def event(items)
+from ext.app.eve_helper import eve_abort
+from ext.scf import ACL_CONTENT_USERS
 
 
-on_inserted_<resource_name>
-def event(items)
-
-PATCH / UPDATE
-on_update_<resource_name>
-def event(updates, original)
-
-on_updated_<resource_name>
-def event(updates, original)
-
-# BEFORE
-app.on_pre_GET_contacts += pre_contacts_get_callback
-
-app.on_pre_GET_<resource> = on_before (request, lookup)
-
-
-
-
-"""
 def before_insert(items):
-    # print('Before POST content to database')
-    # print(items)
-    # payload = json.loads(response.get_data().decode('UTF-8'))
+    if app.globals.get('user_id') not in ACL_CONTENT_USERS:
+        return eve_abort(403, 'No access')
+        raise Exception
+
     for document in items:
-        # update document 'userid' field according to my_arg
-        # value. replace with custom logic.
         document['owner'] = app.globals.get('user_id')
 
-def before_patch(request, lookup):
-    #print('Before PATCH content')
-    #print(request)
-    #print(lookup)
-    pass
-    
-def before_delete(request, lookup):
-    lookup.update({'owner': app.globals.get('user_id')}, response=resp)
+
+def pre_PATCH(request, lookup):
+    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
+                           {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
+
+
+def on_before_replace(item, original):
+    item['owner'] = app.globals.get('user_id')
+
+
+def on_before_update(item, original):
+    item['owner'] = app.globals.get('user_id')
+
+
+def pre_DELETE(request, lookup):
+    lookup.update({'$or': [{"acl.delete.roles": {'$in': app.globals['acl']['roles']}},
+                           {"acl.delete.users": {'$in': [app.globals.get('user_id')]}}]})
+
+
+def pre_GET(request, lookup):
+    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}},
+                           {"acl.read.users": {'$in': [app.globals.get('user_id')]}}]})
