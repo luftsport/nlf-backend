@@ -8,8 +8,8 @@ from eve.methods.patch import patch_internal
 # Need custom decorators
 from ext.app.decorators import *
 from datetime import datetime
-from ext.auth.helpers import Helpers
 from ext.notifications.email import Email  # , Sms
+from ext.app.lungo import get_person_email
 
 OrsShare = Blueprint('Observation Share', __name__, )
 
@@ -21,10 +21,10 @@ def share_observation(observation_id):
     users = args.get('recepients')
     
     mail = Email()
-    helper = Helpers()
-        
-    recepients = helper.get_melwin_users_email(users)
-    action_by = helper.get_user_name(app.globals.get('user_id'))
+
+    raise NotImplementedError
+    recepients = get_person_email(users)
+    status, action_by = get_person_email(app.globals.get('user_id'))
         
     subject = '%s har delt observasjon #%i' % (action_by, observation_id)
     
