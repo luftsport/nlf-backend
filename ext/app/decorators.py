@@ -9,7 +9,7 @@ from flask import current_app as app, request, Response, abort
 from functools import wraps
 
 from ext.auth.tokenauth import TokenAuth
-from ext.auth.helpers import Helpers
+from ext.scf import ACL_SUPERADMINS
 
 # Because of circular import in context
 from ext.app.eve_helper import eve_abort
@@ -75,8 +75,7 @@ def require_superadmin():
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            h = Helpers()
-            if int(app.globals['user_id']) not in h.get_superadmins():  # [99999]: # # #
+            if app.globals.get('user_id', 0) not in ACL_SUPERADMINS:
                 eve_abort(401, 'You do not have sufficient privileges')
 
             return f(*args, **kwargs)
