@@ -96,11 +96,6 @@ _schema = {'id': {'type': 'integer',
             'categories': {'type': 'list',
                            'default': []
                            },
-            'operational': {'type': 'dict',
-                            'default': {}
-                            },
-                           
-
            'related': {'type': 'list',
                        'default': []
                        },
