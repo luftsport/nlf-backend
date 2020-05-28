@@ -39,7 +39,7 @@ definition = {
     },
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH'],
-    'versioning': True,
+    'versioning': False,
     'mongo_indexes': {'name': ([('slug', 1)], {'background': True}),
                       'tags': ([('tags', 1)], {'background': True}),
                       'content': ([('content_type', 1)], {'background': True}),
