@@ -144,8 +144,7 @@ def ors_after_fetched(response):
                             state='closed',
                             model='motorfly',
                             org=response[key].get('discipline', 0)
-                            is False
-                    ):
+                    ) is False:
                         # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
                         response[key] = anon.anonymize_ors(response[key])
 
@@ -164,8 +163,7 @@ def ors_after_fetched(response):
                             state='closed',
                             model='motorfly',
                             org=response.get('discipline', 0)
-                            is False
-                    ):
+                    ) is False:
                         response = anon.anonymize_ors(response)
 
 
