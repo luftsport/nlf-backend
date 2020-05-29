@@ -89,8 +89,8 @@ def ors_after_fetched_diffs(response):
                     perm='execute',
                     state='closed',
                     model='fallskjerm',
-                    org=response.get('discipline', 0)
-                        is False):
+                    org=response[0].get('discipline', 0)
+            ) is False:
                 for index, val in enumerate(response):
                     response[index] = anon.anonymize_ors(response[index])
     else:
@@ -123,7 +123,7 @@ def ors_after_fetched(response):
                             state='closed',
                             model='fallskjerm',
                             org=response[key].get('discipline', 0)
-                            is False):
+                    ) is False:
                         # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
                         response[key] = anon.anonymize_ors(response[key])
 
@@ -132,20 +132,21 @@ def ors_after_fetched(response):
             # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
 
             # SocketIO
-            broadcast('Somebody is looking at ORS#{}'.format(response['id']))
+            # broadcast('Somebody is looking at ORS#{}'.format(response['id']))
 
             response['acl_user'] = get_user_acl_mapping(response['acl'])
 
             """For item return nanon if roles match hi in club or fs"""
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
+
                     if has_nanon_permission(
-                            resource_acl=response[0].get('acl', []),
+                            resource_acl=response.get('acl', []),
                             perm='execute',
                             state='closed',
                             model='fallskjerm',
                             org=response.get('discipline', 0)
-                            is False):
+                    ) is False:
                         response = anon.anonymize_ors(response)
 
     except KeyError as e:
