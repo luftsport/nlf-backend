@@ -250,17 +250,25 @@ def has_permission(resource_acl, perm):
 def has_nanon_permission(resource_acl, perm, state, model, org=0):
     """Closed who should be able to see non-anon?
     org=0 will make roles for all org True"""
-    roles = []
-    for role in ACL_NANON_ROLES.get(model, []):
-        if role['org'] == 0:
-            role['org'] = org
-        roles.append(role)
 
-    if state == 'closed' and perm == 'execute':
-        if (
-                any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
-                or app.globals['user_id'] in resource_acl[perm]['roles'] is True
-        ):
-            return True
+    try:
+        roles = []
+        for role in ACL_NANON_ROLES.get(model, []):
+            if role['org'] == 0:
+                role['org'] = org
+            roles.append(role)
 
-    return has_permission(resource_acl, perm)
+        if state == 'closed' and perm == 'execute':
+            print('NANON', [pid for pid in app.globals['acl']['roles'] if pid in roles])
+            print(app.globals['user_id'] in resource_acl[perm]['roles'])
+            if (
+                    any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
+                    or app.globals['user_id'] in resource_acl[perm]['roles'] is True
+            ):
+                return True
+
+        return has_permission(resource_acl, perm)
+    except:
+        pass
+
+    return False
