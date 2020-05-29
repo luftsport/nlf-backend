@@ -84,7 +84,13 @@ def ors_after_fetched_diffs(response):
     if isinstance(response, list):
 
         if response[0].get('workflow', {}).get('state', None) == 'closed':
-            if has_nanon_permission(response[0].get('acl', []), 'execute', 'closed') is False:
+            if has_nanon_permission(
+                    resource_acl=response[0].get('acl', []),
+                    perm='execute',
+                    state='closed',
+                    model='fallskjerm',
+                    org=response.get('discipline', 0)
+                        is False):
                 for index, val in enumerate(response):
                     response[index] = anon.anonymize_ors(response[index])
     else:
@@ -111,7 +117,13 @@ def ors_after_fetched(response):
 
                 if response[key]['workflow']['state'] == 'closed':
 
-                    if not has_nanon_permission(response[key]['acl'], 'execute', 'closed'):
+                    if has_nanon_permission(
+                            resource_acl=response[key].get('acl', []),
+                            perm='execute',
+                            state='closed',
+                            model='fallskjerm',
+                            org=response[key].get('discipline', 0)
+                            is False):
                         # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
                         response[key] = anon.anonymize_ors(response[key])
 
@@ -127,7 +139,13 @@ def ors_after_fetched(response):
             """For item return nanon if roles match hi in club or fs"""
             if response.get('workflow', False) and 'state' in response['workflow']:
                 if response['workflow']['state'] == 'closed':
-                    if not has_nanon_permission(response['acl'], 'execute', 'closed'):
+                    if has_nanon_permission(
+                            resource_acl=response[0].get('acl', []),
+                            perm='execute',
+                            state='closed',
+                            model='fallskjerm',
+                            org=response.get('discipline', 0)
+                            is False):
                         response = anon.anonymize_ors(response)
 
     except KeyError as e:
