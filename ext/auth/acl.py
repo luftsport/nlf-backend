@@ -12,7 +12,7 @@
 from flask import current_app as app
 from bson.objectid import ObjectId
 from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_SU_GROUP_LIST
+from ext.scf import ACL_NANON_ROLES
 
 def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     acl = {}
@@ -247,12 +247,18 @@ def has_permission(resource_acl, perm):
     return False
 
 
-def has_nanon_permission(resource_acl, perm, state):
-    # Closed and should be able to see
+def has_nanon_permission(resource_acl, perm, state, model, org=0):
+    """Closed who should be able to see non-anon?
+    org=0 will make roles for all org True"""
+    roles = []
+    for role in ACL_NANON_ROLES.get(model, []):
+        if role['org'] == 0:
+            role['org'] = org
+        roles.append(role)
+
     if state == 'closed' and perm == 'execute':
         if (
-                any(pid for pid in app.globals['acl']['roles'] if
-                    pid in [ACL_FALLSKJERM_HI, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST) is True
+                any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
                 or app.globals['user_id'] in resource_acl[perm]['roles'] is True
         ):
             return True
