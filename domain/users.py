@@ -27,7 +27,7 @@ _schema = {
     # Settings for user
     'settings': {'type': 'dict',
                  'default': {}},
-    'avatar': {'type': 'media', },
+    'avatar': {'type': 'string'}, #{'type': 'media', },
 
     # Extra info, worktype, material status, interests...
     'info': {'type': 'dict', },
