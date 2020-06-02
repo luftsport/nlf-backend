@@ -68,7 +68,9 @@ def eve_abort(status=500, message='', sysinfo=None):
         # raises an exception only in Flask
     """
     resp = Response(None, status)
-    abort(status, description=message) #, response=resp)
+    # abort(status, description=message) #, response=resp)
+    data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
+    return eve_response(data=data, status=status)
 
 
 def eve_error_response(message, status):
@@ -105,7 +107,7 @@ def eve_response_pppd(data={}, status=200, error_message=False):
     """Manually create a reponse for POST, PATCH, PUT, DELETE"""
 
     # Add status OK | ERR to data.
-    if not error_message:
+    if error_message is False:
         data.update({'_status': 'OK'})
     else:
         data.update({'_status': 'ERR'})
