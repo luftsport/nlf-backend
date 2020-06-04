@@ -40,6 +40,8 @@ class Anon(object):
             # Always delete tmp_name!
             if 'tmp_name' in x:
                 del x['tmp_name']
+            if 'full_name' in x:
+                del x['full_name']
             return x
 
 
@@ -70,6 +72,8 @@ class Anon(object):
         # Always delete tmp_name!
         if 'tmp_name' in x:
             del x['tmp_name']
+        if 'full_name' in x:
+            del x['full_name']
 
         # print("NEW: %s" % x['id'])
         return x
