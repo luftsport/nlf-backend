@@ -180,10 +180,10 @@ def anonymize_ors(item):
             item['involved'][key] = anon.assign_pair(item['involved'][key])
 
             # Involved.gear -> rigger
-            if 'gear' in item['involved'][key]:  # ".get('gear', False):
-                if 'rigger' in item['involved'][key]['gear']:  # .get('rigger', False):
-                    item['involved'][key]['gear']['rigger'] = anon.assign_pair(
-                        item['involved'][key]['gear'].get('rigger', 0))
+            if 'gear' in item['involved'][key].get('data', {}):  # ".get('gear', False):
+                if 'rigger' in item['involved'][key]['data']['gear']:  # .get('rigger', False):
+                    item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(
+                        item['involved'][key]['data']['gear'].get('rigger', 0))
 
     # Involved in components
     for key, val in enumerate(item.get('components', [])):
