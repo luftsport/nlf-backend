@@ -55,7 +55,7 @@ class Email():
             message = MIMEText(self.message_plaintext, 'plain')
 
         elif not self.message_html and not self.message_plaintext:
-            print("No message body!")
+            # print("No message body!")
             return False
 
         message.preamble = 'NLF Notification'

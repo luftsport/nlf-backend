@@ -413,7 +413,7 @@ class ObservationWorkflow(Machine):
                     or app.globals['user_id'] in self.initial_acl['execute']['users']:
                 return True
         except Exception as e:
-            print('ERRRRR', e)
+            # print('ERRRRR', e)
             pass
 
         return False
