@@ -27,7 +27,7 @@ ors_message
 @async
 def broadcast(message):
     try:
-        print('BROADCAST IT')
+        # print('BROADCAST IT')
         sio = socketio.Client()
         sio.connect('http://localhost:8080?token=tulletoken')
         sio.emit('broadcast', message)
@@ -64,13 +64,11 @@ class Notification:
 
         payload['uuid'] = str(uuid4())
 
-        print('CREATE NOTIFICATION!!!!')
         response, _, _, return_code, location_header = post_internal('notifications', payload)
-        print('Response from', response, return_code)
+        # print('Response from', response, return_code)
         if return_code == 201:
             return True, response
 
-        print('RETTTT', response, return_code)
         return False, {}
 
     def notify_person(self, person_id, data):
@@ -150,7 +148,6 @@ def ors_save(recepients, event_from, event_from_id, source, destination, context
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_save',
                      dismissable=True, acl={})
 
-    print('ORS SAVE', recepients)
     n.event_data['transport'] = 'socket'
     n.event_data['transport_mode'] = 'aggregate'
 

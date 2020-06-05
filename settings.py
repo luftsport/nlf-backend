@@ -14,7 +14,7 @@ sys.path.insert(0, "domain")
 # Import the apps - DOMAIN definition (app.DOMAIN)
 import domain
 
-__version_info__ = ('0', '9', '1')
+__version_info__ = ('0', '9', '5')
 APP_VERSION = '.'.join(__version_info__)
 APP_AUTHOR = 'Einar Huseby'
 APP_LICENSE = 'GPLV1'
