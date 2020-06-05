@@ -27,7 +27,7 @@ _schema = {
     # Settings for user
     'settings': {'type': 'dict',
                  'default': {}},
-    'avatar': {'type': 'media', },
+    'avatar': {'type': 'string'}, #{'type': 'media', },
 
     # Extra info, worktype, material status, interests...
     'info': {'type': 'dict', },
@@ -52,7 +52,7 @@ definition = {
                    'default_sort': [('id', 1)],
                    },
     'extra_response_fields': ['id'],
-    'resource_methods': ['POST', 'GET'],  # No post, only internal!!
+    'resource_methods': ['GET'],  # No post, only internal!!
     'item_methods': ['GET', 'PATCH'],
     'auth_field': 'id',  # This will limit only users who has
     'versioning': True,
