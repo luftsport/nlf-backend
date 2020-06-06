@@ -52,6 +52,7 @@ from blueprints.content import Content
 from blueprints.lungo import Lungo
 from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
+from blueprints.ors import UserORS
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
@@ -107,7 +108,9 @@ app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watch
 
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
 app.register_blueprint(Tags, url_prefix="%s/tags" % app.globals.get('prefix'))
-app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" % app.globals.get('prefix'))
+app.register_blueprint(UserORS, url_prefix="%s/users/observations" % app.globals.get('prefix'))
+
+# app.register_blueprint(OrsShare, url_prefix="%s/fallskjerm/observations/share" % app.globals.get('prefix'))
 
 app.register_blueprint(Notifications, url_prefix="%s/notifications/bin" % app.globals.get('prefix'))
 
