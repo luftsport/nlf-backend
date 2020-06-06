@@ -22,7 +22,7 @@ from ext.app.eve_helper import eve_abort, eve_response
 
 ACLObservations = Blueprint('Acl for observations', __name__, )
 
-@ACLObservations.route("/<string:activity>/<objectid:_id>/<string:right>/<int:person_id", methods=['DELETE', 'POST'])
+@ACLObservations.route("/<string:activity>/<objectid:_id>/<string:right>/<int:person_id>", methods=['DELETE', 'POST'])
 @require_token()
 def acl_toggle(activity, _id, right, person_id ):
 
