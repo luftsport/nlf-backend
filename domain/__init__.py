@@ -76,21 +76,19 @@ DOMAIN = {
     "notifications": app_notifications.definition,
     "notifications_events": app_notifications.agg_events,
 
-    # ACL - Legacy @TODO remove
-    # "acl_groups": acl_groups.definition,
-    # "acl_roles": acl_roles.definition,
-
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
-    "fallskjerm_observations_agg": fallskjerm_observations.aggregate_observation_types,
     "fallskjerm_observations_todo": fallskjerm_observations.workflow_todo,
+    "fallskjerm_aggregate_observation_types": fallskjerm_observations.aggregate_observation_types,
+    "fallskjerm_aggregate_observation_types_by_discipline": fallskjerm_observations.aggregate_observation_types_by_discipline,
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
-    "fallskjerm_year_report_agg": fallskjerm_quarter_report.agg_sum_year,
+    "fallskjerm_aggregate_year_report": fallskjerm_quarter_report.agg_sum_year,
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
-    "motorfly_observations_agg": motorfly_observations.aggregate_observation_types,
     "motorfly_observations_todo": motorfly_observations.workflow_todo,
+    "motorfly_aggregate_observation_types": motorfly_observations.aggregate_observation_types,
+    "motorfly_aggregate_observation_types_by_discipline": motorfly_observations.aggregate_observation_types_by_discipline,
 
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
@@ -120,6 +118,15 @@ DOMAIN = {
     # Help system
     "help": help.definition,
 
+    # E5X
+    "e5x_attributes": e5x_attributes.definition,
+    "e5x_choices": e5x_choices.definition,
+    "e5x_choices_count": e5x_choices.agg_count_keys,
+    "e5x_tree": e5x_tree.definition,
+
+    # @TODO REMOVE
+    # Moved to lungo
+
     # Aircrafts
     "aircrafts": aircrafts.definition,
     "aircrafts_types": aircrafts.agg_count_types,
@@ -137,13 +144,4 @@ DOMAIN = {
     # Geo
     "geo_countries": geo_countries.definition,
     "geo_admin": geo_admin.definition,
-
-    # E5X
-    "e5x_attributes": e5x_attributes.definition,
-    "e5x_choices": e5x_choices.definition,
-    "e5x_choices_count": e5x_choices.agg_count_keys,
-    "e5x_tree": e5x_tree.definition,
-
-    # Testing Eve
-    #"test": test.definition
 }

@@ -180,3 +180,19 @@ aggregate_observation_types = {
         }
     }
 }
+
+aggregate_observation_types_by_discipline = {
+    'item_title': 'Observation Aggregations by discipline',
+    'url': '{}/aggregate/discipline'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$unwind": "$type"},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
+                {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+                {"$sort": SON([("count", -1)])}
+            ]
+        }
+    }
+}
