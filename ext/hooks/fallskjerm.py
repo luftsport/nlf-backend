@@ -96,58 +96,66 @@ def ors_after_fetched_diffs(response):
     else:
         ors_after_fetched(response)
 
+def ors_after_fetched_list(response):
+    for key, item in enumerate(response.get('_items', [])):
+
+        response['_items'][key] = _ors_after_fetched(item)
 
 def ors_after_fetched(response):
     """ Modify response after GETing an observation
     This hook checks if permission on each observation
     If closed, then it will anonymize each observation wo w or x rights
     """
+    response = _ors_after_fetched(response)
+
+def _ors_after_fetched(_response):    
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
-    if isinstance(response, dict):
-        response['acl_user'] = get_user_acl_mapping(response.get('acl', {}))
+    if isinstance(_response, dict):
+        _response['acl_user'] = get_user_acl_mapping(_response.get('acl', {}))
 
     try:
-        if isinstance(response, list):
+        if isinstance(_response, list):
 
-            for key, val in enumerate(response):
+            for key, val in enumerate(_response):
 
-                # response[key]['acl_user'] = user_persmissions(response[key]['acl'], response[key]['workflow']['state'])
-                response[key]['acl_user'] = get_user_acl_mapping(response[key]['acl'])
+                # _response[key]['acl_user'] = user_persmissions(_response[key]['acl'], _response[key]['workflow']['state'])
+                _response[key]['acl_user'] = get_user_acl_mapping(_response[key]['acl'])
 
-                if response[key]['workflow']['state'] == 'closed':
+                if _response[key]['workflow']['state'] == 'closed':
 
                     if has_nanon_permission(
-                            resource_acl=response[key].get('acl', []),
+                            resource_acl=_response[key].get('acl', []),
                             perm='execute',
                             state='closed',
                             model='fallskjerm',
-                            org=response[key].get('discipline', 0)
+                            org=_response[key].get('discipline', 0)
                     ) is False:
-                        # response[key]['acl_user'] = user_persmissions(response[key]['acl'], 'closed')
-                        response[key] = anon.anonymize_ors(response[key])
+                        # _response[key]['acl_user'] = user_persmissions(_response[key]['acl'], 'closed')
+                        _response[key] = anon.anonymize_ors(_response[key])
 
 
-        elif isinstance(response, dict):
-            # response['acl_user'] = user_persmissions(response['acl'], response['workflow']['state'])
+        elif isinstance(_response, dict):
+            # _response['acl_user'] = user_persmissions(_response['acl'], _response['workflow']['state'])
 
             # SocketIO
-            # broadcast('Somebody is looking at ORS#{}'.format(response['id']))
-
-            response['acl_user'] = get_user_acl_mapping(response['acl'])
+            # broadcast('Somebody is looking at ORS#{}'.format(_response['id']))
+            _response['acl_user'] = get_user_acl_mapping(_response['acl'])
 
             """For item return nanon if roles match hi in club or fs"""
-            if response.get('workflow', False) and 'state' in response['workflow']:
-                if response['workflow']['state'] == 'closed':
+            if _response.get('workflow', False) and 'state' in _response['workflow']:
+                if _response['workflow']['state'] == 'closed':
 
                     if has_nanon_permission(
-                            resource_acl=response.get('acl', []),
+                            resource_acl=_response.get('acl', []),
                             perm='execute',
                             state='closed',
                             model='fallskjerm',
-                            org=response.get('discipline', 0)
+                            org=_response.get('discipline', 0)
                     ) is False:
-                        response = anon.anonymize_ors(response)
+                        _response = anon.anonymize_ors(_response)
+
+
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
@@ -157,6 +165,8 @@ def ors_after_fetched(response):
         app.logger.info("Unexpected error: {}".format(e))
         eve_helper.eve_abort(500,
                              'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+
+    return _response
 
 
 @require_token()
