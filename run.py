@@ -155,9 +155,10 @@ app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
+app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
 app.on_fetched_item_fallskjerm_observations += hook.fallskjerm.ors_after_fetched
-app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fetched
 app.on_fetched_diffs_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_diffs
+app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 # AFTER update db layer
@@ -173,9 +174,10 @@ app.on_inserted_motorfly_observations += hook.motorfly.ors_after_inserted
 app.on_pre_GET_motorfly_observations += hook.motorfly.ors_before_get
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.ors_before_get_todo
 # AFTER FETCHED (GET)
+#app.on_fetched_resource_motorfly_observations += hook.motorfly.ors_after_fetched_list
 app.on_fetched_item_motorfly_observations += hook.motorfly.ors_after_fetched
-app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_diffs
+app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
 # AFTER update db layer
