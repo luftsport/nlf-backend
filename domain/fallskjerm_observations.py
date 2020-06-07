@@ -165,9 +165,9 @@ workflow_todo = {
     'schema': _schema
 }
 
-aggregate_observation_types = {
-    'item_title': 'Observation Aggregations',
-    'url': '{}/aggregate'.format(BASE_URL),
+aggregate_types = {
+    'item_title': 'Observation Aggregations by types',
+    'url': '{}/aggregate/types'.format(BASE_URL),
     'datasource': {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
@@ -181,16 +181,32 @@ aggregate_observation_types = {
     }
 }
 
-aggregate_observation_types_by_discipline = {
-    'item_title': 'Observation Aggregations by discipline',
-    'url': '{}/aggregate/discipline'.format(BASE_URL),
+aggregate_types_discipline = {
+    'item_title': 'Observation Aggregations by discipline and types',
+    'url': '{}/aggregate/types/discipline'.format(BASE_URL),
     'datasource': {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
             'pipeline': [
                 {"$unwind": "$type"},
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline", "workflow.state": "$state"}},
                 {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+                {"$sort": SON([("count", -1)])}
+            ]
+        }
+    }
+}
+
+aggregate_states_discipline = {
+    'item_title': 'Observation Aggregation by discipline and states',
+    'url': '{}/aggregate/states/discipline'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$unwind": "$workflow.state"},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
+                {"$group": {"_id": "$workflow.state", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
             ]
         }
