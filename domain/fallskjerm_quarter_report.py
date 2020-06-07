@@ -111,7 +111,7 @@ _schema = {
 
 definition = {
     'item_title': 'Quarterly jump reports',
-    'url': 'fallskjerm/report/quarter',
+    'url': 'fallskjerm/quarter/report',
     'description': 'Jump numbers quarterly',
 
     'datasource': {'source': RESOURCE_COLLECTION,
@@ -130,8 +130,8 @@ definition = {
 # Aggregations
 
 # Sum per år for en organisasjon!
-agg_sum_year = {
-    'url': 'fallskjerm/report/year',
+aggregate_year = {
+    'url': 'fallskjerm/quarter/report/aggregate/year',
     'item_title': 'Jump numbers yearly',
     'pagination': False,
     'datasource': {

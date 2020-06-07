@@ -79,16 +79,19 @@ DOMAIN = {
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
     "fallskjerm_observations_todo": fallskjerm_observations.workflow_todo,
-    "fallskjerm_aggregate_observation_types": fallskjerm_observations.aggregate_observation_types,
-    "fallskjerm_aggregate_observation_types_by_discipline": fallskjerm_observations.aggregate_observation_types_by_discipline,
+    "fallskjerm_observations_aggregate_types": fallskjerm_observations.aggregate_types,
+    "fallskjerm_observations_aggregate_types_discipline": fallskjerm_observations.aggregate_types_discipline,
+    "fallskjerm_observations_aggregate_states_discipline": fallskjerm_observations.aggregate_states_discipline,
+    # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
-    "fallskjerm_aggregate_year_report": fallskjerm_quarter_report.agg_sum_year,
+    "fallskjerm_quarter_report_aggregate_year": fallskjerm_quarter_report.aggregate_year,
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
     "motorfly_observations_todo": motorfly_observations.workflow_todo,
-    "motorfly_aggregate_observation_types": motorfly_observations.aggregate_observation_types,
-    "motorfly_aggregate_observation_types_by_discipline": motorfly_observations.aggregate_observation_types_by_discipline,
+    "motorfly_observations_aggregate_types": motorfly_observations.aggregate_types,
+    "motorfly_observations_aggregate_types_discipline": motorfly_observations.aggregate_types_discipline,
+    "motorfly_observations_aggregate_states_discipline": motorfly_observations.aggregate_states_discipline,
 
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
