@@ -93,9 +93,9 @@ _schema = {'id': {'type': 'integer',
                                 },
                      'default': []
                      },
-            'categories': {'type': 'list',
-                           'default': []
-                           },
+           'categories': {'type': 'list',
+                          'default': []
+                          },
            'related': {'type': 'list',
                        'default': []
                        },
@@ -128,7 +128,19 @@ definition = {
     'extra_response_fields': ['id'],
     # makes only user access those...
     # 'auth_field': 'owner',
-
+    'allowed_filters': [
+        'workflow.state',
+        'id',
+        '_id',
+        'when',
+        'club',
+        'discipline',
+        'tags',
+        'flags',
+        'rating',
+        'type',
+        'location'
+    ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
@@ -148,18 +160,37 @@ definition = {
 
 }
 
+# Hook setting only exececute
 workflow_todo = {
-    'item_title': 'Fallskjerm Observations todo',
+    'item_title': 'Fallskjerm Observations Todo',
     'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
-                   # 'projection': {'acl': 0}  # 'files': 0,
+                   'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1, '_model': 1}  # 'files': 0,
                    },
     'additional_lookup': {
         'url': 'regex("[\d{1,9}]+")',
         'field': 'id',
     },
     'extra_response_fields': ['id'],
+    'allowed_filters': [],
+    'versioning': False,
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'schema': _schema
+}
 
+# My own, hook sets lookup to user
+user = {
+    'item_title': 'Fallskjerm Observations Self',
+    'url': '{}/user'.format(BASE_URL),
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   # 'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1}  # 'files': 0,
+                   },
+    'additional_lookup': {
+        'url': 'regex("[\d{1,9}]+")',
+        'field': 'id',
+    },
+    'extra_response_fields': ['id'],
     'versioning': False,
     'resource_methods': ['GET'],
     'item_methods': ['GET'],
@@ -190,7 +221,8 @@ aggregate_types_discipline = {
         'aggregation': {
             'pipeline': [
                 {"$unwind": "$type"},
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline", "workflow.state": "$state"}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline",
+                            "workflow.state": "$state"}},
                 {"$group": {"_id": "$type", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
             ]

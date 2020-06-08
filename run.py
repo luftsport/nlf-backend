@@ -153,6 +153,7 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
@@ -172,9 +173,10 @@ app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
 app.on_inserted_motorfly_observations += hook.motorfly.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_motorfly_observations += hook.motorfly.ors_before_get
+app.on_pre_GET_motorfly_observations_user += hook.motorfly.ors_before_get_user
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.ors_before_get_todo
 # AFTER FETCHED (GET)
-#app.on_fetched_resource_motorfly_observations += hook.motorfly.ors_after_fetched_list
+app.on_fetched_resource_motorfly_observations += hook.motorfly.ors_after_fetched_list
 app.on_fetched_item_motorfly_observations += hook.motorfly.ors_after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_diffs
 app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
