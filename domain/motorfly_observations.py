@@ -113,7 +113,8 @@ _schema = {'id': {'type': 'integer',
                       'schema': {'version': {'type': 'integer'},
                                  'type': {'type': 'string'}
                                  },
-                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION},
+                      'readonly': True
                       }
 
            }
@@ -192,7 +193,8 @@ aggregate_types_discipline = {
         'aggregation': {
             'pipeline': [
                 {"$unwind": "$type"},
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline", "workflow.state": "$state"}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline",
+                            "workflow.state": "$state"}},
                 {"$group": {"_id": "$type", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
             ]

@@ -108,7 +108,8 @@ _schema = {'id': {'type': 'integer',
                       'schema': {'version': {'type': 'integer'},
                                  'type': {'type': 'string'}
                                  },
-                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION},
+                      'readonly': True
                       }
 
            }
