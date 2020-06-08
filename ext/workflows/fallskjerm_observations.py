@@ -13,7 +13,7 @@ from ext.auth.acl import has_permission as acl_has_permission
 from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
     get_person_name_text
 from ext.notifications.email import Email  # , Sms
-from ext.scf import ACL_CLOSED_ALL_LIST, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST
+from ext.scf import ACL_CLOSED_ALL_LIST, ACL_FALLSKJERM_FSJ, ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_SU_TANDEM, ACL_FALLSKJERM_SU_AFF, ACL_FALLSKJERM_SU_MSJ, ACL_FALLSKJERM_SU_SKJERM
 
 from ext.app.notifications import ors_workflow
 from ext.auth.acl import parse_acl_flat
@@ -69,6 +69,11 @@ WF_FALLSKJERM_STATES = [
     'pending_review_hi',
     'pending_review_fs',
     'pending_review_su',
+    'pending_review_su_aff',
+    'pending_review_su_tandem',
+    'pending_review_su_materiell',
+    'pending_review_su_skjerm',
+    'pending_review_su_leder',
     'closed',
     'withdrawn'
 ]
@@ -89,6 +94,15 @@ WF_FALLSKJERM_ATTR = {
     'pending_review_su': {
         'title': 'Avventer SU',
         'description': 'Avventer vurdering SU'},
+    'pending_review_su_aff': {
+        'title': 'Avventer SU AFF',
+        'description': 'Avventer vurdering SU AFF'},
+    'pending_review_su_tandem': {
+        'title': 'Avventer SU Tandem',
+        'description': 'Avventer vurdering SU Tandem'},
+    'pending_review_su_materiell': {
+        'title': 'Avventer SU MSJ',
+        'description': 'Avventer vurdering SU MSJ'},
     'closed': {
         'title': 'Lukket',
         'description': 'Observasjonen er lukket'},
@@ -160,6 +174,75 @@ WF_FALLSKJERM_TRANSITIONS = [
     {
         'trigger': 'approve_su',
         'source': 'pending_review_su',
+        'dest': 'closed',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    # AFF
+    {
+        'trigger': 'approve_fs_aff',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_su_af',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+
+    {
+        'trigger': 'reject_su_aff',
+        'source': 'pending_review_su_aff',
+        'dest': 'pending_review_fs',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_su_aff',
+        'source': 'pending_review_su_aff',
+        'dest': 'closed',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    # Tadnem
+    {
+        'trigger': 'approve_fs_tandem',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_su_tandem',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+
+    {
+        'trigger': 'reject_su_tandem',
+        'source': 'pending_review_su_tandem',
+        'dest': 'pending_review_fs',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_su_tandem',
+        'source': 'pending_review_su_tandem',
+        'dest': 'closed',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    # MSJ
+    {
+        'trigger': 'approve_fs_materiell',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_su_materiell',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+
+    {
+        'trigger': 'reject_su_materiell',
+        'source': 'pending_review_su_materiell',
+        'dest': 'pending_review_fs',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_su_materiell',
+        'source': 'pending_review_su_materiell',
         'dest': 'closed',
         'after': 'save_workflow',
         'conditions': ['has_permission']
@@ -238,6 +321,73 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Godkjent av SU'
     },
+    # aff
+    'approve_fs_aff': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn AFF',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagsjef'
+    },
+    'reject_su_aff': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av SU AFF'
+    },
+    'approve_su_aff': {
+        'title': 'Godkjenn observasjon AFF',
+        'action': 'Godkjenn AFF',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av SU AFF'
+    },
+    # tandem
+    'approve_fs_tandem': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn Tandem',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagsjef'
+    },
+    'reject_su_tandem': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av SU Tandem'
+    },
+    'approve_su_tandem': {
+        'title': 'Godkjenn observasjon Tandem',
+        'action': 'Godkjenn Tandem',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av SU Tandem'
+    },
+    # Materiell
+    'approve_fs_materiell': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn MSJ',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagsjef'
+    },
+    'reject_su_materiell': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av SU MSJ'
+    },
+    'approve_su_materiell': {
+        'title': 'Godkjenn observasjon MSJ',
+        'action': 'Godkjenn MSJ',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av SU MSJ'
+    },
+    # ####
     'reopen_su': {
         'title': 'Gjenåpne observasjon',
         'action': 'Gjenåpne',
@@ -505,6 +655,37 @@ class ObservationWorkflow(Machine):
             acl['write']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
             acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
 
+
+        elif self.state == 'pending_review_su_aff':
+            """ Owner, reporter, hi, fs read, su read, write, execute """
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['write']['roles'] = [ACL_FALLSKJERM_SU_AFF]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_AFF]
+
+        elif self.state == 'pending_review_su_tandem':
+            """ Owner, reporter, hi, fs read, su read, write, execute """
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['write']['roles'] = [ACL_FALLSKJERM_SU_TANDEM]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_TANDEM]
+
+        elif self.state == 'pending_review_su_materiell':
+            """ Owner, reporter, hi, fs read, su read, write, execute """
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['write']['roles'] = [ACL_FALLSKJERM_SU_MSJ]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_MSJ]
+
         elif self.state == 'closed':
             """ everybody read, su execute """
 
@@ -515,7 +696,6 @@ class ObservationWorkflow(Machine):
             acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
             acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
-
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))
@@ -615,9 +795,9 @@ class ObservationWorkflow(Machine):
             ors_id=self.db_wf['id'],
             ors_tags=self.db_wf.get('tags', []),
             org_id=self.db_wf.get('discipline'),
-            action=action, #WF_FALLSKJERM_TRANSITIONS_ATTR[action]['action'],
+            action=action,  # WF_FALLSKJERM_TRANSITIONS_ATTR[action]['action'],
             source=self.initial_state,  # self._state_attrs[self.initial_state]['description'], #
-            destination=self.state,  #self._state_attrs[self.state]['description'], #
+            destination=self.state,  # self._state_attrs[self.state]['description'], #
             comment=self.comment,
             context=context
         )
