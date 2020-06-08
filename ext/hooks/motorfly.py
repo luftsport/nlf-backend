@@ -84,23 +84,8 @@ def ors_after_inserted_item(item):
     if wf.get_current_state().get('state', '') == 'draft':
         wf.notify_created()
 
-    """   
-    try:
-        wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=app.globals.get('user_id'))
-        
-        if wf.get_current_state() == 'draft':
-            wf.notify_created()
-    
-    except Exception as e:
-        print('ERR item {}'.format(item))
-        print('ERR cant process WF: {}'.format(e))
-        pass
-
-    """
-
 
 def ors_after_fetched_diffs(response):
-    # print('########', response)
     if isinstance(response, list):
 
         if response[0].get('workflow', {}).get('state', None) == 'closed':
@@ -118,7 +103,6 @@ def ors_after_fetched_diffs(response):
 
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
-
         response['_items'][key] = _ors_after_fetched(item)
         
 def ors_after_fetched(response):
@@ -194,6 +178,9 @@ def ors_before_get_todo(request, lookup):
     lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
                             {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                      {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+@require_token()
+def ors_before_get_user(request, lookup):
+    lookup.update({'reporter': app.globals.get('user_id', 0)})
 
 
 @require_token()

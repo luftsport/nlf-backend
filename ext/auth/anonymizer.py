@@ -182,8 +182,10 @@ def anonymize_ors(item):
             # Involved.gear -> rigger
             if 'gear' in item['involved'][key].get('data', {}):  # ".get('gear', False):
                 if 'rigger' in item['involved'][key]['data']['gear']:  # .get('rigger', False):
-                    item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(
-                        item['involved'][key]['data']['gear'].get('rigger', 0))
+                    try:
+                        item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(item['involved'][key]['data']['gear'].get('rigger', {'id': 0}))
+                    except:
+                        item['involved'][key]['data']['gear'].pop('rigger', None)
 
     # Involved in components
     for key, val in enumerate(item.get('components', [])):

@@ -78,17 +78,22 @@ DOMAIN = {
 
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
+    "fallskjerm_observations_user": fallskjerm_observations.user,
     "fallskjerm_observations_todo": fallskjerm_observations.workflow_todo,
+    # Fallskjerm aggregations
     "fallskjerm_observations_aggregate_types": fallskjerm_observations.aggregate_types,
     "fallskjerm_observations_aggregate_types_discipline": fallskjerm_observations.aggregate_types_discipline,
     "fallskjerm_observations_aggregate_states_discipline": fallskjerm_observations.aggregate_states_discipline,
+
     # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
     "fallskjerm_quarter_report_aggregate_year": fallskjerm_quarter_report.aggregate_year,
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
+    "motorfly_observations_user": motorfly_observations.user,
     "motorfly_observations_todo": motorfly_observations.workflow_todo,
+    # Motor aggregations
     "motorfly_observations_aggregate_types": motorfly_observations.aggregate_types,
     "motorfly_observations_aggregate_types_discipline": motorfly_observations.aggregate_types_discipline,
     "motorfly_observations_aggregate_states_discipline": motorfly_observations.aggregate_states_discipline,

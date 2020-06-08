@@ -132,7 +132,25 @@ definition = {
     'extra_response_fields': ['id'],
     # makes only user access those...
     # 'auth_field': 'owner',
-
+    'allowed_filters': [
+        'workflow.state',
+        'id',
+        '_id',
+        'when',
+        'club',
+        'discipline',
+        'tags',
+        'flags',
+        'rating',
+        'type',
+        'aircrafts.aircraft',
+        'aircrafts.parts',
+        'aircrafts.flight',
+        'aircrafts.airspace',
+        'aircrafts.aerodrome',
+        'aircrafts.occurence',
+        'aircrafts.wx'
+    ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
@@ -151,12 +169,32 @@ definition = {
     'schema': _schema
 }
 
+# Hook setting only exececute
 workflow_todo = {
     'item_title': 'Motorfly Observations todo',
     'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
+                   'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1, '_model': 1}  # 'files': 0,
                    },
-    # Make a counter so we can have a lookup for #455
+    'additional_lookup': {
+        'url': 'regex("[\d{1,9}]+")',
+        'field': 'id',
+    },
+    'extra_response_fields': ['id'],
+    'allowed_filters': [],
+    'versioning': False,
+    'resource_methods': ['GET'],
+    'item_methods': ['GET'],
+    'schema': _schema
+}
+
+# My own, hook sets lookup to user
+user = {
+    'item_title': 'Motorfly Observations Self',
+    'url': '{}/user'.format(BASE_URL),
+    'datasource': {'source': RESOURCE_COLLECTION,
+                   # 'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1}  # 'files': 0,
+                   },
     'additional_lookup': {
         'url': 'regex("[\d{1,9}]+")',
         'field': 'id',
