@@ -35,6 +35,17 @@ from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
 
 
+def _del_blacklist(d, blacklist):
+    """Deletes all keys not in whitelist, not recursive"""
+    if isinstance(d, dict):
+        keys = d.copy().keys()
+        for k in keys:
+            if k in blacklist and d[k] != app.globals.get('user_id'):
+                d.pop(k, None)
+        return d
+    return d
+
+
 def ors_before_insert(items):
     for item in items:
         ors_before_insert_item(item)
@@ -66,7 +77,7 @@ def ors_before_insert_item(item):
 
     except Exception as e:
         eve_abort(422, 'Could not create ORS')
-        pass
+
 
 
 def ors_after_inserted(items):
@@ -96,10 +107,11 @@ def ors_after_fetched_diffs(response):
     else:
         ors_after_fetched(response)
 
+
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
-
         response['_items'][key] = _ors_after_fetched(item)
+
 
 def ors_after_fetched(response):
     """ Modify response after GETing an observation
@@ -108,7 +120,8 @@ def ors_after_fetched(response):
     """
     response = _ors_after_fetched(response)
 
-def _ors_after_fetched(_response):    
+
+def _ors_after_fetched(_response):
     # Just to be sure, we remove all data if anything goes wrong!
     # response.set_data({})
     if isinstance(_response, dict):
@@ -174,6 +187,11 @@ def ors_before_get_todo(request, lookup):
     lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
                             {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                      {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+
+
+@require_token()
+def ors_before_get_user(request, lookup):
+    lookup.update({'reporter': app.globals.get('user_id', 0)})
 
 
 @require_token()
