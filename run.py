@@ -203,6 +203,12 @@ app.on_insert_legacy_clubs += hook.common.on_insert_set_owner
 app.on_update_legacy_clubs += hook.common.on_update_set_owner
 
 #############
+# FILES
+# AFTER FETCHED (GET)
+app.on_fetched_resource_files += hook.files.after_fetched_list
+app.on_fetched_item_files += hook.files._after_fetched_item
+
+#############
 # CONTENT
 app.on_pre_GET_content += hook.content.pre_GET
 app.on_pre_PATCH_content += hook.content.pre_PATCH
@@ -210,6 +216,7 @@ app.on_pre_DELETE_content += hook.content.pre_DELETE
 app.on_insert_content += hook.content.before_insert
 app.on_replace_content += hook.content.on_before_replace
 app.on_update_content += hook.content.on_before_update
+
 #############
 # HELP
 app.on_pre_GET_help += hook.help.pre_GET

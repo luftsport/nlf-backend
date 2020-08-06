@@ -111,7 +111,7 @@ def parse_acl_flat(acl, exclude_current_user=False):
 
 
 def has_permission(id, type, collection):
-    """ Checks if current user has type (execute, read, write) permissions on an collection or not
+    """ Checks if current user has type (execute, read, write, delete) permissions on an collection or not
     @note: checks on list comprehension and returns number of intersects in list => len(list) > 0 == True
     @bug: Possible bug if user comparison is int vs float!
     """
