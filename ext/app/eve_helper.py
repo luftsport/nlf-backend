@@ -60,10 +60,14 @@ def eve_abort(status=500, message='', sysinfo=None):
     except:
         pass
 
+    # Eve formatted
+    data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
+    abort(status, json.dumps(data, cls=EveJSONEncoder))
 
-    resp = eve_response(message, status)
+    # Using flask Response
+    # resp = eve_response(message, status)
+    # abort(status, resp)
 
-    abort(status, resp)
     # Should never be reached:
     abort(500)
 
