@@ -202,6 +202,9 @@ def anonymize_ors(item):
     if 'components' not in item:
         item['components'] = []
 
+    # Remove LEGACY
+    item.pop('watchers', None)
+
     # ASK MACRO anon
     for ask_key in list(item.get('ask', {}).get('text', {}).keys()):
 
