@@ -38,11 +38,10 @@ class Anon(object):
 
         # Allow users to see themself
         if int(x['id']) == int(app.globals['id']):
-            # Always delete tmp_name!
-            if 'tmp_name' in x:
-                del x['tmp_name']
-            if 'full_name' in x:
-                del x['full_name']
+            # Always delete tmp_ and full_name!
+            x.pop('tmp_name', None)
+            x.pop('full_name', None)
+
             return x
 
 
@@ -70,11 +69,9 @@ class Anon(object):
             # print("ERROR")
             x['id'] = 0
 
-        # Always delete tmp_name!
-        if 'tmp_name' in x:
-            del x['tmp_name']
-        if 'full_name' in x:
-            del x['full_name']
+        # Always delete tmp_ and full_name!
+        x.pop('tmp_name', None)
+        x.pop('full_name', None)
 
         # print("NEW: %s" % x['id'])
         return x
