@@ -1,5 +1,5 @@
 from flask import current_app as app
-import ext.app.eve_helper as eve_helper
+from ext.app.eve_helper import eve_abort
 import json
 from bson.objectid import ObjectId
 
@@ -41,4 +41,4 @@ def before_aggregation(endpoint, pipeline):
                 or
                 (item.get('acl_user', {}).get('r', False) is False)
         ):
-            eve_helper.eve_abort(403, 'No access')
+            return eve_abort(403, 'No access')
