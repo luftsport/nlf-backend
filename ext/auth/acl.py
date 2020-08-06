@@ -109,8 +109,43 @@ def parse_acl_flat(acl, exclude_current_user=False):
 
     return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete']))]
 
+def _has_permission(resource_acl, perm):
+    """@TODO Global"""
+    if (
+            any(pid for pid in app.globals['acl']['roles'] if pid in resource_acl[perm]['roles']) is True
+            or (app.globals['user_id'] in resource_acl[perm]['users']) is True
+    ):
+        return True
+    return False
 
-def has_permission(id, type, collection):
+
+def has_nanon_permission(resource_acl, perm, state, model, org=0):
+    """Closed who should be able to see non-anon?
+    org=0 will make roles for all org True"""
+
+    try:
+        roles = []
+        for role in ACL_NANON_ROLES.get(model, []):
+            if role['org'] == 0:
+                role['org'] = org
+            roles.append(role)
+
+        if state == 'closed' and perm == 'execute':
+            # print('NANON', [pid for pid in app.globals['acl']['roles'] if pid in roles])
+            # print(app.globals['user_id'] in resource_acl[perm]['roles'])
+            if (
+                    any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
+                    or app.globals['user_id'] in resource_acl[perm]['roles'] is True
+            ):
+                return True
+
+        return _has_permission(resource_acl, perm)
+    except:
+        pass
+
+    return False
+
+def has_permission(id, permission_type, collection):
     """ Checks if current user has type (execute, read, write, delete) permissions on an collection or not
     @note: checks on list comprehension and returns number of intersects in list => len(list) > 0 == True
     @bug: Possible bug if user comparison is int vs float!
@@ -132,9 +167,10 @@ def has_permission(id, type, collection):
 
     acl = col.find_one({'_id': ObjectId(id)}, {'acl': 1})
     try:
-        if len([i for i in app.globals['acl']['roles'] if i in acl['acl'][type]['roles']]) > 0 \
-                or app.globals['user_id'] in acl['acl'][type]['users']:
-            return True
+        # if len([i for i in app.globals['acl']['roles'] if i in acl['acl'][type]['roles']]) > 0 \
+        #        or app.globals['user_id'] in acl['acl'][type]['users']:
+        #    return True
+        return _has_permission(acl['acl'], permission_type)
     except:
         return False
 
@@ -237,38 +273,4 @@ def user_persmissions(resource_acl, state):
     return permissions
 
 
-def has_permission(resource_acl, perm):
-    """@TODO Global"""
-    if (
-            any(pid for pid in app.globals['acl']['roles'] if pid in resource_acl[perm]['roles']) is True
-            or (app.globals['user_id'] in resource_acl[perm]['users']) is True
-    ):
-        return True
-    return False
 
-
-def has_nanon_permission(resource_acl, perm, state, model, org=0):
-    """Closed who should be able to see non-anon?
-    org=0 will make roles for all org True"""
-
-    try:
-        roles = []
-        for role in ACL_NANON_ROLES.get(model, []):
-            if role['org'] == 0:
-                role['org'] = org
-            roles.append(role)
-
-        if state == 'closed' and perm == 'execute':
-            # print('NANON', [pid for pid in app.globals['acl']['roles'] if pid in roles])
-            # print(app.globals['user_id'] in resource_acl[perm]['roles'])
-            if (
-                    any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
-                    or app.globals['user_id'] in resource_acl[perm]['roles'] is True
-            ):
-                return True
-
-        return has_permission(resource_acl, perm)
-    except:
-        pass
-
-    return False
