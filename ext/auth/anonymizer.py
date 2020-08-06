@@ -219,7 +219,7 @@ def anonymize_ors(item):
     try:
         item['files'][:] = [d for d in item['files'] if d.get('r') != True]
     except Exception as e:
-        item['files'] = None
+        item['files'] = []
         app.logger.info("File error: {}".format(e))
         pass
 
@@ -230,7 +230,7 @@ def anonymize_ors(item):
 
                 if item['workflow']['audit'][key]:
 
-                    if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'withdraw']:
+                    if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'send_to_ors', 'withdraw']:
                         item['workflow']['audit'][key]['u'] = anon.assign(item['workflow']['audit'][key]['u'])
 
     # Reporter AND owner
