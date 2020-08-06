@@ -61,8 +61,7 @@ def eve_abort(status=500, message='', sysinfo=None):
         pass
 
     # Eve formatted
-    data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
-    abort(status, json.dumps(data, cls=EveJSONEncoder))
+    abort(status, message)
 
     # Using flask Response
     # resp = eve_response(message, status)
