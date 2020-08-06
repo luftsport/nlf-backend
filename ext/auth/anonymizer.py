@@ -6,6 +6,7 @@ import sys
 from pprint import pprint
 from bs4 import BeautifulSoup
 
+
 class Anon(object):
     def __init__(self):
         self.persons = []
@@ -82,6 +83,80 @@ class Anon(object):
         return self.assign_x(x)
 
 
+def _anon_membership_payment(payment):
+    try:
+        return {'year': payment.get('year', None), 'type': payment.get('type', None)}
+    except:
+        pass
+
+    return None
+
+
+def _remove_from_person_data(item):
+    """Removes possible traceble id's in person object"""
+
+    # Functions
+    # item.pop('functions', None)
+    item['functions'] = []
+
+    # Competences
+    try:
+        item['competences'] = [
+            {
+                '_code': d['_code'],
+                'expiry': d['expiry']
+            } for d in item['competences']
+        ]
+    except:
+        item['competences'] = []
+
+    # Licenses
+    try:
+        item['licenses'] = [
+            {
+                'type_id': d['type_id'],
+                'expiry': d['expiry'],
+                'status_date': d['status_date']
+            } for d in item['licenses']
+        ]
+    except:
+        item['licenses'] = []
+
+    # memberships
+    try:
+        item['memberships'] = [
+            {
+                'club': d['club'],
+                'discipline': d['discipline'],
+                'activity': d['activity'],
+                'from_date': d['from_date'],
+                'payment': _anon_membership_payment(d['payment'])
+            } for d in item['memberships']
+        ]
+    except:
+        item['memberships'] = []
+
+    # magazines
+    try:
+        item['magazines'] = [{'name': d['name'], 'year': d['year']} for d in item['magazines']]
+    except:
+        item['magazines'] = []
+
+    # federation (not used as of now)
+    try:
+        item['federation'] = [
+            {
+                'activity': d['activity'],
+                'year': d['year'],
+                'type': d['type'],
+                'paid': d['paid'],
+            } for d in item['federation']
+        ]
+    except:
+        # item['federation'] = []
+        pass
+
+
 def anonymize_ors(item):
     """ Anonymizes based on a simple scheme
     Only for after_get_observation
@@ -136,11 +211,12 @@ def anonymize_ors(item):
             for key, macro in enumerate(macros):
 
                 # USER MACRO
-                if macros[key].get('data-type', '') == 'user' and int(macros[key].get('data-id', 0)) != int(app.globals['id']):
+                if macros[key].get('data-type', '') == 'user' and int(macros[key].get('data-id', 0)) != int(
+                        app.globals['id']):
 
                     macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
 
-                    macros[key].string = '{} {}'.format(preamble, -1*macros[key].get('data-id'))
+                    macros[key].string = '{} {}'.format(preamble, -1 * macros[key].get('data-id'))
 
                     for attr in list(macros[key].attrs.keys()):
                         if attr not in ['data-id', 'data-type']:
@@ -159,7 +235,8 @@ def anonymize_ors(item):
     for key, aircraft in enumerate(item.get('aircrafts', [])):
         try:
             for k, crew in enumerate(aircraft.get('crew', [])):
-                item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(item['aircrafts'][key]['crew'][k].get('person', {}))
+                item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(
+                    item['aircrafts'][key]['crew'][k].get('person', {}))
         except Exception as e:
             pass
 
@@ -183,7 +260,8 @@ def anonymize_ors(item):
             if 'gear' in item['involved'][key].get('data', {}):  # ".get('gear', False):
                 if 'rigger' in item['involved'][key]['data']['gear']:  # .get('rigger', False):
                     try:
-                        item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(item['involved'][key]['data']['gear'].get('rigger', {'id': 0}))
+                        item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(
+                            item['involved'][key]['data']['gear'].get('rigger', {'id': 0}))
                     except:
                         item['involved'][key]['data']['gear'].pop('rigger', None)
 
@@ -240,23 +318,3 @@ def anonymize_ors(item):
         item['owner'] = anon.assign(item['owner'])
 
     return item
-
-
-"""
-except:
-    eve_abort(500, 'Server experienced problems (Anon) anonymousing the observation and aborted as a safety measure')
-    return {}
-"""
-
-
-def has_permission_obs(id, type):
-    """ Checks if has type (execute, read, write) permissions on an observation or not
-    Only for after_get_observation
-    @note: checks on list comprehension and returns number of intersects in list => len(list) > 0 == True
-    @bug: Possible bug if user comparison is int vs float!
-    @todo: Should not be execute rights? Or could it be another type 'noanon' or if in users with read right? 
-    """
-
-    return acl_helper.has_permission(ObjectId(id), type, 'observations')
-
-    return False
