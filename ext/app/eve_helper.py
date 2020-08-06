@@ -19,7 +19,7 @@ from ext.notifications.sms import Sms  # Email
 CRITICAL_ERROR_CODES = [503]
 
 
-def eve_abort(status=500, message='', sysinfo=None):
+def eve_abort(status=500, message='', sysinfo=None) -> Response:
     """Abort processing and logging
     @Param: code http code
     @Param: message string representation"""
@@ -60,20 +60,19 @@ def eve_abort(status=500, message='', sysinfo=None):
     except:
         pass
 
-    # Eve formatted
-    abort(status, message)
+    # Eve formatted abort
+    # abort(status, message)
 
     # Using flask Response
     # resp = eve_response(message, status)
     # abort(status, resp)
 
+    # If using this pattern, make sure all eve_abort is returned in situ!
+    data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
+    return eve_response(data=data, status=status)
+
     # Should never be reached:
     abort(500)
-
-    # If using this pattern, make sure all eve_abort is returned in situ!
-    #data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
-    #return eve_response(data=data, status=status)
-
 
 def eve_error_response(message, status):
     return eve_response(data={'_status': 'ERR', '_error': message}, status=status)

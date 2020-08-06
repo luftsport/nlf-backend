@@ -41,4 +41,4 @@ def before_aggregation(endpoint, pipeline):
                 or
                 (item.get('acl_user', {}).get('r', False) is False)
         ):
-            eve_abort(403, 'No access')
+            return eve_abort(403, 'No access')

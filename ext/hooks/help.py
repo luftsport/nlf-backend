@@ -5,7 +5,7 @@ from ext.scf import ACL_HELP_USERS, ACL_CLOSED_ALL_LIST
 
 def before_insert(items):
     if app.globals.get('user_id') not in ACL_HELP_USERS:
-        eve_abort(403, 'No access')
+        return eve_abort(403, 'No access')
         raise Exception
 
     for document in items:

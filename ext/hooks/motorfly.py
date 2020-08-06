@@ -50,7 +50,7 @@ def ors_before_insert_item(item):
             if ors_id:
                 item['id'] = ors_id
             else:
-                eve_abort(422, 'Could not create ORS, missing increment')
+                return eve_abort(422, 'Could not create ORS, missing increment')
 
             item['when'] = datetime.utcnow()
             item['reporter'] = app.globals.get('user_id')
@@ -71,7 +71,7 @@ def ors_before_insert_item(item):
 
 
     except Exception as e:
-        eve_abort(422, 'Could not create ORS')
+        return eve_abort(422, 'Could not create ORS')
 
 
 def ors_after_inserted(items):
@@ -163,11 +163,11 @@ def _ors_after_fetched(_response):
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
-        eve_abort(500,
+        return eve_abort(500,
                              'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        eve_abort(500,
+        return eve_abort(500,
                              'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(
                                  e))
 

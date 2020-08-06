@@ -228,7 +228,7 @@ def met_tafmetar(icao, date):
     except Exception as e:
         app.logger.error(e)
 
-    eve_abort(500, 'Could not process')
+    return eve_abort(500, 'Could not process')
 
 
 @Weather.route("/met/parse/<regex('(metar|taf)'):what>/<string:msg>", methods=['GET'])
@@ -242,7 +242,7 @@ def met_parse(what, msg):
 
         return eve_response({'decoded': resp, 'msg': msg}, 200)
     except:
-        eve_abort(404, 'Could not process')
+        return eve_abort(404, 'Could not process')
 
 
 @Weather.route("/met/metar/<regex('[aA-zZ]{4}'):icao>", methods=['GET'])
@@ -262,7 +262,7 @@ def met_get_metar_dict(icao):
         return eve_response({'icao': icao, 'metar': resp})
     except Exception as e:
         app.logger.error(e)
-        eve_abort(404, 'Could not process')
+        return eve_abort(404, 'Could not process')
 
 
 @Weather.route("/met/metar/nearest/<regex('[aA-zZ]{4}'):icao>/<string:date>", methods=['GET'])
@@ -276,4 +276,4 @@ def met_nearest_metar(icao, date):
         return eve_response({'metar': metar, 'parsed': '{}'.format(parsed)}, 200)
     except Exception as e:
         app.logger.error(e)
-        eve_abort(404, 'Could not process {}'.format(e))
+        return eve_abort(404, 'Could not process {}'.format(e))

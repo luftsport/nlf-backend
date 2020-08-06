@@ -70,28 +70,28 @@ def login():
             person_id = decoded_token.get('person_id', None)
 
             if person_id is None:
-                eve_abort(401, 'Could not validate the token, could not find username')
+                return eve_abort(401, 'Could not validate the token, could not find username')
             else:
                 #  print('Username', person_id)
                 _user = User(int(person_id), app)
 
         except jwt.exceptions.InvalidTokenError:
             token_valid = False
-            eve_abort(401, 'Could not validate the token, InvalidTokenError')
+            return eve_abort(401, 'Could not validate the token, InvalidTokenError')
         except jwt.exceptions.InvalidSignatureError:
             token_valid = False
-            eve_abort(401, 'Could not validate the token, InvalidSignatureError')
+            return eve_abort(401, 'Could not validate the token, InvalidSignatureError')
         except jwt.exceptions.InvalidIssuerError:
             token_valid = False
-            eve_abort(401, 'Could not validate the token, InvalidIssuerError')
+            return eve_abort(401, 'Could not validate the token, InvalidIssuerError')
         except jwt.exceptions.ExpiredSignatureError:
             token_valid = False
-            eve_abort(401, 'Could not validate the token, ExpiredSignatureError')
+            return eve_abort(401, 'Could not validate the token, ExpiredSignatureError')
         except Exception as e:
             token_valid = False
-            eve_abort(401, 'Could not validate your token {}'.format(e))
+            return eve_abort(401, 'Could not validate your token {}'.format(e))
     else:
-        eve_abort(401, 'Could not make sense of your request')
+        return eve_abort(401, 'Could not make sense of your request')
 
     # Now process user and successful authentication
     if token_valid is True and _user.user is not None:
@@ -149,7 +149,7 @@ def login():
         except Exception as e:
             app.logger.exception("Could not update user %s auth token:" % _user.person_id)
             app.logger.exception(e)
-            eve_abort(500, "Could not update user %i auth token" % _user.person_id)
+            return eve_abort(500, "Could not update user %i auth token" % _user.person_id)
 
     # On error sleep a little against brute force
     sleep(1)
@@ -182,7 +182,7 @@ def get_user():
             return eve_response(data={'iam': response['id']})
     except:
         app.logger.error("Unknown error in get_user")
-        eve_abort(500, 'Unknown error occurred')
+        return eve_abort(500, 'Unknown error occurred')
 
 
 """
