@@ -259,7 +259,8 @@ def anonymize_ors(item):
 
         else:
             item['involved'][key] = anon.assign_pair(item['involved'][key])
-            item['involved'][key]['data'] = _remove_from_person_data(item['involved'][key]['data'])
+            if 'data' in item['involved'][key]:
+                item['involved'][key]['data'] = _remove_from_person_data(item['involved'][key]['data'])
 
             # Involved.gear -> rigger
             if 'gear' in item['involved'][key].get('data', {}):  # ".get('gear', False):
