@@ -139,7 +139,9 @@ definition = {
         'flags',
         'rating',
         'type',
-        'location'
+        'location',
+        '_updated',
+        '_created'
     ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],

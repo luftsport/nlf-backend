@@ -150,7 +150,9 @@ definition = {
         'aircrafts.airspace',
         'aircrafts.aerodrome',
         'aircrafts.occurence',
-        'aircrafts.wx'
+        'aircrafts.wx',
+        '_updated',
+        '_created'
     ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
