@@ -79,7 +79,6 @@ def ors_before_insert_item(item):
         eve_abort(422, 'Could not create ORS')
 
 
-
 def ors_after_inserted(items):
     for item in items:
         ors_after_inserted_item(item)
@@ -184,9 +183,13 @@ def _ors_after_fetched(_response):
 
 @require_token()
 def ors_before_get_todo(request, lookup):
-    lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
-                            {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                     {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+    lookup.update({
+        '$and': [
+            {'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+            {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
+                     {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}
+        ]
+    })
 
 
 @require_token()
