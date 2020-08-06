@@ -60,17 +60,16 @@ def eve_abort(status=500, message='', sysinfo=None):
     except:
         pass
 
-    """
-    try:
-        return Response(json.dumps(message, cls=EveJSONEncoder), status=status, mimetype='application/json')
-    except:
-        resp = Response(None, status)
-        # raises an exception only in Flask
-    """
-    resp = Response(None, status)
-    # abort(status, description=message) #, response=resp)
-    data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
-    return eve_response(data=data, status=status)
+
+    resp = eve_response(message, status)
+
+    abort(status, resp)
+    # Should never be reached:
+    abort(500)
+
+    # If using this pattern, make sure all eve_abort is returned in situ!
+    #data = {'_status': 'ERR', '_error': {'code': status, 'message': message}}
+    #return eve_response(data=data, status=status)
 
 
 def eve_error_response(message, status):
@@ -98,7 +97,7 @@ def eve_response(data={}, status=200):
     except:
         data.update({'_not_flask_response': True})
         resp = jsonify(**data)
-        return resp, status
+        return resp
 
     abort(500)
 

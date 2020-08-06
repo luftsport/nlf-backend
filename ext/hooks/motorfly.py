@@ -24,7 +24,7 @@
 """
 import ext.auth.anonymizer as anon
 from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permission
-import ext.app.eve_helper as eve_helper
+from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 import json
 
@@ -163,11 +163,11 @@ def _ors_after_fetched(_response):
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
-        eve_helper.eve_abort(500,
+        eve_abort(500,
                              'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        eve_helper.eve_abort(500,
+        eve_abort(500,
                              'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(
                                  e))
 

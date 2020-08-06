@@ -126,7 +126,7 @@ def transition(observation_id, action):
 
         return eve_response(wf.state, 200)
 
-    return eve_abort(500, 'Error in transitioning observation in workflow')
+    eve_abort(500, 'Error in transitioning observation in workflow')
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])

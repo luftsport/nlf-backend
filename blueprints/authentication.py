@@ -182,7 +182,7 @@ def get_user():
             return eve_response(data={'iam': response['id']})
     except:
         app.logger.error("Unknown error in get_user")
-        return eve_abort(500, 'Unknown error occurred')
+        eve_abort(500, 'Unknown error occurred')
 
 
 """
