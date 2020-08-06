@@ -95,7 +95,7 @@ def _anon_membership_payment(payment):
 def _remove_from_person_data(item):
     """Removes possible traceble id's in person object"""
 
-    # Functions
+    # Functions - list of id's
     # item.pop('functions', None)
     item['functions'] = []
 
@@ -156,6 +156,7 @@ def _remove_from_person_data(item):
         # item['federation'] = []
         pass
 
+    return item
 
 def anonymize_ors(item):
     """ Anonymizes based on a simple scheme
@@ -237,6 +238,9 @@ def anonymize_ors(item):
             for k, crew in enumerate(aircraft.get('crew', [])):
                 item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(
                     item['aircrafts'][key]['crew'][k].get('person', {}))
+
+                if 'data' in item['aircrafts'][key]['crew'][k].get('person', {}):
+                    item['aircrafts'][key]['crew'][k]['person']['data'] = _remove_from_person_data(item['aircrafts'][key]['crew'][k]['person']['data'])
         except Exception as e:
             pass
 
@@ -255,6 +259,7 @@ def anonymize_ors(item):
 
         else:
             item['involved'][key] = anon.assign_pair(item['involved'][key])
+            item['involved'][key]['data'] = _remove_from_person_data(item['involved'][key]['data'])
 
             # Involved.gear -> rigger
             if 'gear' in item['involved'][key].get('data', {}):  # ".get('gear', False):
@@ -262,6 +267,9 @@ def anonymize_ors(item):
                     try:
                         item['involved'][key]['data']['gear']['rigger'] = anon.assign_pair(
                             item['involved'][key]['data']['gear'].get('rigger', {'id': 0}))
+
+                        if 'data' in item['involved'][key]['data']['gear']['rigger']:
+                            item['involved'][key]['data']['gear']['rigger'] = _remove_from_person_data(item['involved'][key]['data']['gear']['rigger'])
                     except:
                         item['involved'][key]['data']['gear'].pop('rigger', None)
 
@@ -281,17 +289,29 @@ def anonymize_ors(item):
             for k, hl in enumerate(item['organization']['hl']):
                 item['organization']['hl'][k] = anon.assign_pair(item['organization']['hl'][k])
 
+                if 'data' in item['organization']['hl'][k]:
+                    item['organization']['hl'][k] = _remove_from_person_data(item['organization']['hl'][k])
+
         if 'hfl' in item['organization']:  # if item['organization'].get('hfl', False):
             for k, hfl in enumerate(item['organization']['hfl']):
                 item['organization']['hfl'][k] = anon.assign_pair(item['organization']['hfl'][k])
+
+                if 'data' in item['organization']['hl'][k]:
+                    item['organization']['hfl'][k] = _remove_from_person_data(item['organization']['hfl'][k])
 
         if 'hm' in item['organization']:  # if item['organization'].get('hm', False):
             for k, hm in enumerate(item['organization']['hm']):
                 item['organization']['hm'][k] = anon.assign_pair(item['organization']['hm'][k])
 
+                if 'data' in item['organization']['hl'][k]:
+                    item['organization']['hm'][k] = _remove_from_person_data(item['organization']['hm'][k])
+
         if 'pilot' in item['organization']:  # if item['organization'].get('pilot', False):
             for k, pilot in enumerate(item['organization']['pilot']):
                 item['organization']['pilot'][k] = anon.assign_pair(item['organization']['pilot'][k])
+
+                if 'data' in item['organization']['pilot'][k]:
+                    item['organization']['pilot'][k] = _remove_from_person_data(item['organization']['pilot'][k])
 
     # Files
     try:
