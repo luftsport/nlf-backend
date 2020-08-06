@@ -300,6 +300,7 @@ if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
 
     print(" App:         %s" % app.config['APP_VERSION'])
     print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
+    print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
     print(" Cerberus:    %s" % pkg_resources.get_distribution("cerberus").version)
     print(" Flask:       %s" % pkg_resources.get_distribution("flask").version)
     print(" Pymongo:     %s" % pkg_resources.get_distribution("pymongo").version)
