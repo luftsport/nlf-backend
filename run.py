@@ -144,7 +144,6 @@ def dump_request(request):
         pass
 
 
-
 # ##############
 # FALLSKJERM ORS
 #
@@ -227,11 +226,15 @@ def _aggregation(endpoint, pipeline):
     if endpoint == 'notifications_events':
         notifications.before_aggregation(endpoint, pipeline)
 
+
 # Before any aggregation run this
 app.before_aggregation += _aggregation
 
+
 def ooh(request, lookup):
     print('[AGGG]', request, lookup)
+
+
 # app.on_pre_GET_notifications_events += ooh
 # Motor
 
@@ -250,7 +253,7 @@ def ooh(request, lookup):
 
 
 # app.on_insert += hook.observations.before_post_comments
-#app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
+# app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
 
 # app.on_post_GET_fallskjerm_observations += hook.observations.after_get
 # app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
@@ -296,20 +299,24 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    import pkg_resources
+    
+    try:
+        import pkg_resources
 
-    print(" App:         %s" % app.config['APP_VERSION'])
-    print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
-    print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
-    print(" Cerberus:    %s" % pkg_resources.get_distribution("cerberus").version)
-    print(" Flask:       %s" % pkg_resources.get_distribution("flask").version)
-    print(" Pymongo:     %s" % pkg_resources.get_distribution("pymongo").version)
-    print(" Pillow:      %s" % pkg_resources.get_distribution("Pillow").version)
-    print(" Transtions:  %s" % pkg_resources.get_distribution("transitions").version)
-    print(" Pytaf:       %s" % pkg_resources.get_distribution("pytaf").version)
-    print(" Py Metar:    %s" % pkg_resources.get_distribution("python-metar").version)
-    print(" Py YR:       %s" % pkg_resources.get_distribution("python-yr").version)
-    print("--------------------------------------------------------------------------------")
+        print(" App:         %s" % app.config['APP_VERSION'])
+        print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
+        print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
+        print(" Cerberus:    %s" % pkg_resources.get_distribution("cerberus").version)
+        print(" Flask:       %s" % pkg_resources.get_distribution("flask").version)
+        print(" Pymongo:     %s" % pkg_resources.get_distribution("pymongo").version)
+        print(" Pillow:      %s" % pkg_resources.get_distribution("Pillow").version)
+        print(" Transtions:  %s" % pkg_resources.get_distribution("transitions").version)
+        print(" Pytaf:       %s" % pkg_resources.get_distribution("pytaf").version)
+        print(" Py Metar:    %s" % pkg_resources.get_distribution("python-metar").version)
+        print(" Py YR:       %s" % pkg_resources.get_distribution("python-yr").version)
+        print("--------------------------------------------------------------------------------")
+    except:
+        pass
 
 if __name__ == '__main__':
     app.run(host=app.config['APP_HOST'], port=app.config['APP_PORT'])
