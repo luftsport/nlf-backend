@@ -63,7 +63,7 @@ def login():
 
         try:
             public_key = _get_public_key()
-            decoded_token = jwt.decode(password, public_key, issuer=ISSUER, algorithm='HS256')
+            decoded_token = jwt.decode(password, public_key, issuer=ISSUER, algorithms=['RS256'])
             token_valid = True
 
             # melwin_id or person_id
