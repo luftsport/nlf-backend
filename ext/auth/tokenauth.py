@@ -93,7 +93,6 @@ class TokenAuth(TokenAuth):
         """ Overridden by NOT returning a WWW-Authenticate header
         This makes the browser NOT fire up the basic auth
         """
-        resp = Response(None, 401)
         abort(401)  # , description='Please provide proper credentials')  # , response=resp)
 
     def set_acl(self, u):
@@ -206,7 +205,9 @@ class TokenAuth(TokenAuth):
 
     def _set_acl(self, acl, _person_id, person_id):
 
+        raise NotImplemented
+
         if acl:
             app.globals.update({'acl': acl})
 
-        raise NotImplemented
+

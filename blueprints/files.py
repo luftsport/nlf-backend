@@ -38,12 +38,12 @@ def process_request(file_id):
         file = col.find_one({'_id': ObjectId(file_id)})
         
         if not file:
-            eve_abort(404, 'No file found')
+            return eve_abort(404, 'No file found')
         
         try:
             grid_fs = GridFS(app.data.driver.db)
             if not grid_fs.exists(_id=file['file']):
-                eve_abort(404, 'No file found')
+                return eve_abort(404, 'No file found')
             
             stream = grid_fs.get_last_version(_id=file['file'])
             
@@ -51,7 +51,7 @@ def process_request(file_id):
             response.mimetype = stream.content_type
             return response
         except NoFile:
-            eve_abort(404, 'No file found')
+            return eve_abort(404, 'No file found')
 
 @Files.route("/image/<objectid:file_id>",defaults={'size': None}, methods=['GET'])
 @Files.route("/image/<objectid:file_id>/<string:size>", methods=['GET'])
@@ -71,7 +71,7 @@ def process_image_request(file_id, size):
     grid_fs = GridFS(app.data.driver.db)
     
     if not grid_fs.exists(_id=image['file']):
-        eve_abort(500, 'No file system found')
+        return eve_abort(500, 'No file system found')
     
     im_stream = grid_fs.get_last_version(_id=image['file']) 
     
@@ -115,10 +115,10 @@ def has_permission():
                                method=request.method, 
                                resource=request.path[len(app.globals.get('prefix')):], 
                                allowed_roles=None):
-            eve_abort(404, 'Please provide proper credentials')
+            return eve_abort(404, 'Please provide proper credentials')
 
     except:
-        eve_abort(404, 'Please provide proper credentials')
+        return eve_abort(404, 'Please provide proper credentials')
     return True
     
     
