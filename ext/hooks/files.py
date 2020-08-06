@@ -2,7 +2,7 @@ from ext.auth.acl import has_permission
 from ext.app.eve_helper import eve_abort
 
 
-def _after_fetched_item(response):
+def after_fetched_item(response):
     try:
 
         response = _anon(response)
@@ -11,7 +11,7 @@ def _after_fetched_item(response):
         return eve_abort(500, 'Anon file aborted')
 
 
-def _after_fetched_list(response):
+def after_fetched_list(response):
     try:
         for key, item in enumerate(response.get('_items', [])):
             response['_items'][key] = _anon(item)
