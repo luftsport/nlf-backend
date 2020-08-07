@@ -85,12 +85,12 @@ def parse_acl(acl):
         for role in acl.get(right, {}).get('roles', []):
             # print('ROLE', role)
 
-            if role.get('org', 0) > 0:
+            if role.get('org', None) is not None and role.get('org', 0) > 0:
                 _orgs = [role.get('org')]
-            elif role.get('club', 0) > 0:
+            elif role.get('club', None) is not None and role.get('club', 0) > 0:
                 _orgs = [role.get('club')]
             else:
-                _orgs = get_orgs_in_activivity(role.get('activity'))
+                _orgs = get_orgs_in_activivity(role.get('activity', 0))
 
             users[right] += get_users_from_role(role.get('role'), _orgs)
 
