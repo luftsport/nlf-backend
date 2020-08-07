@@ -330,7 +330,7 @@ def anonymize_ors(item):
 
                 if item['workflow']['audit'][key]:
 
-                    if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'withdraw']:
+                    if item['workflow']['audit'][key]['a'] in ['init', 'set_ready', 'send_to_hi', 'send_to_ors', 'withdraw']:
                         item['workflow']['audit'][key]['u'] = anon.assign(item['workflow']['audit'][key]['u'])
 
     # Reporter AND owner
