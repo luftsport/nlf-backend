@@ -42,10 +42,10 @@ def has_permission():
                                resource=request.path[len(app.globals.get('prefix')):],
                                allowed_roles=None):
 
-            eve_abort(404, 'Please provide proper credentials')
+            return eve_abort(404, 'Please provide proper credentials')
 
     except:
-        eve_abort(404, 'Please provide proper credentials')
+        return eve_abort(404, 'Please provide proper credentials')
 
     # If so far, then goodie!
     return True

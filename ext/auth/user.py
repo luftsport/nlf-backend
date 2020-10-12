@@ -34,11 +34,11 @@ class User:
                     self.user = self._create_user(person_id)
 
             else:
-                eve_abort(500, 'Error getting the user')
+                return eve_abort(500, 'Error getting the user')
             self.person_id = person_id
         except Exception as e:
             if not is_mongo_alive():
-                eve_abort(502, 'Network problems')
+                return eve_abort(502, 'Network problems')
 
     def _create_user(self, person_id):
         # melwin_user, _, _, status = getitem_internal(resource='legacy_melwin_users', **{'id': person_id})

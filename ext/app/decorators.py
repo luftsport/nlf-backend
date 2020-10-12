@@ -54,9 +54,9 @@ def require_token(allowed_roles=None):
                 
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
-                eve_abort(401, 'Please provide proper credentials')
+                return eve_abort(401, 'Please provide proper credentials')
             except Exception as e:
-                eve_abort(500, 'Server error')
+                return eve_abort(500, 'Server error')
 
             return f(*args, **kwargs)
 
@@ -76,7 +76,7 @@ def require_superadmin():
         @wraps(f)
         def wrapped(*args, **kwargs):
             if app.globals.get('user_id', 0) not in ACL_SUPERADMINS:
-                eve_abort(401, 'You do not have sufficient privileges')
+                return eve_abort(401, 'You do not have sufficient privileges')
 
             return f(*args, **kwargs)
 

@@ -144,7 +144,6 @@ def dump_request(request):
         pass
 
 
-
 # ##############
 # FALLSKJERM ORS
 #
@@ -153,6 +152,7 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
@@ -172,9 +172,10 @@ app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
 app.on_inserted_motorfly_observations += hook.motorfly.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_motorfly_observations += hook.motorfly.ors_before_get
+app.on_pre_GET_motorfly_observations_user += hook.motorfly.ors_before_get_user
 app.on_pre_GET_motorfly_observations_todo += hook.motorfly.ors_before_get_todo
 # AFTER FETCHED (GET)
-#app.on_fetched_resource_motorfly_observations += hook.motorfly.ors_after_fetched_list
+app.on_fetched_resource_motorfly_observations += hook.motorfly.ors_after_fetched_list
 app.on_fetched_item_motorfly_observations += hook.motorfly.ors_after_fetched
 app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_diffs
 app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
@@ -202,6 +203,12 @@ app.on_insert_legacy_clubs += hook.common.on_insert_set_owner
 app.on_update_legacy_clubs += hook.common.on_update_set_owner
 
 #############
+# FILES
+# AFTER FETCHED (GET)
+app.on_fetched_resource_files += hook.files.after_fetched_list
+app.on_fetched_item_files += hook.files.after_fetched_item
+
+#############
 # CONTENT
 app.on_pre_GET_content += hook.content.pre_GET
 app.on_pre_PATCH_content += hook.content.pre_PATCH
@@ -209,6 +216,7 @@ app.on_pre_DELETE_content += hook.content.pre_DELETE
 app.on_insert_content += hook.content.before_insert
 app.on_replace_content += hook.content.on_before_replace
 app.on_update_content += hook.content.on_before_update
+
 #############
 # HELP
 app.on_pre_GET_help += hook.help.pre_GET
@@ -225,11 +233,15 @@ def _aggregation(endpoint, pipeline):
     if endpoint == 'notifications_events':
         notifications.before_aggregation(endpoint, pipeline)
 
+
 # Before any aggregation run this
 app.before_aggregation += _aggregation
 
+
 def ooh(request, lookup):
     print('[AGGG]', request, lookup)
+
+
 # app.on_pre_GET_notifications_events += ooh
 # Motor
 
@@ -248,7 +260,7 @@ def ooh(request, lookup):
 
 
 # app.on_insert += hook.observations.before_post_comments
-#app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
+# app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
 
 # app.on_post_GET_fallskjerm_observations += hook.observations.after_get
 # app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
@@ -294,19 +306,24 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    import pkg_resources
+    
+    try:
+        import pkg_resources
 
-    print(" App:         %s" % app.config['APP_VERSION'])
-    print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
-    print(" Cerberus:    %s" % pkg_resources.get_distribution("cerberus").version)
-    print(" Flask:       %s" % pkg_resources.get_distribution("flask").version)
-    print(" Pymongo:     %s" % pkg_resources.get_distribution("pymongo").version)
-    print(" Pillow:      %s" % pkg_resources.get_distribution("Pillow").version)
-    print(" Transtions:  %s" % pkg_resources.get_distribution("transitions").version)
-    print(" Pytaf:       %s" % pkg_resources.get_distribution("pytaf").version)
-    print(" Py Metar:    %s" % pkg_resources.get_distribution("python-metar").version)
-    print(" Py YR:       %s" % pkg_resources.get_distribution("python-yr").version)
-    print("--------------------------------------------------------------------------------")
+        print(" App:         %s" % app.config['APP_VERSION'])
+        print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
+        print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
+        print(" Cerberus:    %s" % pkg_resources.get_distribution("cerberus").version)
+        print(" Flask:       %s" % pkg_resources.get_distribution("flask").version)
+        print(" Pymongo:     %s" % pkg_resources.get_distribution("pymongo").version)
+        print(" Pillow:      %s" % pkg_resources.get_distribution("Pillow").version)
+        print(" Transtions:  %s" % pkg_resources.get_distribution("transitions").version)
+        print(" Pytaf:       %s" % pkg_resources.get_distribution("pytaf").version)
+        print(" Py Metar:    %s" % pkg_resources.get_distribution("python-metar").version)
+        print(" Py YR:       %s" % pkg_resources.get_distribution("python-yr").version)
+        print("--------------------------------------------------------------------------------")
+    except:
+        pass
 
 if __name__ == '__main__':
     app.run(host=app.config['APP_HOST'], port=app.config['APP_PORT'])

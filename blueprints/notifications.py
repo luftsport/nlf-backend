@@ -36,7 +36,7 @@ def message():
         msg = strip_tags(args.get('message', None))
 
         if event_from is None or event_from_id is None or msg is None:
-            eve_abort(422, 'Missing parameters')
+            return eve_abort(422, 'Missing parameters')
 
         # Can't do if closed or withdrawn
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1, 'id': 1, 'discipline': 1, 'tags': 1})
@@ -90,7 +90,7 @@ def reminder():
             return eve_response_pppd({}, 403, 'Observation is closed')
 
         if event_from is None or event_from_id is None or message is None:
-            eve_abort(422, 'Missing parameters')
+            return eve_abort(422, 'Missing parameters')
 
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1, 'id': 1, 'discipline': 1, 'tags': 1})
         # print('ACLS', acl)
