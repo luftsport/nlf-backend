@@ -64,8 +64,10 @@ def get_acl_init(person_id, discipline_id):
 WF_MOTORFLY_STATES = [
     'draft',
     'pending_review_ors',
+    'pending_review_ftl',
     'pending_review_dto',
     'pending_review_skole',
+    'pending_review_operativ',
     'pending_review_teknisk',
     'closed',
     'withdrawn'
@@ -88,6 +90,14 @@ WF_MOTORFLY_STATES_ATTR = {
         'title': 'Avventer Skolesjef',
         'description': 'Avventer Skolesjef i klubb'
     },
+    'pending_review_operativ': {
+        'title': 'Avventer Operativ',
+        'description': 'Avventer Operativ leder i klubb'
+    },
+    'pending_review_ftl': {
+        'title': 'Avventer FLT',
+        'description': 'Avventer Flytryggings leder i klubb'
+    },
     'pending_review_teknisk': {
         'title': 'Avventer Teknisk',
         'description': 'Avventer Teknisk leder i klubb'
@@ -103,6 +113,7 @@ WF_MOTORFLY_STATES_ATTR = {
 }
 
 WF_MOTORFLY_TRANSITIONS = [
+    # OBSERVATØR
     {'trigger': 'send_to_ors',
      'source': 'draft',
      'dest': 'pending_review_ors',
@@ -121,6 +132,7 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    # OBSREGKOOORD
     {'trigger': 'approve_ors',
      'source': 'pending_review_ors',
      'dest': 'closed',
@@ -139,15 +151,29 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'send_to_dto',
+    # FTL
+    {'trigger': 'send_to_ftl',
      'source': 'pending_review_ors',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_ftl',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # DTO 
+    {'trigger': 'send_to_dto',
+     'source': 'pending_review_ftl',
      'dest': 'pending_review_dto',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
     {'trigger': 'approve_dto',
      'source': 'pending_review_dto',
-     'dest': 'pending_review_ors',
+     'dest': 'pending_review_ftl',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -163,16 +189,30 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+
+    # OPERATIVT
+    {'trigger': 'send_to_operativ',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_operativ',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_operativ',
+     'source': 'pending_review_operativ',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # TEKNISK
     {'trigger': 'send_to_teknisk',
-     'source': 'pending_review_dto',
+     'source': 'pending_review_ftl',
      'dest': 'pending_review_teknisk',
      'after': 'save_workflow',
      'conditions': ['has_permission']
-
      },
     {'trigger': 'approve_teknisk',
      'source': 'pending_review_teknisk',
-     'dest': 'pending_review_dto',
+     'dest': 'pending_review_ftl',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -360,9 +400,19 @@ class ObservationWorkflow(Machine):
         col = app.data.driver.db[RESOURCE_COLLECTION]
 
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
-                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
-                                   '_version': 1, 'owner': 1,
-                                   'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
+                                  {'id': 1,
+                                   'workflow': 1,
+                                   'acl': 1,
+                                   'club': 1,
+                                   'discipline': 1,
+                                   '_etag': 1,
+                                   '_version': 1,
+                                   'owner': 1,
+                                   'reporter': 1,
+                                   'organization': 1,
+                                   'tags': 1,
+                                   'acl': 1}
+                                  )
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)
 

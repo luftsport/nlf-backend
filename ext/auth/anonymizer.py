@@ -79,6 +79,22 @@ class Anon(object):
     def assign_pair(self, x):
         return self.assign_x(x)
 
+class AnonAircraft(object):
+
+    def __init__(self):
+        self.aircraft = []
+
+    def assign(self, aircraft):
+        """Keep track of all assigned persons"""
+
+        if aircraft in self.aircraft:
+            return "FLY-{}".format(-1 * (self.aircraft.index(aircraft) + 1))
+        else:
+            self.aircraft.append(aircraft)
+            # self.persons = list(set(self.persons))
+            return "FLY-{}".format(-1 * (self.aircraft.index(aircraft) + 1))
+
+        return "FLY-0"
 
 def _anon_membership_payment(payment):
     try:
