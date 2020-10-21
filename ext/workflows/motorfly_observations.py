@@ -183,6 +183,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    {'trigger': 'reject_dto',
+     'source': 'pending_review_dto',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
     {'trigger': 'send_to_skole',
      'source': 'pending_review_dto',
      'dest': 'pending_review_skole',
@@ -190,6 +196,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'conditions': ['has_permission']
      },
     {'trigger': 'approve_skole',
+     'source': 'pending_review_skole',
+     'dest': 'pending_review_dto',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_skole',
      'source': 'pending_review_skole',
      'dest': 'pending_review_dto',
      'after': 'save_workflow',
@@ -209,6 +221,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    {'trigger': 'reject_operativ',
+     'source': 'pending_review_operativ',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
     # TEKNISK
     {'trigger': 'send_to_teknisk',
      'source': 'pending_review_ftl',
@@ -217,6 +235,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'conditions': ['has_permission']
      },
     {'trigger': 'approve_teknisk',
+     'source': 'pending_review_teknisk',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_teknisk',
      'source': 'pending_review_teknisk',
      'dest': 'pending_review_ftl',
      'after': 'save_workflow',
@@ -320,6 +344,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til FTL'
     },
+    'reject_dto': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
     'send_to_skole': {
         'title': 'Send til Skolesjef',
         'action': 'Send til Skolesjef',
@@ -333,6 +364,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til DTO representant'
+    },
+    'reject_skole': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til DTO'
     },
     'send_to_teknisk': {
         'title': 'Send til Teknisk Leder',
@@ -348,6 +386,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til FTL'
     },
+    'reject_teknisk': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
         'action': 'Send til Operativ Leder',
@@ -359,6 +404,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'title': 'Godkjent Operativ',
         'action': 'Send til FTL',
         'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'reject_operativ': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
         'comment': True,
         'descr': 'Sendt til FTL'
     },
