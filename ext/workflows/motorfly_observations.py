@@ -164,7 +164,7 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    # DTO 
+    # DTO
     {'trigger': 'send_to_dto',
      'source': 'pending_review_ftl',
      'dest': 'pending_review_dto',
@@ -226,7 +226,9 @@ Resource is bluepring trigger
 'reopen', 
 'approve', 
 'reopen_ors', 
-'reject_ors', 
+'reject_ors',
+'send_to_ftl', 
+'approve_ftl',
 'send_to_dto', 
 'approve_dto', 
 'send_to_skole', 
@@ -254,13 +256,15 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'action': 'Gjenåpne',
         'resource': 'reopen',
         'comment': True,
-        'descr': 'Gjenåpnet'},
+        'descr': 'Gjenåpnet'
+    },
     'reopen_ors': {
         'title': 'Gjenåpne observasjon',
         'action': 'Gjenåpne',
         'resource': 'reopen',
         'comment': True,
-        'descr': 'Gjenåpnet'},
+        'descr': 'Gjenåpnet'
+    },
     'approve_ors': {
         'title': 'Godkjenn observasjon',
         'action': 'Lukk',
@@ -275,7 +279,20 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av ORS koord'
     },
-
+    'send_to_ftl': {
+        'title': 'Send til FTL',
+        'action': 'Send til FTL',
+        'resource': 'ftl',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'approve_ftl': {
+        'title': 'Godkjent FTL',
+        'action': 'Send til Koordinator',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til ORS Koordinator'
+    },
     'send_to_dto': {
         'title': 'Send til DTO',
         'action': 'Send til DTO',
@@ -285,10 +302,10 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'approve_dto': {
         'title': 'Godkjent DTO',
-        'action': 'Send til ORS koordinator',
+        'action': 'Send til FTL',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS koordinator'
+        'descr': 'Sendt til FTL'
     },
     'send_to_skole': {
         'title': 'Send til Skolesjef',
@@ -312,11 +329,25 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'descr': 'Sendt til Teknisk Leder'
     },
     'approve_teknisk': {
-        'title': 'Godkjent DTO',
-        'action': 'Send til DTO representant',
+        'title': 'Godkjent Teknisk',
+        'action': 'Send til FTL',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til DTO representant'
+        'descr': 'Sendt til FTL'
+    },
+    'send_to_operativ': {
+        'title': 'Send til Operativ Leder',
+        'action': 'Send til Operativ Leder',
+        'resource': 'operativ',
+        'comment': True,
+        'descr': 'Sendt til Operativ Leder'
+    },
+    'approve_operativ': {
+        'title': 'Godkjent Operativ',
+        'action': 'Send til FTL',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til FTL'
     },
 
 }
