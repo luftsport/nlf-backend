@@ -164,6 +164,12 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    {'trigger': 'reject_ftl',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
     # DTO
     {'trigger': 'send_to_dto',
      'source': 'pending_review_ftl',
@@ -290,6 +296,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'title': 'Godkjent FTL',
         'action': 'Send til Koordinator',
         'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til ORS Koordinator'
+    },
+    'reject_ftl': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
         'comment': True,
         'descr': 'Sendt til ORS Koordinator'
     },
