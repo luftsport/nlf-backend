@@ -338,7 +338,7 @@ Sizes: [
                                                         <tr>
                                                             <td align="center" valign="top" class="textContent">
                                                                 <h1 style="color:#FFFFFF;line-height:100%;font-family:Helvetica,Arial,sans-serif;font-size:35px;font-weight:normal;margin-bottom:5px;text-align:center;">
-                                                                    ORS #{{ ors_id }}
+                                                                    {{ app_name }} #{{ ors_id }}
                                                                 </h1>
 
                                                                 <h2 style="text-align:center;font-weight:normal;font-family:Helvetica,Arial,sans-serif;font-size:23px;margin-bottom:10px;color:#205478;line-height:135%;">
@@ -346,7 +346,7 @@ Sizes: [
                                                                 </h2>
 
                                                                 <div style="text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:0;color:#FFFFFF;line-height:135%;">
-                                                                    NLF ORS - {{ org_name }}
+                                                                    NLF {{ app_name }} - {{ org_name }}
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -371,7 +371,7 @@ Sizes: [
                     {% if app_instance != 'prod' %}
                     <tr style="background-color:#d9534f;">
                         <td align="center" valign="top" style="padding:20px;">
-                            <h1 style="color: white;text-align: center;">ORS {{ app_instance }}</h1>
+                            <h1 style="color: white;text-align: center;">{{ app_name }} {{ app_instance }}</h1>
                             <div>dette er en testinstans</div>
                         </td>
                     </tr>
@@ -408,12 +408,12 @@ Sizes: [
                                                                                 INFO</h3>
                                                                             <div style="text-align:left;font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:0;color:#FFFFFF;line-height:135%;">
                                                                                 <div>
-                                                                                    <a href="{{ ors_root_url }}">ORS</a>
+                                                                                    <a href="{{ ors_root_url }}">{{ app_name }}</a>
                                                                                 </div>
                                                                                 <div><a href="https://doc.nlf.no">Brukermanual</a>
                                                                                 </div>
                                                                                 <div>
-                                                                                    <a href="https://www.facebook.com/groups/859203907492826/">ORS
+                                                                                    <a href="https://www.facebook.com/groups/859203907492826/">{{ app_name }}
                                                                                         Facebook</a></div>
                                                                                 <!--<div>ORS Twitter</div>-->
                                                                                 <div><a href="http://www.nlf.no">NLF</a>
@@ -487,7 +487,7 @@ Sizes: [
                                                                     <tr>
                                                                         <td valign="top" class="textContent">
                                                                             <div style="text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:0;margin-top:3px;color:#5F5F5F;line-height:135%;">
-                                                                                Visste du at ORS står for Observasjon
+                                                                                Visste du at {{ app_name }} står for Observasjon
                                                                                 Registrerings System?
                                                                             </div>
                                                                         </td>
@@ -545,7 +545,7 @@ Sizes: [
                                                             <td valign="top" bgcolor="#E1E1E1">
 
                                                                 <div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;color:#828282;text-align:center;line-height:120%;">
-                                                                    <div>Sent to you from ORS by <a
+                                                                    <div>Sent to you from {{ app_name }} by <a
                                                                             href="http://www.nlf.no"
                                                                             target="_blank"
                                                                             style="text-decoration:none;color:#828282;"><span
