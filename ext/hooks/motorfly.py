@@ -28,7 +28,7 @@ from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 import json
 
-from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO
+from ext.scf import ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_DTO, ACL_MOTORFLY_FTL
 from ext.workflows.motorfly_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
@@ -66,6 +66,11 @@ def ors_before_insert_item(item):
             persons_dto['org'] = item.get('discipline')
             _, _persons_dto = get_person_from_role(persons_dto)
             item['organization']['dto'] = _persons_dto
+            
+            persons_ftl = ACL_MOTORFLY_FTL.copy()
+            persons_ftl['org'] = item.get('discipline')
+            _, _persons_ftl = get_person_from_role(persons_ftl)
+            item['organization']['ftl'] = _persons_ftl
 
             item['acl'] = get_acl_init(app.globals.get('user_id'), item.get('discipline'))
 
