@@ -780,8 +780,11 @@ class ObservationWorkflow(Machine):
         # New owner it is!
         new['owner'] = app.globals['user_id']
 
-        if self._trigger_attrs.get(event.event.name).get('comment'):
+        if self._trigger_attrs.get(event.event.name).get('comment', False):
             new.get('workflow').update({'comment': self.comment})
+
+        # Always add
+        new['workflow']['settings'] = self.wf_settings
 
         new['acl'] = self.set_acl()
 
