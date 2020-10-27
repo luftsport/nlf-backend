@@ -673,8 +673,13 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
+            # Only reporter can make
+            if self.wf_settings.get('do_not_process_in_club', False) is False:
+                acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
+            else:
+                acl['read']['roles'] = [self.acl_ORS]
+
             acl['write']['roles'] = [self.acl_ORS]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
             acl['execute']['roles'] = [self.acl_ORS]
 
         elif self.state == 'pending_review_ftl':
