@@ -20,7 +20,15 @@ RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
 
 ORS_MODEL_TYPE = 'motorfly'
-ORS_MODEL_VERSION = 2
+# Changelog
+# 3
+# 'workflow.settings' with properties 'do_not_process_club' and 'do_not_publish' for WF processing
+# 2
+# Occurrence
+# 1
+# Initial
+ORS_MODEL_VERSION = 3
+
 
 _schema = {'id': {'type': 'integer',
                   'readonly': True

@@ -124,7 +124,7 @@ def transition(observation_id, action):
 
     # Let ORS descide if not public on close
     if wf.initial_state == 'pending_review_ors':
-        wf.wf_settings['do_not_make_public'] = args.get('do_not_make_public', False)
+        wf.wf_settings['do_not_publish'] = args.get('do_not_publish', False)
 
     # Now just do a
 

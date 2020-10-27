@@ -36,7 +36,7 @@ def get_wf_init(person_id):
             'expires': utc + timedelta(days=7),
             'settings': {
                 'do_not_process_club': False,
-                'do_not_make_public': False
+                'do_not_publish': False
             },
             'audit': [{'a': 'init',
                        'r': 'init',
@@ -513,7 +513,7 @@ class ObservationWorkflow(Machine):
         # Backporting
         self.wf_settings = self.db_wf.get('workflow', {}).get('settings', {
             'do_not_process_club': False,
-            'do_not_make_public': False
+            'do_not_publish': False
         })
 
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
@@ -730,7 +730,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             # Only if we can make it public
-            if self.wf_settings.get('do_not_make_public', False) is False:
+            if self.wf_settings.get('do_not_publish', False) is False:
                 acl['read']['roles'] += ACL_CLOSED_ALL_LIST
 
             acl['write']['roles'] = []
