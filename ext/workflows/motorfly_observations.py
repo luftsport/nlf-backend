@@ -440,21 +440,7 @@ class ObservationWorkflow(Machine):
 
         self._state_attrs = WF_MOTORFLY_STATES_ATTR
 
-        """ And some transitions between states. We're lazy, so we'll leave out
-        the inverse phase transitions (freezing, condensation, etc.).
-        name, source, dest
-
-        This is event chaining methods/functions
-        Callbacks: after, before
-        conditions: is_flammable, is_something
-
-        Apply to all states
-        machine.add_transition('to_liquid', '*', 'liquid')
-
-        Linear states:
-        machine.add_ordered_transitions()
-
-        machine.next_state()
+        """
 
         WISHLIST:
         states: should also have an extended version, say {'name':'state_name', 'attr': {whatever you like}
@@ -482,18 +468,6 @@ class ObservationWorkflow(Machine):
 
         self.action = None
         """ Extra attributes needed for sensible feedback from API to client
-
-        Permission:
-        - owner
-        - reporter
-        - role - hi - in club!
-        - group - fsj, su
-
-        How is this related to acl? Well acl will always be set according to the workflow
-
-        To transition - NEED write permissions!
-
-
         """
         self._trigger_attrs = WF_MOTORFLY_TRANSITIONS_ATTR
 
@@ -694,7 +668,8 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_FTL]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV, self.acl_TEKNISK, self.acl_DTO]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
+                                                           self.acl_TEKNISK, self.acl_DTO]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_dto':
