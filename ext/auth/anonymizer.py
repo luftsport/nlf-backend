@@ -202,6 +202,7 @@ def anonymize_ors(item):
     preamble = 'Person'
     # try:
     anon = Anon()
+    anon_aircraft = AnonAircraft()
 
     # Remove keys
     item.pop('acl', None)
@@ -248,8 +249,16 @@ def anonymize_ors(item):
 
             item['ask']['text'][ask_key] = '<macro>Anon Error ({})</macro>'.format(e)
 
-    # Aircraft CREW
+    # Aircraft CREW and AIRCRAFT
     for key, aircraft in enumerate(item.get('aircrafts', [])):
+
+        try:
+            item['aircrafts'][key]['aircraft'].pop('_id', None)
+            item['aircrafts'][key]['aircraft'].pop('msn', None)
+            item['aircrafts'][key]['aircraft']['callsign'] = anon_aircraft.assign(item['aircrafts'][key]['aircraft']['callsign'])
+        except Exception as e:
+            pass
+
         try:
             for k, crew in enumerate(aircraft.get('crew', [])):
                 item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(
