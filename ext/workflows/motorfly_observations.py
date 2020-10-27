@@ -11,8 +11,14 @@ from ext.notifications.email import Email  # , Sms
 from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
     get_person_name_text
 
-from ext.scf import ACL_CLOSED_ALL_LIST, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
-    ACL_MOTORFLY_TEKNISK_LEDER
+from ext.scf import \
+    ACL_MOTORFLY_ORS, \
+    ACL_MOTORFLY_CLUB_TEKNISK_LEDER, \
+    ACL_MOTORFLY_CLUB_OPERATIV_LEDER, \
+    ACL_MOTORFLY_CLUB_FTL, \
+    ACL_MOTORFLY_CLUB_SKOLESJEF, \
+    ACL_MOTORFLY_CLUB_DTO, \
+    ACL_CLOSED_ALL_LIST
 
 from ext.app.notifications import ors_workflow
 from ext.auth.acl import parse_acl_flat
@@ -527,14 +533,20 @@ class ObservationWorkflow(Machine):
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
         # self.acl_ORS['org'] = self.discipline
 
-        self.acl_SKOLE = ACL_MOTORFLY_SKOLESJEF.copy()
+        self.acl_SKOLE = ACL_MOTORFLY_CLUB_SKOLESJEF.copy()
         self.acl_SKOLE['org'] = self.discipline
 
-        self.acl_DTO = ACL_MOTORFLY_DTO.copy()
+        self.acl_DTO = ACL_MOTORFLY_CLUB_DTO.copy()
         self.acl_DTO['org'] = self.discipline
 
-        self.acl_TEKNISK = ACL_MOTORFLY_TEKNISK_LEDER.copy()
+        self.acl_TEKNISK = ACL_MOTORFLY_CLUB_TEKNISK_LEDER.copy()
         self.acl_TEKNISK['org'] = self.discipline
+
+        self.acl_OPERATIV = ACL_MOTORFLY_CLUB_OPERATIV_LEDER.copy()
+        self.acl_OPERATIV['org'] = self.discipline
+
+        self.acl_FTL = ACL_MOTORFLY_CLUB_FTL.copy()
+        self.acl_FTL['org'] = self.discipline
 
         self.initial_acl = self.db_wf.get('acl', {}).copy()
 
@@ -673,8 +685,17 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_ORS]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_ORS]
+
+        elif self.state == 'pending_review_ftl':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FTL]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV, self.acl_TEKNISK, self.acl_DTO]
+            acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_dto':
 
@@ -682,7 +703,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -691,7 +712,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -700,8 +721,17 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
+
+        elif self.state == 'pending_review_operativ':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_OPERATIV]
+            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
 
