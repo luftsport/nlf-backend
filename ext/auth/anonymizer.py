@@ -88,11 +88,11 @@ class AnonAircraft(object):
         """Keep track of all assigned persons"""
 
         if aircraft in self.aircraft:
-            return "FLY-{}".format(-1 * (self.aircraft.index(aircraft) + 1))
+            return "FLY-{}".format(self.aircraft.index(aircraft) + 1)
         else:
             self.aircraft.append(aircraft)
             # self.persons = list(set(self.persons))
-            return "FLY-{}".format(-1 * (self.aircraft.index(aircraft) + 1))
+            return "FLY-{}".format(self.aircraft.index(aircraft) + 1)
 
         return "FLY-0"
 
