@@ -118,6 +118,14 @@ def transition(observation_id, action):
     # Instantiate with observation_id and current user (user is from app.globals.user_id
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'), comment=comment)
 
+    # Let draft descide to not process in club
+    if wf.initial_state == 'draft' and action == 'approve':
+        wf.wf_settings['do_not_process_in_club'] = args.get('do_not_process_in_club', False)
+
+    # Let ORS descide if not public on close
+    if wf.initial_state == 'pending_review_ors':
+        wf.wf_settings['do_not_make_public'] = args.get('do_not_make_public', False)
+
     # Now just do a
 
     if wf.get_resource_mapping().get(action, False):

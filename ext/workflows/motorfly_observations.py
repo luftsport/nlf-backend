@@ -34,6 +34,10 @@ def get_wf_init(person_id):
             'state': 'draft',
             'last_transition': utc,
             'expires': utc + timedelta(days=7),
+            'settings': {
+                'do_not_process_club': False,
+                'do_not_make_public': False
+            },
             'audit': [{'a': 'init',
                        'r': 'init',
                        'u': person_id,
@@ -88,6 +92,10 @@ WF_MOTORFLY_STATES_ATTR = {
         'title': 'Avventer ORS',
         'description': 'Avventer ORS koordinator'
     },
+    'pending_review_ftl': {
+        'title': 'Avventer FLT',
+        'description': 'Avventer Flytryggings leder i klubb'
+    },
     'pending_review_dto': {
         'title': 'Avventer DTO',
         'description': 'Avventer DTO ansvarlig i klubb'
@@ -99,10 +107,6 @@ WF_MOTORFLY_STATES_ATTR = {
     'pending_review_operativ': {
         'title': 'Avventer Operativ',
         'description': 'Avventer Operativ leder i klubb'
-    },
-    'pending_review_ftl': {
-        'title': 'Avventer FLT',
-        'description': 'Avventer Flytryggings leder i klubb'
     },
     'pending_review_teknisk': {
         'title': 'Avventer Teknisk',
@@ -162,7 +166,7 @@ WF_MOTORFLY_TRANSITIONS = [
      'source': 'pending_review_ors',
      'dest': 'pending_review_ftl',
      'after': 'save_workflow',
-     'conditions': ['has_permission']
+     'conditions': ['has_permission', 'can_process_in_club']
      },
     {'trigger': 'approve_ftl',
      'source': 'pending_review_ftl',
@@ -483,6 +487,7 @@ class ObservationWorkflow(Machine):
                                    'discipline': 1,
                                    '_etag': 1,
                                    '_version': 1,
+                                   '_model': 1,
                                    'owner': 1,
                                    'reporter': 1,
                                    'organization': 1,
@@ -503,6 +508,13 @@ class ObservationWorkflow(Machine):
         self.owner = self.db_wf.get('owner', None)
         self.club = self.db_wf.get('club', None)
         self.discipline = self.db_wf.get('discipline', None)
+
+        # Backporting
+        # Backporting
+        self.wf_settings = self.db_wf.get('workflow', {}).get('settings', {
+            'do_not_process_club': False,
+            'do_not_make_public': False
+        })
 
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
         # self.acl_ORS['org'] = self.discipline
@@ -597,6 +609,9 @@ class ObservationWorkflow(Machine):
 
         # return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
 
+    def can_process_in_club(self, event):
+        return not self.wf_settings.get('do_not_process_club', False)
+
     def condition_completed_tasks(self):
 
         # Check if has completed all tasks,
@@ -659,7 +674,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_ORS]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
             acl['execute']['roles'] = [self.acl_ORS]
 
         elif self.state == 'pending_review_ftl':
@@ -668,8 +683,8 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_FTL]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
-                                                           self.acl_TEKNISK, self.acl_DTO]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
+                                    self.acl_TEKNISK, self.acl_DTO]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_dto':
@@ -678,7 +693,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -687,7 +702,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -696,7 +711,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
 
         elif self.state == 'pending_review_operativ':
@@ -705,7 +720,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_OPERATIV]
-            acl['read']['roles'] = acl['read']['roles'] + [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
             acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
@@ -714,7 +729,10 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] += ACL_CLOSED_ALL_LIST
+            # Only if we can make it public
+            if self.wf_settings.get('do_not_make_public', False) is False:
+                acl['read']['roles'] += ACL_CLOSED_ALL_LIST
+
             acl['write']['roles'] = []
             acl['execute']['roles'] = [self.acl_ORS]
 
