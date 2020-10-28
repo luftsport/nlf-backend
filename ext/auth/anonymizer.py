@@ -91,7 +91,6 @@ class AnonAircraft(object):
             return "FLY-{}".format(self.aircraft.index(aircraft) + 1)
         else:
             self.aircraft.append(aircraft)
-            # self.persons = list(set(self.persons))
             return "FLY-{}".format(self.aircraft.index(aircraft) + 1)
 
         return "FLY-0"
@@ -254,7 +253,7 @@ def anonymize_ors(item):
 
         try:
             item['aircrafts'][key]['aircraft'].pop('_id', None)
-            item['aircrafts'][key]['aircraft'].pop('msn', None)
+            item['aircrafts'][key]['aircraft'] = 'msn-anon'  # .pop('msn', None)
             item['aircrafts'][key]['aircraft']['callsign'] = anon_aircraft.assign(item['aircrafts'][key]['aircraft']['callsign'])
         except Exception as e:
             pass
