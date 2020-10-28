@@ -253,7 +253,7 @@ def anonymize_ors(item):
 
         try:
             item['aircrafts'][key]['aircraft'].pop('_id', None)
-            item['aircrafts'][key]['aircraft'] = 'msn-anon'  # .pop('msn', None)
+            item['aircrafts'][key]['aircraft']['msn'] = 'msn-anon'  # .pop('msn', None)
             item['aircrafts'][key]['aircraft']['callsign'] = anon_aircraft.assign(item['aircrafts'][key]['aircraft']['callsign'])
         except Exception as e:
             pass
