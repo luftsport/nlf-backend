@@ -188,7 +188,7 @@ WF_MOTORFLY_TRANSITIONS = [
      },
     # FLYTJENESTEN
     {'trigger': 'send_to_flytjenesten',
-     'source': 'pending_review_ors',
+     'source': 'pending_review_ftl',
      'dest': 'pending_review_flytjenesten',
      'after': 'save_workflow',
      'conditions': ['has_permission']
