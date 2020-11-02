@@ -18,6 +18,7 @@ from ext.scf import \
     ACL_MOTORFLY_CLUB_FTL, \
     ACL_MOTORFLY_CLUB_SKOLESJEF, \
     ACL_MOTORFLY_CLUB_DTO, \
+    ACL_MOTORFLY_CLUB_FLYTJENESTEN, \
     ACL_CLOSED_ALL_LIST
 
 from ext.app.notifications import ors_workflow
@@ -75,6 +76,7 @@ WF_MOTORFLY_STATES = [
     'draft',
     'pending_review_ors',
     'pending_review_ftl',
+    'pending_review_flytjenesten',
     'pending_review_dto',
     'pending_review_skole',
     'pending_review_operativ',
@@ -95,6 +97,10 @@ WF_MOTORFLY_STATES_ATTR = {
     'pending_review_ftl': {
         'title': 'Avventer FLT',
         'description': 'Avventer Flytryggings leder i klubb'
+    },
+    'pending_review_flytjenesten': {
+        'title': 'Avventer Flytjenesten',
+        'description': 'Avventer Flytjenesteleder i klubb'
     },
     'pending_review_dto': {
         'title': 'Avventer DTO',
@@ -177,6 +183,25 @@ WF_MOTORFLY_TRANSITIONS = [
     {'trigger': 'reject_ftl',
      'source': 'pending_review_ftl',
      'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # FLYTJENESTEN
+    {'trigger': 'send_to_flytjenesten',
+     'source': 'pending_review_ors',
+     'dest': 'pending_review_flytjenesten',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_flytjenesten',
+     'source': 'pending_review_flytjenesten',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_flytjenesten',
+     'source': 'pending_review_flytjenesten',
+     'dest': 'pending_review_ftl',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -269,6 +294,9 @@ Resource is bluepring trigger
 'reject_ors',
 'send_to_ftl', 
 'approve_ftl',
+'send_to_flytjenesten',
+'approve_flytjenesten',
+'reject_flytjenesten',
 'send_to_dto', 
 'approve_dto', 
 'send_to_skole', 
@@ -339,6 +367,27 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'resource': 'reject',
         'comment': True,
         'descr': 'Sendt til ORS Koordinator'
+    },
+    'send_to_flytjenesten': {
+        'title': 'Send til Flytjenesteleder',
+        'action': 'Send til Flytjenesteleder',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til Flytjenesteleder'
+    },
+    'approve_flytjenesten': {
+        'title': 'Godkjent Flytjenesteleder',
+        'action': 'Send til FTL',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'reject_flytjenesten': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
     },
     'send_to_dto': {
         'title': 'Send til DTO',
@@ -534,6 +583,9 @@ class ObservationWorkflow(Machine):
         self.acl_FTL = ACL_MOTORFLY_CLUB_FTL.copy()
         self.acl_FTL['org'] = self.discipline
 
+        self.acl_FLYTJENESTEN = ACL_MOTORFLY_CLUB_FLYTJENESTEN.copy()
+        self.acl_FLYTJENESTEN['org'] = self.discipline
+
         self.initial_acl = self.db_wf.get('acl', {}).copy()
 
         self.comment = '' if comment is None else '{}'.format(comment).strip()
@@ -691,6 +743,15 @@ class ObservationWorkflow(Machine):
             acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
                                     self.acl_TEKNISK, self.acl_DTO]
             acl['execute']['roles'] = [self.acl_DTO]
+
+        elif self.state == 'pending_review_flytjenesten':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FLYTJENESTEN]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
+            acl['execute']['roles'] = [self.acl_FLYTJENESTEN]
 
         elif self.state == 'pending_review_dto':
 
