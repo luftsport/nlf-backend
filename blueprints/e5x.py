@@ -403,14 +403,19 @@ def download(activity, ors_id, version):
                 file_name = 'nlf_{}_{}_v{}.e5x'.format(activity,
                                                        ors_id,
                                                        version)
-                app.logger.debug('{}/{}'.format(FILE_WORKING_DIR, file_name))
+                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
                 # print('####',
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
                 #    
-                return send_file('{}/{}'.format(FILE_WORKING_DIR, file_name), as_attachment=True,
-                                 attachment_filename=file_name, mimetype="'application/octet-stream'")
+                return send_file('{}/{}'.format(FILE_WORKING_DIR, file_name),
+                                 as_attachment=True,
+                                 attachment_filename=file_name,
+                                 mimetype="'application/octet-stream'")
             except Exception as e:
                 # print('Download failed', e)
-                return eve_response({'ERR': 'Could not send file'}, 422)
+                app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
+
+        app.logger.debug('[E5X DOWNLOAD ERR] Returned {} items for {} id {} versjon {}'.format(len(_items), activity, ors_id, version))
+        return eve_response({'ERR': 'Could not send file'}, 422)
 
