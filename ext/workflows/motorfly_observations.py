@@ -371,7 +371,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     'send_to_flytjenesten': {
         'title': 'Send til Flytjenesteleder',
         'action': 'Send til Flytjenesteleder',
-        'resource': 'approve',
+        'resource': 'ftl',
         'comment': True,
         'descr': 'Sendt til Flytjenesteleder'
     },
