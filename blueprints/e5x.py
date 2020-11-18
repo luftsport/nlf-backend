@@ -278,7 +278,7 @@ def generate(_id):
 
                     # SFTP DELIVERY!
                     # Only dev and prod should be able to deliver to LT
-                    if app.config.get('APP_INSTANCE', '') == 'dev':
+                    if app.config.get('APP_INSTANCE', '') == 'dev-removeme-test':
                         from ext.scf import LT_SFTP_TEST_CFG as SFTP
                     elif app.config.get('APP_INSTANCE', '') == 'prod':
                         from ext.scf import LT_SFTP_CFG as SFTP
@@ -424,3 +424,5 @@ def download(activity, ors_id, version):
         app.logger.debug('[E5X DOWNLOAD ERR] Returned {} items for {} id {} version {}'.format(len(_items), activity, ors_id, version))
 
         return eve_response({'ERR': 'Could not send file'}, 422)
+
+
