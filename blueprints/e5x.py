@@ -30,6 +30,7 @@ E5X = Blueprint('E5X Blueprint', __name__, )
 
 RESOURCE_COLLECTION = 'motorfly_observations'
 
+
 def has_permission():
     try:
 
@@ -41,7 +42,6 @@ def has_permission():
                                method=request.method,
                                resource=request.path[len(app.globals.get('prefix')):],
                                allowed_roles=None):
-
             return eve_abort(404, 'Please provide proper credentials')
 
     except:
@@ -139,14 +139,13 @@ def transport_e5x(dir, file_name, sftp_settings):
             'uid': result.st_uid,
             'gid': result.st_gid
         }
-    
+
     return False, {}
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
-
     data = request.get_json(force=True)
     col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
@@ -223,7 +222,6 @@ def generate(_id):
                             except Exception as e:
                                 app.logger.exception("[ERROR] Could not add file name to report")
                                 app.logger.error(e)
-                                pass
 
                     except Exception as e:
                         app.logger.exception("[ERR] Getting files")
@@ -265,7 +263,8 @@ def generate(_id):
                     # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
-                        FILE_WORKING_DIR)
+                        FILE_WORKING_DIR
+                    )
 
                     try:
                         status = data.get('e5x').get('entities', {}) \
@@ -276,7 +275,6 @@ def generate(_id):
                     except Exception as e:
                         app.logger.exception('Error gettings status {}'.format(status))
                         status = 0
-
 
                     # SFTP DELIVERY!
                     # Only dev and prod should be able to deliver to LT
@@ -333,7 +331,7 @@ def generate(_id):
                                 event_from_id=ors.get('_id', ''),
                                 source=ors.get('_version', ''),
                                 status=status,
-                                ors_id=ors.get('id',None),
+                                ors_id=ors.get('id', None),
                                 ors_tags=ors.get('tags', []),
                                 file_name='{}.e5x'.format(file_name),
                                 transport='sftp',
@@ -385,8 +383,15 @@ def download(activity, ors_id, version):
         col = app.data.driver.db['motorfly_observations']
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
-                                    {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                             {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                    {'$or': [
+                                        {'reporter': app.globals['user_id']},
+                                        {'acl.execute.users': {'$in': [app.globals['user_id']]}},
+                                        {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}
+                                    ]
+                                    }
+                                    ]
+                           }
+                          )
 
         # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
         _items = list(cursor)
@@ -416,6 +421,6 @@ def download(activity, ors_id, version):
                 # print('Download failed', e)
                 app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
 
-        app.logger.debug('[E5X DOWNLOAD ERR] Returned {} items for {} id {} versjon {}'.format(len(_items), activity, ors_id, version))
-        return eve_response({'ERR': 'Could not send file'}, 422)
+        app.logger.debug('[E5X DOWNLOAD ERR] Returned {} items for {} id {} version {}'.format(len(_items), activity, ors_id, version))
 
+        return eve_response({'ERR': 'Could not send file'}, 422)
