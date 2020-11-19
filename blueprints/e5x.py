@@ -250,8 +250,8 @@ def generate(_id):
                     ],
                     app.config['E5X_WORKING_DIR'])
 
-                app.logger.debug('[STDOUT]', stdout)
-                app.logger.debug('[STDERR]', stderr)
+                app.logger.debug('[STDOUT] {}'.format(stdout))
+                app.logger.debug('[STDERR] {]'.format(stderr))
 
                 # 3 Zip it! Add files to it!
                 if stderr.rstrip() == '':
