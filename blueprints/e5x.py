@@ -369,6 +369,9 @@ def generate(_id):
 
                     return eve_response({'e5x': {'audit': audit}, 'err': traceback.format_exc()}, 200)
 
+                else:
+                    app.logger.error('STDERR: {}'.format(stderr))
+
             except Exception as e:
                 app.logger.exception('Error processing e5x file')
                 return eve_response({'ERR': 'Could not process', 'err': traceback.format_exc()}, 422)
