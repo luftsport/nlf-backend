@@ -57,7 +57,8 @@ def execute(cmdArray, workingDir):
 
     try:
         try:
-            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1)
+            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       bufsize=1)
         except OSError:
             return [False, '', 'ERROR : command(' + ' '.join(cmdArray) + ') could not get executed!']
 
@@ -102,7 +103,8 @@ def generate_structure(activity, ors_id, version):
 
                 _, stdout, stderr = execute(['mkdir', '{}/{}'.format(activity, ors_id)], app.config['E5X_WORKING_DIR'])
 
-            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)], app.config['E5X_WORKING_DIR'])
+            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)],
+                                        app.config['E5X_WORKING_DIR'])
         return True
     except Exception as e:
         app.logger.exception('[E5X] Generate structure failed')
@@ -141,6 +143,57 @@ def transport_e5x(dir, file_name, sftp_settings):
         }
 
     return False, {}
+
+
+def _clean_empty(d):
+    if not isinstance(d, (dict, list)):
+        return d
+    if isinstance(d, list):
+        return [v for v in (_clean_empty(v) for v in d) if v]
+    return {k: v for k, v in ((k, _clean_empty(v)) for k, v in d.items()) if v}
+
+
+def _remove_keys(obj, _refs, _ids):
+    if isinstance(obj, dict):
+        num_keys = len(obj.keys())
+        obj = {
+            key: _remove_keys(value, _refs, _ids)
+            for key, value in obj.items()
+            if (key not in ['ref', 'id']) or (key == 'ref' and value not in _refs) or (
+                key == 'id' and (value not in _ids and num_keys > 1))
+        }
+    elif isinstance(obj, list):
+        obj = [_remove_keys(item, _refs, _ids) for item in obj]
+
+    return obj
+
+
+def _recursive_iter(obj, keys=()):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield from _recursive_iter(v, keys + (k,))
+    elif any(isinstance(obj, t) for t in (list, tuple)):
+        for idx, item in enumerate(obj):
+            yield from _recursive_iter(item, keys + (idx,))
+    else:
+        yield keys, obj
+
+
+def remove_empty_nodes(obj):
+    refs = []
+    ids = []
+    for keys, item in _recursive_iter(obj):
+        if keys[len(keys) - 1] == 'ref':
+            refs.append(item)
+        elif keys[len(keys) - 1] == 'id':
+            ids.append(item)
+
+    # print('REFS:', refs)
+    # print('IDS:', ids)
+
+    # print('REFS TO REMOVE', [x for x in refs if x not in ids])
+    # print('IDS TO REMOVE', [x for x in ids if x not in refs])
+    return _clean_empty(_remove_keys(obj, [x for x in refs if x not in ids], [x for x in ids if x not in refs]))
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
@@ -234,7 +287,7 @@ def generate(_id):
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(data.get('e5x', {}), f)
+                    json.dump(remove_empty_nodes(data.get('e5x', {})), f)
 
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
@@ -424,8 +477,8 @@ def download(activity, ors_id, version):
                 # print('Download failed', e)
                 app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
 
-        app.logger.debug('[E5X DOWNLOAD ERR] Returned {} items for {} id {} version {}'.format(len(_items), activity, ors_id, version))
+        app.logger.debug(
+            '[E5X DOWNLOAD ERR] Returned {} items for {} id {} version {}'.format(len(_items), activity, ors_id,
+                                                                                  version))
 
         return eve_response({'ERR': 'Could not send file'}, 422)
-
-
