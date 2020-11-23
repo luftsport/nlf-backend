@@ -145,55 +145,63 @@ def transport_e5x(dir, file_name, sftp_settings):
     return False, {}
 
 
-def _clean_empty(d):
-    if not isinstance(d, (dict, list)):
-        return d
-    if isinstance(d, list):
-        return [v for v in (_clean_empty(v) for v in d) if v]
-    return {k: v for k, v in ((k, _clean_empty(v)) for k, v in d.items()) if v}
-
-
-def _remove_keys(obj, _refs, _ids):
-    if isinstance(obj, dict):
-        num_keys = len(obj.keys())
-        obj = {
-            key: _remove_keys(value, _refs, _ids)
-            for key, value in obj.items()
-            if (key not in ['ref', 'id']) or (key == 'ref' and value not in _refs) or (
-                key == 'id' and (value not in _ids and num_keys > 1))
-        }
-    elif isinstance(obj, list):
-        obj = [_remove_keys(item, _refs, _ids) for item in obj]
-
-    return obj
-
-
-def _recursive_iter(obj, keys=()):
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            yield from _recursive_iter(v, keys + (k,))
-    elif any(isinstance(obj, t) for t in (list, tuple)):
-        for idx, item in enumerate(obj):
-            yield from _recursive_iter(item, keys + (idx,))
-    else:
-        yield keys, obj
-
-
 def remove_empty_nodes(obj):
+    """Remove empty nodes with only id, refs pointing to nonexisting id's and empty lists and dicts"""
+
+    def recursive_iter(obj, keys=()):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                yield from recursive_iter(v, keys + (k,))
+        elif any(isinstance(obj, t) for t in (list, tuple)):
+            for idx, item in enumerate(obj):
+                yield from recursive_iter(item, keys + (idx,))
+        else:
+            yield keys, obj
+
+    def clean_empty(d):
+        if not isinstance(d, (dict, list)):
+            return d
+        if isinstance(d, list):
+            return [v for v in (clean_empty(v) for v in d) if v]
+        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v}
+
+    def scrub(obj, bad_key="id", bad_values=[]):
+        if isinstance(obj, dict):
+            for key in list(obj.keys()):
+                if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
+                    del obj[key]
+                else:
+                    scrub(obj[key], bad_key)
+        elif isinstance(obj, list):
+            for i in reversed(range(len(obj))):
+                if obj[i] == bad_key and len(obj) == 1:
+                    del obj[i]
+                else:
+                    scrub(obj[i], bad_key)
+
+        else:
+            # neither a dict nor a list, do nothing
+            pass
+
+        return obj
+
+    # Remove all single id's
+    obj = scrub(obj, bad_key='id')
+
+    # Find all refs and remaining ids
     refs = []
     ids = []
-    for keys, item in _recursive_iter(obj):
+    for keys, item in recursive_iter(obj):
         if keys[len(keys) - 1] == 'ref':
             refs.append(item)
         elif keys[len(keys) - 1] == 'id':
             ids.append(item)
 
-    # print('REFS:', refs)
-    # print('IDS:', ids)
+    # Remove all refs pointing to nonexisting id's
+    obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
-    # print('REFS TO REMOVE', [x for x in refs if x not in ids])
-    # print('IDS TO REMOVE', [x for x in ids if x not in refs])
-    return _clean_empty(_remove_keys(obj, [x for x in refs if x not in ids], [x for x in ids if x not in refs]))
+
+    return clean_empty(obj)
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
