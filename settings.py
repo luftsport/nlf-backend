@@ -13,8 +13,8 @@ sys.path.insert(0, "domain")
 
 # Import the apps - DOMAIN definition (app.DOMAIN)
 import domain
+from version import __version_info__
 
-__version_info__ = ('0', '9', '8')
 APP_VERSION = '.'.join(__version_info__)
 APP_AUTHOR = 'Einar Huseby'
 APP_LICENSE = 'GPLV1'
@@ -28,7 +28,7 @@ AUTH_SESSION_LENGHT = 3600  # Seconds
 
 # @TODO: use sys.argv to parse this as cmdline input
 APP_INSTANCES = ['local', 'dev', 'beta', 'prod']
-APP_INSTANCE = 'local'  # APP_INSTANCES[0]
+APP_INSTANCE = 'prod'  # APP_INSTANCES[0]
 
 if APP_INSTANCE == 'prod':
     MONGO_HOST = 'localhost'
