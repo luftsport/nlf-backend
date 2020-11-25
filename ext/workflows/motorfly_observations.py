@@ -36,7 +36,7 @@ def get_wf_init(person_id):
             'last_transition': utc,
             'expires': utc + timedelta(days=7),
             'settings': {
-                'do_not_process_club': False,
+                'do_not_process_in_club': False,
                 'do_not_publish': False
             },
             'audit': [{'a': 'init',
@@ -561,7 +561,7 @@ class ObservationWorkflow(Machine):
         # Backporting
         # Backporting
         self.wf_settings = self.db_wf.get('workflow', {}).get('settings', {
-            'do_not_process_club': False,
+            'do_not_process_in_club': False,
             'do_not_publish': False
         })
 
@@ -623,6 +623,7 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
+            print('Event in actions', event)
             if self.initial_state=='pending_review_ors' and event=='send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
@@ -665,7 +666,7 @@ class ObservationWorkflow(Machine):
         # return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
 
     def can_process_in_club(self, event):
-        return not self.wf_settings.get('do_not_process_club', False)
+        return not self.wf_settings.get('do_not_process_in_club', False)
 
     def condition_completed_tasks(self):
 
