@@ -623,7 +623,10 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            tmp['permission'] = self.has_permission(None)
+            if self.initial_state=='pending_review_ors' and event=='send_to_ftl':
+                tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
+            else:
+                tmp['permission'] = self.has_permission(None)
 
             resources.append(tmp)
 
