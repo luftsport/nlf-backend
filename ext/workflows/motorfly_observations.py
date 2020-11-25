@@ -36,7 +36,7 @@ def get_wf_init(person_id):
             'last_transition': utc,
             'expires': utc + timedelta(days=7),
             'settings': {
-                'do_not_process_club': False,
+                'do_not_process_in_club': False,
                 'do_not_publish': False
             },
             'audit': [{'a': 'init',
@@ -371,7 +371,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     'send_to_flytjenesten': {
         'title': 'Send til Flytjenesteleder',
         'action': 'Send til Flytjenesteleder',
-        'resource': 'ftl',
+        'resource': 'flytjenesten',
         'comment': True,
         'descr': 'Sendt til Flytjenesteleder'
     },
@@ -561,7 +561,7 @@ class ObservationWorkflow(Machine):
         # Backporting
         # Backporting
         self.wf_settings = self.db_wf.get('workflow', {}).get('settings', {
-            'do_not_process_club': False,
+            'do_not_process_in_club': False,
             'do_not_publish': False
         })
 
@@ -665,7 +665,7 @@ class ObservationWorkflow(Machine):
         # return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
 
     def can_process_in_club(self, event):
-        return not self.wf_settings.get('do_not_process_club', False)
+        return not self.wf_settings.get('do_not_process_in_club', False)
 
     def condition_completed_tasks(self):
 
@@ -745,7 +745,7 @@ class ObservationWorkflow(Machine):
             acl['write']['roles'] = [self.acl_FTL]
             acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
                                     self.acl_TEKNISK, self.acl_DTO]
-            acl['execute']['roles'] = [self.acl_DTO]
+            acl['execute']['roles'] = [self.acl_FTL]
 
         elif self.state == 'pending_review_flytjenesten':
 
