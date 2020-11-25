@@ -81,7 +81,6 @@ def parse_acl(acl):
     }
 
     for right in acl.keys():
-        # print('RIGHT', right)
         for role in acl.get(right, {}).get('roles', []):
             # print('ROLE', role)
 
@@ -94,7 +93,7 @@ def parse_acl(acl):
 
             users[right] += get_users_from_role(role.get('role'), _orgs)
 
-        acl[right] = list(set(acl[right]))
+        users[right] = list(set(users[right]))
 
 
     return users
