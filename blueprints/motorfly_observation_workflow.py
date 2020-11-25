@@ -94,7 +94,7 @@ def get_observations():
 
 
 @OrsWorkflow.route(
-    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|ftl|dto|skole|teknisk|operativ)"):action>',
+    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|ftl|flytjenesten|dto|skole|teknisk|operativ)"):action>',
     methods=['POST'])
 @require_token()
 def transition(observation_id, action):

@@ -371,7 +371,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     'send_to_flytjenesten': {
         'title': 'Send til Flytjenesteleder',
         'action': 'Send til Flytjenesteleder',
-        'resource': 'ftl',
+        'resource': 'flytjenesten',
         'comment': True,
         'descr': 'Sendt til Flytjenesteleder'
     },
@@ -623,7 +623,6 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            print('Event in actions', event)
             if self.initial_state=='pending_review_ors' and event=='send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
@@ -746,7 +745,7 @@ class ObservationWorkflow(Machine):
             acl['write']['roles'] = [self.acl_FTL]
             acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
                                     self.acl_TEKNISK, self.acl_DTO]
-            acl['execute']['roles'] = [self.acl_DTO]
+            acl['execute']['roles'] = [self.acl_FTL]
 
         elif self.state == 'pending_review_flytjenesten':
 
