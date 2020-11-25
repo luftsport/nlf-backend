@@ -20,7 +20,15 @@ RESOURCE_COLLECTION = 'motorfly_observations'
 BASE_URL = 'motorfly/observations'
 
 ORS_MODEL_TYPE = 'motorfly'
-ORS_MODEL_VERSION = 2
+# Changelog
+# 3
+# 'workflow.settings' with properties 'do_not_process_club' and 'do_not_publish' for WF processing
+# 2
+# Occurrence
+# 1
+# Initial
+ORS_MODEL_VERSION = 3
+
 
 _schema = {'id': {'type': 'integer',
                   'readonly': True
@@ -113,7 +121,8 @@ _schema = {'id': {'type': 'integer',
                       'schema': {'version': {'type': 'integer'},
                                  'type': {'type': 'string'}
                                  },
-                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION},
+                      'readonly': True
                       }
 
            }
@@ -143,13 +152,18 @@ definition = {
         'flags',
         'rating',
         'type',
-        'aircrafts.aircraft',
+        # Anon no callsign 'aircrafts.aircraft',
+        'aircrafts.aircraft.model',
+        'aircrafts.aircraft.manufacturer',
+        'aircrafts.aircraft.type',
         'aircrafts.parts',
         'aircrafts.flight',
         'aircrafts.airspace',
         'aircrafts.aerodrome',
         'aircrafts.occurence',
-        'aircrafts.wx'
+        'aircrafts.wx',
+        '_updated',
+        '_created'
     ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
@@ -230,7 +244,8 @@ aggregate_types_discipline = {
         'aggregation': {
             'pipeline': [
                 {"$unwind": "$type"},
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline", "workflow.state": "$state"}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline",
+                            "workflow.state": "$state"}},
                 {"$group": {"_id": "$type", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
             ]

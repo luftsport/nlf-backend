@@ -108,7 +108,8 @@ _schema = {'id': {'type': 'integer',
                       'schema': {'version': {'type': 'integer'},
                                  'type': {'type': 'string'}
                                  },
-                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION}
+                      'default': {'type': ORS_MODEL_TYPE, 'version': ORS_MODEL_VERSION},
+                      'readonly': True
                       }
 
            }
@@ -138,7 +139,9 @@ definition = {
         'flags',
         'rating',
         'type',
-        'location'
+        'location',
+        '_updated',
+        '_created'
     ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],

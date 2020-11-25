@@ -11,8 +11,15 @@ from ext.notifications.email import Email  # , Sms
 from ext.notifications.notifications import get_recepients, get_recepients_from_roles, get_org_name_text, \
     get_person_name_text
 
-from ext.scf import ACL_CLOSED_ALL_LIST, ACL_MOTORFLY_DTO, ACL_MOTORFLY_SKOLESJEF, ACL_MOTORFLY_ORS, \
-    ACL_MOTORFLY_TEKNISK_LEDER
+from ext.scf import \
+    ACL_MOTORFLY_ORS, \
+    ACL_MOTORFLY_CLUB_TEKNISK_LEDER, \
+    ACL_MOTORFLY_CLUB_OPERATIV_LEDER, \
+    ACL_MOTORFLY_CLUB_FTL, \
+    ACL_MOTORFLY_CLUB_SKOLESJEF, \
+    ACL_MOTORFLY_CLUB_DTO, \
+    ACL_MOTORFLY_CLUB_FLYTJENESTEN, \
+    ACL_CLOSED_ALL_LIST
 
 from ext.app.notifications import ors_workflow
 from ext.auth.acl import parse_acl_flat
@@ -28,6 +35,10 @@ def get_wf_init(person_id):
             'state': 'draft',
             'last_transition': utc,
             'expires': utc + timedelta(days=7),
+            'settings': {
+                'do_not_process_club': False,
+                'do_not_publish': False
+            },
             'audit': [{'a': 'init',
                        'r': 'init',
                        'u': person_id,
@@ -64,8 +75,11 @@ def get_acl_init(person_id, discipline_id):
 WF_MOTORFLY_STATES = [
     'draft',
     'pending_review_ors',
+    'pending_review_ftl',
+    'pending_review_flytjenesten',
     'pending_review_dto',
     'pending_review_skole',
+    'pending_review_operativ',
     'pending_review_teknisk',
     'closed',
     'withdrawn'
@@ -80,6 +94,14 @@ WF_MOTORFLY_STATES_ATTR = {
         'title': 'Avventer ORS',
         'description': 'Avventer ORS koordinator'
     },
+    'pending_review_ftl': {
+        'title': 'Avventer FLT',
+        'description': 'Avventer Flytryggings leder i klubb'
+    },
+    'pending_review_flytjenesten': {
+        'title': 'Avventer Flytjenesten',
+        'description': 'Avventer Flytjenesteleder i klubb'
+    },
     'pending_review_dto': {
         'title': 'Avventer DTO',
         'description': 'Avventer DTO ansvarlig i klubb'
@@ -87,6 +109,10 @@ WF_MOTORFLY_STATES_ATTR = {
     'pending_review_skole': {
         'title': 'Avventer Skolesjef',
         'description': 'Avventer Skolesjef i klubb'
+    },
+    'pending_review_operativ': {
+        'title': 'Avventer Operativ',
+        'description': 'Avventer Operativ leder i klubb'
     },
     'pending_review_teknisk': {
         'title': 'Avventer Teknisk',
@@ -103,6 +129,7 @@ WF_MOTORFLY_STATES_ATTR = {
 }
 
 WF_MOTORFLY_TRANSITIONS = [
+    # OBSERVATØR
     {'trigger': 'send_to_ors',
      'source': 'draft',
      'dest': 'pending_review_ors',
@@ -121,6 +148,7 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    # OBSREGKOOORD
     {'trigger': 'approve_ors',
      'source': 'pending_review_ors',
      'dest': 'closed',
@@ -139,15 +167,60 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-    {'trigger': 'send_to_dto',
+    # FTL
+    {'trigger': 'send_to_ftl',
      'source': 'pending_review_ors',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission', 'can_process_in_club']
+     },
+    {'trigger': 'approve_ftl',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_ftl',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # FLYTJENESTEN
+    {'trigger': 'send_to_flytjenesten',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_flytjenesten',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_flytjenesten',
+     'source': 'pending_review_flytjenesten',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_flytjenesten',
+     'source': 'pending_review_flytjenesten',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # DTO
+    {'trigger': 'send_to_dto',
+     'source': 'pending_review_ftl',
      'dest': 'pending_review_dto',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
     {'trigger': 'approve_dto',
      'source': 'pending_review_dto',
-     'dest': 'pending_review_ors',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_dto',
+     'source': 'pending_review_dto',
+     'dest': 'pending_review_ftl',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -163,16 +236,48 @@ WF_MOTORFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
+    {'trigger': 'reject_skole',
+     'source': 'pending_review_skole',
+     'dest': 'pending_review_dto',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+
+    # OPERATIVT
+    {'trigger': 'send_to_operativ',
+     'source': 'pending_review_ftl',
+     'dest': 'pending_review_operativ',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_operativ',
+     'source': 'pending_review_operativ',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_operativ',
+     'source': 'pending_review_operativ',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # TEKNISK
     {'trigger': 'send_to_teknisk',
-     'source': 'pending_review_dto',
+     'source': 'pending_review_ftl',
      'dest': 'pending_review_teknisk',
      'after': 'save_workflow',
      'conditions': ['has_permission']
-
      },
     {'trigger': 'approve_teknisk',
      'source': 'pending_review_teknisk',
-     'dest': 'pending_review_dto',
+     'dest': 'pending_review_ftl',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_teknisk',
+     'source': 'pending_review_teknisk',
+     'dest': 'pending_review_ftl',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -186,7 +291,12 @@ Resource is bluepring trigger
 'reopen', 
 'approve', 
 'reopen_ors', 
-'reject_ors', 
+'reject_ors',
+'send_to_ftl', 
+'approve_ftl',
+'send_to_flytjenesten',
+'approve_flytjenesten',
+'reject_flytjenesten',
 'send_to_dto', 
 'approve_dto', 
 'send_to_skole', 
@@ -214,13 +324,15 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'action': 'Gjenåpne',
         'resource': 'reopen',
         'comment': True,
-        'descr': 'Gjenåpnet'},
+        'descr': 'Gjenåpnet'
+    },
     'reopen_ors': {
         'title': 'Gjenåpne observasjon',
         'action': 'Gjenåpne',
         'resource': 'reopen',
         'comment': True,
-        'descr': 'Gjenåpnet'},
+        'descr': 'Gjenåpnet'
+    },
     'approve_ors': {
         'title': 'Godkjenn observasjon',
         'action': 'Lukk',
@@ -235,7 +347,48 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av ORS koord'
     },
-
+    'send_to_ftl': {
+        'title': 'Send til FTL',
+        'action': 'Send til FTL',
+        'resource': 'ftl',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'approve_ftl': {
+        'title': 'Godkjent FTL',
+        'action': 'Send til Koordinator',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til ORS Koordinator'
+    },
+    'reject_ftl': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til ORS Koordinator'
+    },
+    'send_to_flytjenesten': {
+        'title': 'Send til Flytjenesteleder',
+        'action': 'Send til Flytjenesteleder',
+        'resource': 'ftl',
+        'comment': True,
+        'descr': 'Sendt til Flytjenesteleder'
+    },
+    'approve_flytjenesten': {
+        'title': 'Godkjent Flytjenesteleder',
+        'action': 'Send til FTL',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'reject_flytjenesten': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
     'send_to_dto': {
         'title': 'Send til DTO',
         'action': 'Send til DTO',
@@ -245,10 +398,17 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'approve_dto': {
         'title': 'Godkjent DTO',
-        'action': 'Send til ORS koordinator',
+        'action': 'Send til FTL',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS koordinator'
+        'descr': 'Sendt til FTL'
+    },
+    'reject_dto': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
     },
     'send_to_skole': {
         'title': 'Send til Skolesjef',
@@ -264,6 +424,13 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til DTO representant'
     },
+    'reject_skole': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til DTO'
+    },
     'send_to_teknisk': {
         'title': 'Send til Teknisk Leder',
         'action': 'Send til Teknisk Leder',
@@ -272,11 +439,39 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'descr': 'Sendt til Teknisk Leder'
     },
     'approve_teknisk': {
-        'title': 'Godkjent DTO',
-        'action': 'Send til DTO representant',
+        'title': 'Godkjent Teknisk',
+        'action': 'Send til FTL',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til DTO representant'
+        'descr': 'Sendt til FTL'
+    },
+    'reject_teknisk': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'send_to_operativ': {
+        'title': 'Send til Operativ Leder',
+        'action': 'Send til Operativ Leder',
+        'resource': 'operativ',
+        'comment': True,
+        'descr': 'Sendt til Operativ Leder'
+    },
+    'approve_operativ': {
+        'title': 'Godkjent Operativ',
+        'action': 'Send til FTL',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'reject_operativ': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til FTL'
     },
 
 }
@@ -298,21 +493,7 @@ class ObservationWorkflow(Machine):
 
         self._state_attrs = WF_MOTORFLY_STATES_ATTR
 
-        """ And some transitions between states. We're lazy, so we'll leave out
-        the inverse phase transitions (freezing, condensation, etc.).
-        name, source, dest
-
-        This is event chaining methods/functions
-        Callbacks: after, before
-        conditions: is_flammable, is_something
-
-        Apply to all states
-        machine.add_transition('to_liquid', '*', 'liquid')
-
-        Linear states:
-        machine.add_ordered_transitions()
-
-        machine.next_state()
+        """
 
         WISHLIST:
         states: should also have an extended version, say {'name':'state_name', 'attr': {whatever you like}
@@ -340,18 +521,6 @@ class ObservationWorkflow(Machine):
 
         self.action = None
         """ Extra attributes needed for sensible feedback from API to client
-
-        Permission:
-        - owner
-        - reporter
-        - role - hi - in club!
-        - group - fsj, su
-
-        How is this related to acl? Well acl will always be set according to the workflow
-
-        To transition - NEED write permissions!
-
-
         """
         self._trigger_attrs = WF_MOTORFLY_TRANSITIONS_ATTR
 
@@ -360,9 +529,20 @@ class ObservationWorkflow(Machine):
         col = app.data.driver.db[RESOURCE_COLLECTION]
 
         self.db_wf = col.find_one({'_id': ObjectId(object_id)},
-                                  {'id': 1, 'workflow': 1, 'acl': 1, 'club': 1, 'discipline': 1, '_etag': 1,
-                                   '_version': 1, 'owner': 1,
-                                   'reporter': 1, 'organization': 1, 'tags': 1, 'acl': 1})
+                                  {'id': 1,
+                                   'workflow': 1,
+                                   'acl': 1,
+                                   'club': 1,
+                                   'discipline': 1,
+                                   '_etag': 1,
+                                   '_version': 1,
+                                   '_model': 1,
+                                   'owner': 1,
+                                   'reporter': 1,
+                                   'organization': 1,
+                                   'tags': 1,
+                                   'acl': 1}
+                                  )
 
         initial_state = self.db_wf.get('workflow', {}).get('state', None)
 
@@ -378,17 +558,33 @@ class ObservationWorkflow(Machine):
         self.club = self.db_wf.get('club', None)
         self.discipline = self.db_wf.get('discipline', None)
 
+        # Backporting
+        # Backporting
+        self.wf_settings = self.db_wf.get('workflow', {}).get('settings', {
+            'do_not_process_club': False,
+            'do_not_publish': False
+        })
+
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
         # self.acl_ORS['org'] = self.discipline
 
-        self.acl_SKOLE = ACL_MOTORFLY_SKOLESJEF.copy()
+        self.acl_SKOLE = ACL_MOTORFLY_CLUB_SKOLESJEF.copy()
         self.acl_SKOLE['org'] = self.discipline
 
-        self.acl_DTO = ACL_MOTORFLY_DTO.copy()
+        self.acl_DTO = ACL_MOTORFLY_CLUB_DTO.copy()
         self.acl_DTO['org'] = self.discipline
 
-        self.acl_TEKNISK = ACL_MOTORFLY_TEKNISK_LEDER.copy()
+        self.acl_TEKNISK = ACL_MOTORFLY_CLUB_TEKNISK_LEDER.copy()
         self.acl_TEKNISK['org'] = self.discipline
+
+        self.acl_OPERATIV = ACL_MOTORFLY_CLUB_OPERATIV_LEDER.copy()
+        self.acl_OPERATIV['org'] = self.discipline
+
+        self.acl_FTL = ACL_MOTORFLY_CLUB_FTL.copy()
+        self.acl_FTL['org'] = self.discipline
+
+        self.acl_FLYTJENESTEN = ACL_MOTORFLY_CLUB_FLYTJENESTEN.copy()
+        self.acl_FLYTJENESTEN['org'] = self.discipline
 
         self.initial_acl = self.db_wf.get('acl', {}).copy()
 
@@ -465,6 +661,9 @@ class ObservationWorkflow(Machine):
 
         # return acl_has_permission(self.db_wf['_id'], 'execute', 'observations')
 
+    def can_process_in_club(self, event):
+        return not self.wf_settings.get('do_not_process_club', False)
+
     def condition_completed_tasks(self):
 
         # Check if has completed all tasks,
@@ -526,9 +725,33 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
+            # Only reporter can make
+            if self.wf_settings.get('do_not_process_in_club', False) is False:
+                acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
+            else:
+                acl['read']['roles'] = [self.acl_ORS]
+
             acl['write']['roles'] = [self.acl_ORS]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_ORS]
+
+        elif self.state == 'pending_review_ftl':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FTL]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
+                                    self.acl_TEKNISK, self.acl_DTO]
+            acl['execute']['roles'] = [self.acl_DTO]
+
+        elif self.state == 'pending_review_flytjenesten':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FLYTJENESTEN]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
+            acl['execute']['roles'] = [self.acl_FLYTJENESTEN]
 
         elif self.state == 'pending_review_dto':
 
@@ -536,7 +759,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -545,7 +768,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -554,8 +777,17 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_TEKNISK, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
+
+        elif self.state == 'pending_review_operativ':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_OPERATIV]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
 
@@ -563,7 +795,10 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] += ACL_CLOSED_ALL_LIST
+            # Only if we can make it public
+            if self.wf_settings.get('do_not_publish', False) is False:
+                acl['read']['roles'] += ACL_CLOSED_ALL_LIST
+
             acl['write']['roles'] = []
             acl['execute']['roles'] = [self.acl_ORS]
 
@@ -611,8 +846,11 @@ class ObservationWorkflow(Machine):
         # New owner it is!
         new['owner'] = app.globals['user_id']
 
-        if self._trigger_attrs.get(event.event.name).get('comment'):
+        if self._trigger_attrs.get(event.event.name).get('comment', False):
             new.get('workflow').update({'comment': self.comment})
+
+        # Always add
+        new['workflow']['settings'] = self.wf_settings
 
         new['acl'] = self.set_acl()
 
