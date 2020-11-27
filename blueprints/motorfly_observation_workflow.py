@@ -94,7 +94,7 @@ def get_observations():
 
 
 @OrsWorkflow.route(
-    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|dto|skole|teknisk)"):action>',
+    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|ftl|flytjenesten|dto|skole|teknisk|operativ)"):action>',
     methods=['POST'])
 @require_token()
 def transition(observation_id, action):
@@ -117,6 +117,14 @@ def transition(observation_id, action):
 
     # Instantiate with observation_id and current user (user is from app.globals.user_id
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'), comment=comment)
+
+    # Let draft descide to not process in club
+    if wf.initial_state == 'draft' and action == 'approve':
+        wf.wf_settings['do_not_process_in_club'] = args.get('do_not_process_in_club', False)
+
+    # Let ORS descide if not public on close
+    if wf.initial_state == 'pending_review_ors':
+        wf.wf_settings['do_not_publish'] = args.get('do_not_publish', False)
 
     # Now just do a
 

@@ -30,6 +30,7 @@ E5X = Blueprint('E5X Blueprint', __name__, )
 
 RESOURCE_COLLECTION = 'motorfly_observations'
 
+
 def has_permission():
     try:
 
@@ -41,7 +42,6 @@ def has_permission():
                                method=request.method,
                                resource=request.path[len(app.globals.get('prefix')):],
                                allowed_roles=None):
-
             return eve_abort(404, 'Please provide proper credentials')
 
     except:
@@ -57,7 +57,8 @@ def execute(cmdArray, workingDir):
 
     try:
         try:
-            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1)
+            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       bufsize=1)
         except OSError:
             return [False, '', 'ERROR : command(' + ' '.join(cmdArray) + ') could not get executed!']
 
@@ -102,7 +103,8 @@ def generate_structure(activity, ors_id, version):
 
                 _, stdout, stderr = execute(['mkdir', '{}/{}'.format(activity, ors_id)], app.config['E5X_WORKING_DIR'])
 
-            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)], app.config['E5X_WORKING_DIR'])
+            _, stdout, stderr = execute(['mkdir', '{}/{}/{}'.format(activity, ors_id, version)],
+                                        app.config['E5X_WORKING_DIR'])
         return True
     except Exception as e:
         app.logger.exception('[E5X] Generate structure failed')
@@ -123,7 +125,7 @@ def transport_e5x(dir, file_name, sftp_settings):
                                password=sftp_settings['password'], cnopts=cnopts) as sftp:
 
             try:
-                result = sftp.put('{}/{}.e5x'.format(dir, file_name), file_name)
+                result = sftp.put('{}/{}.e5x'.format(dir, file_name))
             except Exception as e:
                 app.logger.exception('Could not send file via SFTP')
                 return False, {}
@@ -139,14 +141,72 @@ def transport_e5x(dir, file_name, sftp_settings):
             'uid': result.st_uid,
             'gid': result.st_gid
         }
-    
+
     return False, {}
+
+
+def remove_empty_nodes(obj):
+    """Remove empty nodes with only id, refs pointing to nonexisting id's and empty lists and dicts"""
+
+    def recursive_iter(obj, keys=()):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                yield from recursive_iter(v, keys + (k,))
+        elif any(isinstance(obj, t) for t in (list, tuple)):
+            for idx, item in enumerate(obj):
+                yield from recursive_iter(item, keys + (idx,))
+        else:
+            yield keys, obj
+
+    def clean_empty(d):
+        if not isinstance(d, (dict, list)):
+            return d
+        if isinstance(d, list):
+            return [v for v in (clean_empty(v) for v in d) if v]
+        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v}
+
+    def scrub(obj, bad_key="id", bad_values=[]):
+        if isinstance(obj, dict):
+            for key in list(obj.keys()):
+                if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
+                    del obj[key]
+                else:
+                    scrub(obj[key], bad_key)
+        elif isinstance(obj, list):
+            for i in reversed(range(len(obj))):
+                if obj[i] == bad_key and len(obj) == 1:
+                    del obj[i]
+                else:
+                    scrub(obj[i], bad_key)
+
+        else:
+            # neither a dict nor a list, do nothing
+            pass
+
+        return obj
+
+    # Remove all single id's
+    obj = scrub(obj, bad_key='id')
+
+    # Find all refs and remaining ids
+    refs = []
+    ids = []
+    for keys, item in recursive_iter(obj):
+        if keys[len(keys) - 1] == 'ref':
+            refs.append(item)
+        elif keys[len(keys) - 1] == 'id':
+            ids.append(item)
+
+    # Remove all refs pointing to nonexisting id's
+    obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
+
+
+    return clean_empty(obj)
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
-
     data = request.get_json(force=True)
     col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
@@ -223,7 +283,6 @@ def generate(_id):
                             except Exception as e:
                                 app.logger.exception("[ERROR] Could not add file name to report")
                                 app.logger.error(e)
-                                pass
 
                     except Exception as e:
                         app.logger.exception("[ERR] Getting files")
@@ -236,7 +295,7 @@ def generate(_id):
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(data.get('e5x', {}), f)
+                    json.dump(remove_empty_nodes(data.get('e5x', {})), f)
 
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
@@ -252,8 +311,8 @@ def generate(_id):
                     ],
                     app.config['E5X_WORKING_DIR'])
 
-                # app.logger.debug('[CMD]', stdout)
-                # app.logger.debug('[CMD]', stderr)
+                app.logger.debug('[STDOUT] {}'.format(stdout))
+                app.logger.debug('[STDERR] {}'.format(stderr))
 
                 # 3 Zip it! Add files to it!
                 if stderr.rstrip() == '':
@@ -265,7 +324,8 @@ def generate(_id):
                     # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
-                        FILE_WORKING_DIR)
+                        FILE_WORKING_DIR
+                    )
 
                     try:
                         status = data.get('e5x').get('entities', {}) \
@@ -277,10 +337,9 @@ def generate(_id):
                         app.logger.exception('Error gettings status {}'.format(status))
                         status = 0
 
-
                     # SFTP DELIVERY!
                     # Only dev and prod should be able to deliver to LT
-                    if app.config.get('APP_INSTANCE', '') == 'dev':
+                    if app.config.get('APP_INSTANCE', '') == 'dev-removeme-test':
                         from ext.scf import LT_SFTP_TEST_CFG as SFTP
                     elif app.config.get('APP_INSTANCE', '') == 'prod':
                         from ext.scf import LT_SFTP_CFG as SFTP
@@ -333,7 +392,7 @@ def generate(_id):
                                 event_from_id=ors.get('_id', ''),
                                 source=ors.get('_version', ''),
                                 status=status,
-                                ors_id=ors.get('id',None),
+                                ors_id=ors.get('id', None),
                                 ors_tags=ors.get('tags', []),
                                 file_name='{}.e5x'.format(file_name),
                                 transport='sftp',
@@ -371,6 +430,9 @@ def generate(_id):
 
                     return eve_response({'e5x': {'audit': audit}, 'err': traceback.format_exc()}, 200)
 
+                else:
+                    app.logger.error('STDERR: {}'.format(stderr))
+
             except Exception as e:
                 app.logger.exception('Error processing e5x file')
                 return eve_response({'ERR': 'Could not process', 'err': traceback.format_exc()}, 422)
@@ -385,8 +447,15 @@ def download(activity, ors_id, version):
         col = app.data.driver.db['motorfly_observations']
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
-                                    {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                             {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                    {'$or': [
+                                        {'reporter': app.globals['user_id']},
+                                        {'acl.execute.users': {'$in': [app.globals['user_id']]}},
+                                        {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}
+                                    ]
+                                    }
+                                    ]
+                           }
+                          )
 
         # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
         _items = list(cursor)
@@ -403,14 +472,21 @@ def download(activity, ors_id, version):
                 file_name = 'nlf_{}_{}_v{}.e5x'.format(activity,
                                                        ors_id,
                                                        version)
-                app.logger.debug('{}/{}'.format(FILE_WORKING_DIR, file_name))
+                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
                 # print('####',
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
                 #    
-                return send_file('{}/{}'.format(FILE_WORKING_DIR, file_name), as_attachment=True,
-                                 attachment_filename=file_name, mimetype="'application/octet-stream'")
+                return send_file('{}/{}'.format(FILE_WORKING_DIR, file_name),
+                                 as_attachment=True,
+                                 attachment_filename=file_name,
+                                 mimetype="'application/octet-stream'")
             except Exception as e:
                 # print('Download failed', e)
-                return eve_response({'ERR': 'Could not send file'}, 422)
+                app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
 
+        app.logger.debug(
+            '[E5X DOWNLOAD ERR] Returned {} items for {} id {} version {}'.format(len(_items), activity, ors_id,
+                                                                                  version))
+
+        return eve_response({'ERR': 'Could not send file'}, 422)
