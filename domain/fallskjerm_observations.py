@@ -256,7 +256,7 @@ aggregate_avg_rating_discipline = {
         'aggregation': {
             'pipeline': [
                 {"$match": {"workflow.state": "closed", "when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
-                {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}, "sum": {"$count": "$rating._rating"}}},
+                {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}, "sum": {"$sum": 1}}},
             ]
         }
     }
