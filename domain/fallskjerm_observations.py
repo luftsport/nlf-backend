@@ -255,7 +255,7 @@ aggregate_avg_rating_discipline = {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
             'pipeline': [
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline", "workflow.state": "closed"}},
                 {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}}},
             ]
         }
@@ -269,7 +269,7 @@ aggregate_avg_rating = {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
             'pipeline': [
-                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}}},
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "workflow.state": "closed"}},
                 {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}}},
                 {"$sort": SON([("avg", -1)])}
             ]
