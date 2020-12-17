@@ -264,7 +264,7 @@ aggregate_avg_rating_discipline = {
 
 aggregate_avg_rating = {
     'item_title': 'Observations aggregate average ratings by discipline and date range',
-    'url': '{}/aggregate/ratings/discipline'.format(BASE_URL),
+    'url': '{}/aggregate/ratings'.format(BASE_URL),
     'datasource': {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
