@@ -84,6 +84,8 @@ DOMAIN = {
     "fallskjerm_observations_aggregate_types": fallskjerm_observations.aggregate_types,
     "fallskjerm_observations_aggregate_types_discipline": fallskjerm_observations.aggregate_types_discipline,
     "fallskjerm_observations_aggregate_states_discipline": fallskjerm_observations.aggregate_states_discipline,
+    "fallskjerm_observations_aggregate_avg_ratings_discipline": fallskjerm_observations.aggregate_avg_rating_discipline,
+    "fallskjerm_observations_aggregate_avg_ratings": fallskjerm_observations.aggregate_avg_rating,
 
     # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
