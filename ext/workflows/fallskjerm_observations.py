@@ -614,7 +614,10 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            tmp['permission'] = self.has_permission(None)
+            try:
+                tmp['permission'] = self.has_permission()
+            except Exception as e:
+                print('[ERRRR] ', e)
 
             resources.append(tmp)
 
@@ -633,7 +636,7 @@ class ObservationWorkflow(Machine):
         # Should return users allowed for this transition!
         return NotImplemented
 
-    def has_permission(self, event):
+    def has_permission(self, event=None):
         """ No events sendt by conditions...
         if event.kwargs.get('user_id', 0) in self.trigger_permissions:
             return True
