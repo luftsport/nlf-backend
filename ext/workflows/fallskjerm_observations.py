@@ -645,7 +645,7 @@ class ObservationWorkflow(Machine):
                     or app.globals['user_id'] in self.initial_acl['execute']['users']:
                 return True
         except Exception as e:
-            # print('ERRRRR', e)
+            print('Error in has_permission', e)
             pass
 
         return False
