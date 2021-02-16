@@ -7,6 +7,13 @@
 
 import os, sys
 from datetime import datetime
+from sys import exit
+
+try:
+    from instance import APP_INSTANCE
+except:
+    print("[ERR] No instance file 'instance.py' found, exiting")
+    exit(0)
 
 # Make importing sliced up apps easy as pees
 sys.path.insert(0, "domain")
@@ -28,7 +35,6 @@ AUTH_SESSION_LENGHT = 3600  # Seconds
 
 # @TODO: use sys.argv to parse this as cmdline input
 APP_INSTANCES = ['local', 'dev', 'beta', 'prod']
-APP_INSTANCE = 'local'  # APP_INSTANCES[0]
 
 if APP_INSTANCE == 'prod':
     MONGO_HOST = 'localhost'
