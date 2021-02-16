@@ -28,7 +28,7 @@ AUTH_SESSION_LENGHT = 3600  # Seconds
 
 # @TODO: use sys.argv to parse this as cmdline input
 APP_INSTANCES = ['local', 'dev', 'beta', 'prod']
-APP_INSTANCE = 'prod'  # APP_INSTANCES[0]
+APP_INSTANCE = 'local'  # APP_INSTANCES[0]
 
 if APP_INSTANCE == 'prod':
     MONGO_HOST = 'localhost'
