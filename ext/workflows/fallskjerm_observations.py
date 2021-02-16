@@ -456,7 +456,7 @@ class ObservationWorkflow(Machine):
             """Only owner can do stuff?"""
 
             acl['read']['users'] += [reporter]
-            acl['write']['users'] += [reporter]
+            acl['write']['users'] = [reporter]
             acl['execute']['users'] = [reporter]
 
             acl['read']['roles'] += [self.acl_hi]
@@ -482,7 +482,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_hi]
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ]
+            acl['read']['roles'] += [self.acl_hi, ACL_FALLSKJERM_FSJ]
             acl['execute']['roles'] = [self.acl_hi]
 
         elif self.state == 'pending_review_fs':
@@ -492,7 +492,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [ACL_FALLSKJERM_FSJ]
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['read']['roles'] += [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
             acl['execute']['roles'] = [ACL_FALLSKJERM_FSJ]
 
         elif self.state == 'pending_review_su':
@@ -501,7 +501,12 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            if self.initial_state == 'closed':
+                # Remove all members access
+                acl['read']['roles'] = [x for x in acl['read']['roles'] if x not in ACL_CLOSED_ALL_LIST]
+            else:
+                acl['read']['roles'] += ACL_FALLSKJERM_SU_GROUP_LIST
+
             acl['write']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
             acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
 
@@ -524,7 +529,6 @@ class ObservationWorkflow(Machine):
 
         acl['read']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['read']['roles'])]
         acl['write']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['write']['roles'])]
-
         acl['execute']['roles'] = [dict(y) for y in set(tuple(x.items()) for x in acl['execute']['roles'])]
 
         return acl
