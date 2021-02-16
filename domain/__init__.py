@@ -17,6 +17,11 @@ import fallskjerm_quarter_report
 
 # MOTORFLY
 import motorfly_observations
+
+import seilfly_observations
+
+import sportsfly_observations
+
 # import observation_components
 # import observation_comments
 # Files - just a test collection
@@ -84,6 +89,8 @@ DOMAIN = {
     "fallskjerm_observations_aggregate_types": fallskjerm_observations.aggregate_types,
     "fallskjerm_observations_aggregate_types_discipline": fallskjerm_observations.aggregate_types_discipline,
     "fallskjerm_observations_aggregate_states_discipline": fallskjerm_observations.aggregate_states_discipline,
+    "fallskjerm_observations_aggregate_avg_ratings_discipline": fallskjerm_observations.aggregate_avg_rating_discipline,
+    "fallskjerm_observations_aggregate_avg_ratings": fallskjerm_observations.aggregate_avg_rating,
 
     # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
@@ -98,6 +105,24 @@ DOMAIN = {
     "motorfly_observations_aggregate_types_discipline": motorfly_observations.aggregate_types_discipline,
     "motorfly_observations_aggregate_states_discipline": motorfly_observations.aggregate_states_discipline,
 
+    # Seil
+    "seilfly_observations": seilfly_observations.definition,
+    "seilfly_observations_user": seilfly_observations.user,
+    "seilfly_observations_todo": seilfly_observations.workflow_todo,
+    # Seil aggregations
+    "seilfly_observations_aggregate_types": seilfly_observations.aggregate_types,
+    "seilfly_observations_aggregate_types_discipline": seilfly_observations.aggregate_types_discipline,
+    "seilfly_observations_aggregate_states_discipline": seilfly_observations.aggregate_states_discipline,
+
+    # Sportsfly
+    "sportsfly_observations": sportsfly_observations.definition,
+    "sportsfly_observations_user": sportsfly_observations.user,
+    "sportsfly_observations_todo": sportsfly_observations.workflow_todo,
+    # Sportsfly aggregations
+    "sportsfly_observations_aggregate_types": sportsfly_observations.aggregate_types,
+    "sportsfly_observations_aggregate_types_discipline": sportsfly_observations.aggregate_types_discipline,
+    "sportsfly_observations_aggregate_states_discipline": sportsfly_observations.aggregate_states_discipline,
+    
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
     "legacy_clubs": legacy_clubs.definition,

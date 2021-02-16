@@ -3,6 +3,7 @@ share/
 *.log
 *.log*
 *.png
+instance.py
 resume.token
 */.directory
 .directory
