@@ -91,8 +91,8 @@ WF_MOTORFLY_STATES_ATTR = {
         'description': 'Utkast'
     },
     'pending_review_ors': {
-        'title': 'Avventer ORS',
-        'description': 'Avventer ORS koordinator'
+        'title': 'Avventer OBSREG',
+        'description': 'Avventer OBSREG koordinator'
     },
     'pending_review_ftl': {
         'title': 'Avventer FLT',
@@ -730,9 +730,15 @@ class ObservationWorkflow(Machine):
 
             # Only reporter can make
             if self.wf_settings.get('do_not_process_in_club', False) is False:
-                acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
+                if self.initial_state == 'closed':
+                    acl['read']['roles'] = [self.acl_ORS, self.acl_FTL]
+                else:
+                    acl['read']['roles'] += [self.acl_ORS, self.acl_FTL]
             else:
-                acl['read']['roles'] = [self.acl_ORS]
+                if self.initial_state == 'closed':
+                    acl['read']['roles'] = [self.acl_ORS]
+                else:
+                    acl['read']['roles'] += [self.acl_ORS]
 
             acl['write']['roles'] = [self.acl_ORS]
             acl['execute']['roles'] = [self.acl_ORS]
@@ -743,7 +749,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_FTL]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
                                     self.acl_TEKNISK, self.acl_DTO]
             acl['execute']['roles'] = [self.acl_FTL]
 
@@ -753,7 +759,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_FLYTJENESTEN]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
+            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
             acl['execute']['roles'] = [self.acl_FLYTJENESTEN]
 
         elif self.state == 'pending_review_dto':
@@ -762,7 +768,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -771,7 +777,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -780,7 +786,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
+            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
 
         elif self.state == 'pending_review_operativ':
@@ -789,16 +795,15 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_OPERATIV]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
             acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
 
-            # acl['read']['users'] = [] #Should let users still see??
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            # Only if we can make it public
+            # Only if we can make it public, else keep as is
             if self.wf_settings.get('do_not_publish', False) is False:
                 acl['read']['roles'] += ACL_CLOSED_ALL_LIST
 
