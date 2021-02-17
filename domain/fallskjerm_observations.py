@@ -130,6 +130,8 @@ definition = {
     # 'auth_field': 'owner',
     'allowed_filters': [
         'workflow.state',
+        'components.attributes',
+        'components.flags',
         'id',
         '_id',
         'when',
@@ -146,18 +148,24 @@ definition = {
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'PUT'],
-    'mongo_indexes': {'id': ([('id', 1)], {'background': True}),
-                      'club': ([('club', 1)], {'background': True}),
-                      'discipline': ([('discipline', 1)], {'background': True}),
-                      'persons': ([('owner', 1), ('reporter', 1)], {'background': True}),
-                      'when': ([('when', 1)], {'background': True}),
-                      'type': ([('type', 1)], {'background': True}),
-                      'rating': ([('rating', 1)], {'background': True}),
-                      'title': ([('tags', 'text'), ('ask', 'text')],
-                                {'background': True, 'default_language': 'norwegian',
-                                 'weights': {'tags': 10, 'ask': 2}})
+    'mongo_indexes': {
+        'id': ([('id', 1)], {'background': True}),
+        'club': ([('club', 1)], {'background': True}),
+        'discipline': ([('discipline', 1)], {'background': True}),
+        'persons': ([('owner', 1), ('reporter', 1)], {'background': True}),
+        'when': ([('when', 1)], {'background': True}),
+        'type': ([('type', 1)], {'background': True}),
+        'rating': ([('rating', 1)], {'background': True}),
+        'title': (
+            [('tags', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
+            {
+                'background': True,
+                'default_language': 'norwegian',
+                'weights': {'tags': 10, 'ask': 2, 'components.what': 5, 'components.how': 1}
+            }
+        )
 
-                      },
+    },
     'schema': _schema
 
 }
@@ -167,7 +175,8 @@ workflow_todo = {
     'item_title': 'Fallskjerm Observations Todo',
     'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
-                   'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1, '_model': 1}  # 'files': 0,
+                   'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1, '_model': 1}
+                   # 'files': 0,
                    },
     'additional_lookup': {
         'url': 'regex("[\d{1,9}]+")',
@@ -255,7 +264,8 @@ aggregate_avg_rating_discipline = {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
             'pipeline': [
-                {"$match": {"workflow.state": "closed", "when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
+                {"$match": {"workflow.state": "closed", "when": {"$gte": "$from", "$lte": "$to"},
+                            "discipline": "$discipline"}},
                 {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}, "sum": {"$sum": 1}}},
             ]
         }
@@ -276,5 +286,3 @@ aggregate_avg_rating = {
         }
     }
 }
-
-
