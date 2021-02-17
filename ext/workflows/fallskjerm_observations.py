@@ -362,7 +362,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     },
     'approve_fs': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn',
+        'action': 'SU (alle)',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -384,7 +384,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     # aff
     'approve_fs_aff': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn AFF',
+        'action': 'SU AFF',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -398,7 +398,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     },
     'approve_su_aff': {
         'title': 'Godkjenn observasjon AFF',
-        'action': 'Godkjenn AFF',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av SU AFF'
@@ -406,7 +406,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     # tandem
     'approve_fs_tandem': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn Tandem',
+        'action': 'SU Tandem',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -420,7 +420,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     },
     'approve_su_tandem': {
         'title': 'Godkjenn observasjon Tandem',
-        'action': 'Godkjenn Tandem',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av SU Tandem'
@@ -428,7 +428,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     # Materiell
     'approve_fs_materiell': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn FSJ',
+        'action': 'SU MSJ',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -442,15 +442,37 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     },
     'approve_su_materiell': {
         'title': 'Godkjenn observasjon MSJ',
-        'action': 'Godkjenn MSJ',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av SU MSJ'
     },
+    # Skjerm
+    'approve_fs_skjerm': {
+        'title': 'Godkjenn observasjon',
+        'action': 'SU Skjerm',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagsjef'
+    },
+    'reject_su_skjerm': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av SU Skjerm'
+    },
+    'approve_su_skjerm': {
+        'title': 'Godkjenn observasjon SU Skjerm',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av SU Skjerm'
+    },
     # Leder
     'approve_fs_leder': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn FSJ',
+        'action': 'SU Leder',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -464,7 +486,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     },
     'approve_su_leder': {
         'title': 'Godkjenn observasjon SU leder',
-        'action': 'Godkjenn SU leder',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av SU leder'
@@ -613,7 +635,9 @@ class ObservationWorkflow(Machine):
         resources = []
 
         for event in self.get_actions():
+            print('[EVENT]', event)
             tmp = self._trigger_attrs.get(event)
+            print('[tmp]', tmp)
             try:
                 tmp['permission'] = self.has_permission()
             except Exception as e:
@@ -782,8 +806,7 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [self.acl_hi,
-                                    ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST + ACL_FALLSKJERM_SU_SKJERM
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
             acl['write']['roles'] = [ACL_FALLSKJERM_SU_SKJERM]
             acl['execute']['roles'] = [ACL_FALLSKJERM_SU_SKJERM]
 
@@ -793,10 +816,9 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] = [self.acl_hi,
-                                    ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST + ACL_FALLSKJERM_SU_LEDER
-            acl['write']['roles'] = ACL_FALLSKJERM_SU_LEDER
-            acl['execute']['roles'] = ACL_FALLSKJERM_SU_LEDER
+            acl['read']['roles'] = [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
+            acl['write']['roles'] = [ACL_FALLSKJERM_SU_LEDER]
+            acl['execute']['roles'] = [ACL_FALLSKJERM_SU_LEDER]
 
         elif self.state == 'closed':
             """ everybody read, su execute """
