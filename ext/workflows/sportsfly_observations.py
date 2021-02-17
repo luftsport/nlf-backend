@@ -287,6 +287,13 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til OBSREG Koordinator'
     },
+    'reopen_ftu': {
+        'title': 'Gjenåpne observasjon',
+        'action': 'Gjenåpne',
+        'resource': 'reopen',
+        'comment': True,
+        'descr': 'Gjenåpnet'
+    },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
         'action': 'Send til Operativ Leder',
@@ -376,12 +383,12 @@ class ObservationWorkflow(Machine):
 
         """ The transition definition
         """
-        self._transitions = WF_SPORTSFLY_TRANSITIONS
+        self._transitions = WF_SPORTSFLY_TRANSITIONS.copy()
 
         self.action = None
         """ Extra attributes needed for sensible feedback from API to client
         """
-        self._trigger_attrs = WF_SPORTSFLY_TRANSITIONS_ATTR
+        self._trigger_attrs = WF_SPORTSFLY_TRANSITIONS_ATTR.copy()
 
         """ Make sure to start with a defined state!
         """
@@ -472,7 +479,8 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-
+            if not tmp or not isinstance(tmp, dict):
+                print('[ERR] event: ', event, ' tmp: ', tmp)
             if self.initial_state == 'pending_review_ors' and event == 'send_to_operativ':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
