@@ -604,7 +604,7 @@ class ObservationWorkflow(Machine):
                 else:
                     acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_FSJ]
 
-            acl['execute']['roles'] = [self.acl_FTL]
+            acl['execute']['roles'] = [self.acl_FTU]
 
         elif self.state == 'pending_review_operativ':
 
@@ -630,7 +630,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -639,7 +639,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
 
         elif self.state == 'pending_review_operativ':
@@ -648,7 +648,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_OPERATIV]
-            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_OPERATIV]
             acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
