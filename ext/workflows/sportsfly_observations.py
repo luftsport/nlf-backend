@@ -622,7 +622,7 @@ class ObservationWorkflow(Machine):
 
             acl['write']['roles'] = [self.acl_OOU]
             acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_OOU]
-            acl['execute']['roles'] = [self.acl_DTO]
+            acl['execute']['roles'] = [self.acl_OOU]
 
         elif self.state == 'pending_review_skole':
 
@@ -630,7 +630,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_OOU, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
