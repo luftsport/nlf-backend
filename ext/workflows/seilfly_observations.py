@@ -318,7 +318,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'approve_su': {
         'title': 'Godkjent SU',
-        'action': 'Send til Koordinator',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til ORS Koordinator'
@@ -500,7 +500,6 @@ class ObservationWorkflow(Machine):
         self.acl_OPERATIV['org'] = self.discipline
 
         self.acl_SU = ACL_SEILFLY_SU.copy()
-        self.acl_SU['org'] = self.discipline
 
         self.initial_acl = self.db_wf.get('acl', {}).copy()
 
