@@ -759,7 +759,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_FLYTJENESTEN]
-            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_FLYTJENESTEN]
             acl['execute']['roles'] = [self.acl_FLYTJENESTEN]
 
         elif self.state == 'pending_review_dto':
@@ -768,7 +768,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -777,7 +777,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
             acl['execute']['roles'] = [self.acl_SKOLE]
 
         elif self.state == 'pending_review_teknisk':
@@ -786,7 +786,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_TEKNISK]
-            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_TEKNISK]
             acl['execute']['roles'] = [self.acl_TEKNISK]
 
         elif self.state == 'pending_review_operativ':
@@ -795,7 +795,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_OPERATIV]
-            acl['read']['roles'] = +[self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV]
             acl['execute']['roles'] = [self.acl_OPERATIV]
 
         elif self.state == 'closed':
