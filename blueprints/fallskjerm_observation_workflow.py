@@ -88,7 +88,7 @@ def get_observations():
     return eve_response(result, 200)
 
 
-@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen)"):action>', methods=['POST'])
+@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs_aff|approve_fs_skjerm|approve_fs_tandem|approve_fs_aff|approve_fs_leder)"):action>', methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
