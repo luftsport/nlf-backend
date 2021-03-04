@@ -196,7 +196,7 @@ WF_FALLSKJERM_TRANSITIONS = [
     {
         'trigger': 'approve_fs_aff',
         'source': 'pending_review_fs',
-        'dest': 'pending_review_su_af',
+        'dest': 'pending_review_su_aff',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
