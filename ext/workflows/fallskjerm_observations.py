@@ -385,7 +385,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     'approve_fs_aff': {
         'title': 'Godkjenn observasjon',
         'action': 'SU AFF',
-        'resource': 'approve',
+        'resource': 'approve_fs_aff',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
     },
@@ -407,7 +407,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     'approve_fs_tandem': {
         'title': 'Godkjenn observasjon',
         'action': 'SU Tandem',
-        'resource': 'approve',
+        'resource': 'approve_fs_tandem',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
     },
@@ -429,7 +429,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     'approve_fs_materiell': {
         'title': 'Godkjenn observasjon',
         'action': 'SU MSJ',
-        'resource': 'approve',
+        'resource': 'approve_fs_materiell',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
     },
@@ -451,7 +451,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     'approve_fs_skjerm': {
         'title': 'Godkjenn observasjon',
         'action': 'SU Skjerm',
-        'resource': 'approve',
+        'resource': 'approve_fs_skjerm',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
     },
@@ -473,7 +473,7 @@ WF_FALLSKJERM_TRANSITIONS_ATTR = {
     'approve_fs_leder': {
         'title': 'Godkjenn observasjon',
         'action': 'SU Leder',
-        'resource': 'approve',
+        'resource': 'approve_fs_leder',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
     },
