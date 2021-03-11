@@ -254,7 +254,7 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
     },
     'approve_ors': {
         'title': 'Godkjenn observasjon',
-        'action': 'Send til FTU',
+        'action': 'Send FTU',
         'resource': 'approve',
         'comment': True,
         'descr': 'Send til Flytryggingsutvalget'
@@ -268,7 +268,7 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
     },
     'send_to_ftu': {
         'title': 'Send til FTU',
-        'action': 'Send til FTU',
+        'action': 'Send FTU',
         'resource': 'ftu',
         'comment': True,
         'descr': 'Sendt til Flytryggingsutvalget'
@@ -296,21 +296,21 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
     },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
-        'action': 'Send til Operativ Leder',
+        'action': 'Send Operativ Leder',
         'resource': 'operativ',
         'comment': True,
         'descr': 'Sendt til Operativ Leder'
     },
     'send_to_oou': {
         'title': 'Send til O&U',
-        'action': 'Send til O&U',
+        'action': 'Send O&U',
         'resource': 'oou',
         'comment': True,
         'descr': 'Sendt til Operasjons- og Utdanningsutvalget'
     },
     'send_to_tku': {
         'title': 'Send til TKU',
-        'action': 'Send til TKU',
+        'action': 'Send TKU',
         'resource': 'tku',
         'comment': True,
         'descr': 'Sendt til Teknisk Utvalg'

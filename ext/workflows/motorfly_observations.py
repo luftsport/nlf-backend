@@ -356,7 +356,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'approve_ftl': {
         'title': 'Godkjent FTL',
-        'action': 'Send til Koordinator',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til ORS Koordinator'
@@ -370,14 +370,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'send_to_flytjenesten': {
         'title': 'Send til Flytjenesteleder',
-        'action': 'Send til Flytjenesteleder',
+        'action': 'Send Flytjenesteleder',
         'resource': 'flytjenesten',
         'comment': True,
         'descr': 'Sendt til Flytjenesteleder'
     },
     'approve_flytjenesten': {
         'title': 'Godkjent Flytjenesteleder',
-        'action': 'Send til FTL',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til FTL'
@@ -398,7 +398,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'approve_dto': {
         'title': 'Godkjent DTO',
-        'action': 'Send til FTL',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til FTL'
@@ -412,14 +412,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'send_to_skole': {
         'title': 'Send til Skolesjef',
-        'action': 'Send til Skolesjef',
+        'action': 'Send Skolesjef',
         'resource': 'skole',
         'comment': True,
         'descr': 'Sendt til Skolesjef'
     },
     'approve_skole': {
         'title': 'Godkjent Skolesjef',
-        'action': 'Send til DTO representant',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til DTO representant'
@@ -433,14 +433,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'send_to_teknisk': {
         'title': 'Send til Teknisk Leder',
-        'action': 'Send til Teknisk Leder',
+        'action': 'Send Teknisk Leder',
         'resource': 'teknisk',
         'comment': True,
         'descr': 'Sendt til Teknisk Leder'
     },
     'approve_teknisk': {
         'title': 'Godkjent Teknisk',
-        'action': 'Send til FTL',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til FTL'
@@ -454,14 +454,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
     },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
-        'action': 'Send til Operativ Leder',
+        'action': 'Send Operativ Leder',
         'resource': 'operativ',
         'comment': True,
         'descr': 'Sendt til Operativ Leder'
     },
     'approve_operativ': {
         'title': 'Godkjent Operativ',
-        'action': 'Send til FTL',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Sendt til FTL'

@@ -311,7 +311,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'send_to_su': {
         'title': 'Send til SU',
-        'action': 'Send til SU',
+        'action': 'Send SU',
         'resource': 'su',
         'comment': True,
         'descr': 'Sendt til SU'
@@ -332,7 +332,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'send_to_dto': {
         'title': 'Send til DTO',
-        'action': 'Send til DTO',
+        'action': 'Send DTO',
         'resource': 'dto',
         'comment': True,
         'descr': 'Sendt til DTO ansvarlig'
@@ -353,7 +353,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
-        'action': 'Send til Operativ Leder',
+        'action': 'Send Operativ Leder',
         'resource': 'operativ',
         'comment': True,
         'descr': 'Sendt til Operativ Leder'
@@ -374,7 +374,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'send_to_skole': {
         'title': 'Send til Skolesjef',
-        'action': 'Send til Skolesjef',
+        'action': 'Send Skolesjef',
         'resource': 'skole',
         'comment': True,
         'descr': 'Sendt til Skolesjef'
@@ -395,7 +395,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
     },
     'send_to_teknisk': {
         'title': 'Send til Teknisk Leder',
-        'action': 'Send til Teknisk Leder',
+        'action': 'Send Teknisk Leder',
         'resource': 'teknisk',
         'comment': True,
         'descr': 'Sendt til Teknisk Leder'
