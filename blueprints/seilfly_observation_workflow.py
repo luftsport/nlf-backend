@@ -8,18 +8,20 @@
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
+
 from flask import Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
-from ext.workflows.fallskjerm_observations import ObservationWorkflow
+from ext.workflows.seilfly_observations import ObservationWorkflow
 
 # Need custom decorators
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 
-OrsWorkflow = Blueprint('Fallskjerm Observation Workflow', __name__, )
+OrsWorkflow = Blueprint('Seilfly Observation Workflow', __name__, )
 
-RESOURCE_COLLECTION = 'fallskjerm_observations'
+RESOURCE_COLLECTION = 'seilfly_observations'
+
 
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
 @OrsWorkflow.route("/<objectid:observation_id>/state", methods=['GET'])
@@ -28,6 +30,8 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
+    # print(observation_id)
+
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
 
     return eve_response(wf.get_current_state(), 200)
@@ -74,21 +78,15 @@ def get_observations():
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
     _items = list(cursor.sort('id', 1).skip(max_results * (page - 1)).limit(max_results))
 
-    """
-    #hateos
-    _links = {"self": {"title": "observations/todo", "href": "observations/todo?max_results=%i&page=%i" % (max_results, page), 
-                       "next": {},
-                       "previous": {},
-                       "last": {},
-                       "first": {},
-                       "parent": {}}}
-    """
     _meta = {'page': page, 'max_results': max_results, 'total': total_items}
     result = {'_items': _items, '_meta': _meta}
+    # return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
     return eve_response(result, 200)
 
 
-@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs_aff|approve_fs_skjerm|approve_fs_tandem|approve_fs_materiell|approve_fs_leder)"):action>', methods=['POST'])
+@OrsWorkflow.route(
+    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|su|dto|skole|teknisk|operativ)"):action>',
+    methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
@@ -100,17 +98,24 @@ def transition(observation_id, action):
     @todo: check permissions here??
     """
 
-    comment = ''
+    comment = None
     try:
         args = request.get_json()  # use force=True to do anyway!
         comment = args.get('comment', '')
-    except Exception as e:
+    except:
         # Could try form etc
-        print('ERR', e)
         pass
 
     # Instantiate with observation_id and current user (user is from app.globals.user_id
     wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'), comment=comment)
+
+    # Let draft descide to not process in club
+    if wf.initial_state == 'draft' and action == 'approve':
+        wf.wf_settings['do_not_process_in_club'] = args.get('do_not_process_in_club', False)
+
+    # Let ORS descide if not public on close
+    if wf.initial_state == 'pending_review_ors':
+        wf.wf_settings['do_not_publish'] = args.get('do_not_publish', False)
 
     # Now just do a
 
@@ -120,7 +125,6 @@ def transition(observation_id, action):
         # This is actually safe!
         result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
-        # ors_workflow(recepients, activity, _id, action, source, destination, what, comment, context='transition'
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
@@ -133,15 +137,15 @@ def transition(observation_id, action):
 @require_token()
 def graphit(observation_id, state):
     # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
-    from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_STATES, WF_FALLSKJERM_TRANSITIONS
-    if state in WF_FALLSKJERM_STATES:
+    from ext.workflows.seilfly_observations import WF_SEILFLY_STATES, WF_SEILFLY_TRANSITIONS
+    if state in WF_SEILFLY_STATES:
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
 
         machine = Machine(model=wf,
-                          states=WF_FALLSKJERM_STATES,
-                          transitions=WF_FALLSKJERM_TRANSITIONS,
+                          states=WF_SEILFLY_STATES,
+                          transitions=WF_SEILFLY_TRANSITIONS,
                           initial=state,
                           title='Workflow graph')
         stream = io.BytesIO()

@@ -36,6 +36,8 @@ from blueprints.acl import ACL
 # Observation blueprints
 from blueprints.fallskjerm_observation_workflow import OrsWorkflow as FallskjermOrsWF
 from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsWF
+from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
+from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
 
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
@@ -103,6 +105,8 @@ app.register_blueprint(ACL, url_prefix="%s/acl" % app.globals.get('prefix'))
 # ORS NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflow" % app.globals.get('prefix'))
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
@@ -183,6 +187,47 @@ app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetche
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
+
+# ################
+# SEILFLY ORS
+#
+# BEFORE AND AFTER POST INSERT
+app.on_insert_seilfly_observations += hook.seilfly.ors_before_insert
+app.on_inserted_seilfly_observations += hook.seilfly.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_seilfly_observations += hook.seilfly.ors_before_get
+app.on_pre_GET_seilfly_observations_user += hook.seilfly.ors_before_get_user
+app.on_pre_GET_seilfly_observations_todo += hook.seilfly.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_resource_seilfly_observations += hook.seilfly.ors_after_fetched_list
+app.on_fetched_item_seilfly_observations += hook.seilfly.ors_after_fetched
+app.on_fetched_diffs_seilfly_observations += hook.seilfly.ors_after_fetched_diffs
+app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
+# AFTER update db layer
+app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
+
+# ################
+# SPORTSFLY ORS
+#
+# BEFORE AND AFTER POST INSERT
+app.on_insert_sportsfly_observations += hook.sportsfly.ors_before_insert
+app.on_inserted_sportsfly_observations += hook.sportsfly.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_sportsfly_observations += hook.sportsfly.ors_before_get
+app.on_pre_GET_sportsfly_observations_user += hook.sportsfly.ors_before_get_user
+app.on_pre_GET_sportsfly_observations_todo += hook.sportsfly.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_resource_sportsfly_observations += hook.sportsfly.ors_after_fetched_list
+app.on_fetched_item_sportsfly_observations += hook.sportsfly.ors_after_fetched
+app.on_fetched_diffs_sportsfly_observations += hook.sportsfly.ors_after_fetched_diffs
+app.on_fetched_item_sportsfly_observations_todo += hook.sportsfly.ors_after_fetched
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_sportsfly_observations += hook.sportsfly.ors_before_patch
+# AFTER update db layer
+app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
+
 
 ###############
 # Notifications
