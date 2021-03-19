@@ -8,7 +8,7 @@
 
 from flask import Blueprint, request, current_app as app
 from ext.scf import LUNGO_HEADERS, LUNGO_URL
-from ext.app.eve_helper import eve_response
+from ext.app.eve_helper import eve_response, eve_abort
 from ext.app.decorators import require_token
 import requests
 
@@ -56,4 +56,9 @@ def lungo(path):
                         headers=LUNGO_HEADERS,
                         verify=app.config.get('REQUESTS_VERIFY', True))
 
-    return eve_response(resp.json(), resp.status_code)
+    try:
+        return eve_response(resp.json(), resp.status_code)
+    except Exception as e:
+        app.logger.exception('Error in Lungo response')
+
+    return eve_abort(502, 'Unknown error')
