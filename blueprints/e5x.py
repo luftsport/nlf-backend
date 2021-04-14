@@ -210,7 +210,6 @@ def generate(_id):
     send_to_lt = False
     data = request.get_json(force=True)
     col = app.data.driver.db[RESOURCE_COLLECTION]
-    # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                          {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
@@ -348,11 +347,11 @@ def generate(_id):
                         app.logger.warning('No SFTP settings for this instance')
                         SFTP = False
 
-                    if send_to_lt is True:
-                        transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
-                    else:
-                        transport_status = False
-                        transport = None
+                    # Manual flag set via local send_to_lt
+                    if send_to_lt is False:
+                        SFTP = False
+
+                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
