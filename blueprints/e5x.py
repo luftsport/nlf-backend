@@ -207,6 +207,7 @@ def remove_empty_nodes(obj):
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
+    send_to_lt = False
     data = request.get_json(force=True)
     col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
@@ -347,7 +348,11 @@ def generate(_id):
                         app.logger.warning('No SFTP settings for this instance')
                         SFTP = False
 
-                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
+                    if send_to_lt is True:
+                        transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
+                    else:
+                        transport_status = False
+                        transport = None
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
