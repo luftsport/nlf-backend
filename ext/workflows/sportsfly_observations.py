@@ -501,7 +501,7 @@ class ObservationWorkflow(Machine):
 
         events = []
         for transition in self._transitions:
-            if self.state in transition['source']:
+            if self.state == transition['source']:
                 events.append(transition['trigger'])
 
         return events
