@@ -612,7 +612,7 @@ class ObservationWorkflow(Machine):
         """
         events = {}
         for transition in self._transitions:
-            if self.state in transition.get('source', None):
+            if self.state == transition.get('source', None):
                 events.update({self._trigger_attrs.get(transition['trigger']).get('resource'): transition['trigger']})
 
         return events
@@ -623,7 +623,7 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            if self.initial_state=='pending_review_ors' and event=='send_to_ftl':
+            if self.initial_state == 'pending_review_ors' and event=='send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
                 tmp['permission'] = self.has_permission(None)

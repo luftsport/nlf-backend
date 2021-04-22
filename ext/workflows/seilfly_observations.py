@@ -527,7 +527,7 @@ class ObservationWorkflow(Machine):
         """
         events = {}
         for transition in self._transitions:
-            if self.state in transition.get('source', None):
+            if self.state == transition.get('source', None):
                 events.update({self._trigger_attrs.get(transition['trigger']).get('resource'): transition['trigger']})
 
         return events
