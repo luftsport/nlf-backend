@@ -617,8 +617,8 @@ class ObservationWorkflow(Machine):
                          transitions=self._transitions,
                          initial=self.initial_state)
 
-        app.logger.info('Initial state: ', self.initial_state)
-        app.logger.info('Self state: ', self.state)
+        app.logger.info('Initial state: {}'.format(self.initial_state))
+        app.logger.info('Self state: {}'.format(self.state))
 
     def get_actions(self):
 
