@@ -207,7 +207,10 @@ def remove_empty_nodes(obj):
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
+
+    # Temporary use as flag
     send_to_lt = False
+
     data = request.get_json(force=True)
     col = app.data.driver.db[RESOURCE_COLLECTION]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
@@ -231,7 +234,7 @@ def generate(_id):
 
         if generate_structure(ors.get('_model', {}).get('type', None), ors.get('id'), ors.get('_version')) is True:
 
-            app.logger.debug('[E5X] Structure ok')
+            app.logger.debug('[E5X] Structure ok')
 
             # Process files!
             file_list = []
