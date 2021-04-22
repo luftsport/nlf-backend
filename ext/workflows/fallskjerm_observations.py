@@ -626,7 +626,7 @@ class ObservationWorkflow(Machine):
         events = []
         for transition in self._transitions:
             app.logger.info('WF: transition iter: {}'.format(transition))
-            if self.state in transition['source']:
+            if self.state == transition['source']:
                 app.logger.info('WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'], transition['trigger']))
                 events.append(transition['trigger'])
 
