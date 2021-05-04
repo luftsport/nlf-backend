@@ -8,8 +8,8 @@ import datetime
 import time
 
 from pymongo import MongoClient
-from gridfs import GridFS
 from gridfs.errors import NoFile
+from gridfs import GridFS
 from bson.objectid import ObjectId
 
 from ext.app.decorators import *
@@ -21,14 +21,15 @@ from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
 import pysftp
-
 import traceback
+
+from ext.scf import E5X_SEND_TO_LT
 
 E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
-RESOURCE_COLLECTION = 'motorfly_observations'
+# RESOURCE_COLLECTION = 'motorfly_observations'
 
 
 def has_permission():
@@ -200,18 +201,15 @@ def remove_empty_nodes(obj):
     # Remove all refs pointing to nonexisting id's
     obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
-
     return clean_empty(obj)
 
 
 @E5X.route("/generate/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(_id):
-
-    # Temporary use as flag
-    send_to_lt = False
-
     data = request.get_json(force=True)
+
+    RESOURCE_COLLECTION = '{}_observations'.format(data.get('_model', {}).get('type', 'motorfly'))
     col = app.data.driver.db[RESOURCE_COLLECTION]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
@@ -350,8 +348,8 @@ def generate(_id):
                         app.logger.warning('No SFTP settings for this instance')
                         SFTP = False
 
-                    # Manual flag set via local send_to_lt
-                    if send_to_lt is False:
+                    # Manual flag set via local E5X_SEND_TO_LT
+                    if E5X_SEND_TO_LT is False:
                         SFTP = False
 
                     transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
