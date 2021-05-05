@@ -201,11 +201,10 @@ def remove_empty_nodes(obj):
     return clean_empty(obj)
 
 
-@E5X.route("/generate/<objectid:_id>", methods=['POST'])
+@E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
-def generate(_id):
+def generate(activity, _id):
     data = request.get_json(force=True)
-    activity = data.get('_model', {}).get('type', None)
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
