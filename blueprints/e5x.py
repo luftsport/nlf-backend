@@ -29,9 +29,6 @@ E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
-# RESOURCE_COLLECTION = 'motorfly_observations'
-
-
 def has_permission():
     try:
 
@@ -208,9 +205,9 @@ def remove_empty_nodes(obj):
 @require_token()
 def generate(_id):
     data = request.get_json(force=True)
-
-    RESOURCE_COLLECTION = '{}_observations'.format(data.get('_model', {}).get('type', 'motorfly'))
-    col = app.data.driver.db[RESOURCE_COLLECTION]
+    activity = data.get('_model', {}).get('type', None)
+    resource_collection = '{}_observations'.format(activity)
+    col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                          {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
@@ -224,13 +221,13 @@ def generate(_id):
         # print(_items)
         ors = _items[0]
 
-        FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], 'motorfly', ors.get('id'),
+        FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], activity, ors.get('id'),
                                                 ors.get('_version'))
 
         file_name = 'nlf_{}_{}_v{}'.format(ors.get('_model', {}).get('type', None), ors.get('id'),
                                            ors.get('_version'))
 
-        if generate_structure(ors.get('_model', {}).get('type', None), ors.get('id'), ors.get('_version')) is True:
+        if generate_structure(activity, ors.get('id'), ors.get('_version')) is True:
 
             app.logger.debug('[E5X] Structure ok')
 
@@ -306,7 +303,7 @@ def generate(_id):
                         'e5x-generate.js',
                         str(ors.get('id')),
                         str(ors.get('_version')),
-                        'motorfly',
+                        activity,
                         str(data.get('rit_version', E5X_RIT_DEFAULT_VERSION))
 
                     ],
@@ -393,7 +390,7 @@ def generate(_id):
                         recepients = parse_acl_flat(ors.get('acl', {}))
 
                         ors_e5x(recepients=recepients,
-                                event_from=RESOURCE_COLLECTION,
+                                event_from=resource_collection,
                                 event_from_id=ors.get('_id', ''),
                                 source=ors.get('_version', ''),
                                 status=status,
@@ -448,8 +445,7 @@ def generate(_id):
 @E5X.route("/download/<string:activity>/<int:ors_id>/<int:version>", methods=['GET'])
 def download(activity, ors_id, version):
     if has_permission() is True:
-        # print(app.globals.get('user_id', 'AWDFULLLL'))
-        col = app.data.driver.db['motorfly_observations']
+        col = app.data.driver.db['{}_observations'.format(activity)]
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
                                     {'$or': [
