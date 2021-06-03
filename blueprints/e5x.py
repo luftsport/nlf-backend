@@ -203,7 +203,7 @@ def remove_empty_nodes(obj):
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
-def generate(activity, _id):
+def generate(activity, _id)
     data = request.get_json(force=True)
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
@@ -252,37 +252,45 @@ def generate(activity, _id):
                     app.logger.debug('[E5X] Created folder for files')
 
                 for key, _file in enumerate(ors.get('files', [])):
-                    file = col_files.find_one({'_id': ObjectId(_file['f'])})
-
-                    """
-                    @TODO need to verify size for LT
-                    """
                     try:
-                        grid_fs = GridFS(app.data.driver.db)
-                        if not grid_fs.exists(_id=file['file']):
-                            pass
-                        else:
+                        file = col_files.find_one({'_id': ObjectId(_file['f'])})
 
-                            stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
+                        """
+                        @TODO need to verify size for LT
+                        """
+                        try:
+                            grid_fs = GridFS(app.data.driver.db)
+                            if not grid_fs.exists(_id=file['file']):
+                                pass
+                            else:
 
-                            file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
+                                stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
 
-                            with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
-                                f.write(stream.read())
+                                file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
 
-                            try:
-                                # data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
-                                #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
-                                # )
-                                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
-                                )
-                            except Exception as e:
-                                app.logger.exception("[ERROR] Could not add file name to report")
-                                app.logger.error(e)
+                                with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
+                                    f.write(stream.read())
 
+                                try:
+                                    # data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
+                                    #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                    # )
+                                    data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
+                                        {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                    )
+                                except Exception as e:
+                                    app.logger.exception("[ERROR] Could not add file name to report")
+                                    app.logger.error(e)
+
+                        except Exception as e:
+                            app.logger.exception("[ERR] Getting files")
+                    except KeyError as e:
+                        app.logger.exception("[ERROR] Could not add file, KeyError: {}".format(_file))
+                        app.logger.error(e)
                     except Exception as e:
-                        app.logger.exception("[ERR] Getting files")
+                        app.logger.exception("[ERROR] Could not add file, unknown error: {}".format(_file))
+                        app.logger.error(e)
+
 
             try:
                 app.logger.debug('[III] In try')
