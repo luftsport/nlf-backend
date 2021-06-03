@@ -203,7 +203,7 @@ def remove_empty_nodes(obj):
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
-def generate(activity, _id)
+def generate(activity, _id):
     data = request.get_json(force=True)
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
