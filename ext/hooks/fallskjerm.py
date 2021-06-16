@@ -60,7 +60,7 @@ def ors_before_insert_item(item):
             if ors_id:
                 item['id'] = ors_id
             else:
-                return eve_abort(422, 'Could not create ORS, missing increment')
+                return eve_abort(422, 'Could not create OBSREG, missing increment')
 
             item['when'] = datetime.utcnow()
             item['reporter'] = app.globals.get('user_id')
@@ -76,7 +76,7 @@ def ors_before_insert_item(item):
             item['acl'] = get_acl_init(app.globals.get('user_id'), item['discipline'])
 
     except Exception as e:
-        return eve_abort(422, 'Could not create ORS')
+        return eve_abort(422, 'Could not create OBSREG')
 
 def ors_after_inserted(items):
     for item in items:
@@ -150,7 +150,7 @@ def _ors_after_fetched(_response):
             # _response['acl_user'] = user_persmissions(_response['acl'], _response['workflow']['state'])
 
             # SocketIO
-            # broadcast('Somebody is looking at ORS#{}'.format(_response['id']))
+            # broadcast('Somebody is looking at OBSREG#{}'.format(_response['id']))
             _response['acl_user'] = get_user_acl_mapping(_response['acl'])
 
             """For item return nanon if roles match hi in club or fs"""

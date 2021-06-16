@@ -272,7 +272,7 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
         'action': 'Send til Koordinator',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'withdraw': {
         'title': 'Trekk tilbake observasjon',
@@ -300,14 +300,14 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
         'action': 'Lukk',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Godkjent av ORS Koordinator'
+        'descr': 'Godkjent av OBSREG Koordinator'
     },
     'reject_ors': {
         'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Sendt tilbake av ORS koord'
+        'descr': 'Sendt tilbake av OBSREG koord'
     },
     'send_to_su': {
         'title': 'Send til SU',
@@ -321,14 +321,14 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
         'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'reject_su': {
         'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'send_to_dto': {
         'title': 'Send til DTO',
@@ -515,7 +515,7 @@ class ObservationWorkflow(Machine):
 
         events = []
         for transition in self._transitions:
-            if self.state in transition['source']:
+            if self.state == transition['source']:
                 events.append(transition['trigger'])
 
         return events
@@ -527,7 +527,7 @@ class ObservationWorkflow(Machine):
         """
         events = {}
         for transition in self._transitions:
-            if self.state in transition.get('source', None):
+            if self.state == transition.get('source', None):
                 events.update({self._trigger_attrs.get(transition['trigger']).get('resource'): transition['trigger']})
 
         return events
@@ -538,7 +538,7 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            if self.initial_state=='pending_review_ors' and event=='send_to_ftl':
+            if self.initial_state == 'pending_review_ors' and event=='send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
                 tmp['permission'] = self.has_permission(None)

@@ -7,6 +7,7 @@ from eve.methods.patch import patch_internal
 
 from datetime import datetime, timedelta
 
+from flask import current_app as app
 import re
 
 from ext.auth.acl import has_permission as acl_has_permission
@@ -101,25 +102,32 @@ WF_FALLSKJERM_ATTR = {
     },
     'pending_review_su': {
         'title': 'Avventer SU',
-        'description': 'Avventer vurdering SU'},
+        'description': 'Avventer vurdering SU'
+    },
     'pending_review_su_aff': {
         'title': 'Avventer SU AFF',
-        'description': 'Avventer vurdering SU AFF'},
+        'description': 'Avventer vurdering SU AFF'
+    },
     'pending_review_su_tandem': {
         'title': 'Avventer SU Tandem',
-        'description': 'Avventer vurdering SU Tandem'},
+        'description': 'Avventer vurdering SU Tandem'
+    },
     'pending_review_su_materiell': {
         'title': 'Avventer SU MSJ',
-        'description': 'Avventer vurdering SU MSJ'},
+        'description': 'Avventer vurdering SU MSJ'
+    },
     'pending_review_su_skjerm': {
         'title': 'Avventer SU Skjerm',
-        'description': 'Avventer vurdering SU Skjermkjøring'},
+        'description': 'Avventer vurdering SU Skjermkjøring'
+    },
     'pending_review_su_leder': {
         'title': 'Avventer SU leder',
-        'description': 'Avventer vurdering SU leder'},
+        'description': 'Avventer vurdering SU leder'
+    },
     'closed': {
         'title': 'Lukket',
-        'description': 'Observasjonen er lukket'},
+        'description': 'Observasjonen er lukket'
+    },
     'withdrawn': {
         'title': 'Trukket',
         'description': 'Observasjonen er trekt tilbake'
@@ -135,7 +143,7 @@ WF_FALLSKJERM_TRANSITIONS = [
     },
     {
         'trigger': 'withdraw',
-        'source': ['draft'],
+        'source': 'draft',
         'dest': 'withdrawn',
         'after': 'save_workflow',
         'conditions': ['has_permission']
@@ -609,11 +617,17 @@ class ObservationWorkflow(Machine):
                          transitions=self._transitions,
                          initial=self.initial_state)
 
+        app.logger.info('Initial state: {}'.format(self.initial_state))
+        app.logger.info('Self state: {}'.format(self.state))
+
     def get_actions(self):
 
+        app.logger.info('WF: Self state is: {}'.format(self.state))
         events = []
         for transition in self._transitions:
-            if self.state in transition['source']:
+            app.logger.info('WF: transition iter: {}'.format(transition))
+            if self.state == transition['source']:
+                app.logger.info('WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'], transition['trigger']))
                 events.append(transition['trigger'])
 
         return events
@@ -625,7 +639,7 @@ class ObservationWorkflow(Machine):
         """
         events = {}
         for transition in self._transitions:
-            if self.state in transition.get('source', None):
+            if self.state == transition.get('source', None):
                 events.update({self._trigger_attrs.get(transition['trigger']).get('resource'): transition['trigger']})
 
         return events

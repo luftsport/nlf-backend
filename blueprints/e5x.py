@@ -8,8 +8,8 @@ import datetime
 import time
 
 from pymongo import MongoClient
-from gridfs import GridFS
 from gridfs.errors import NoFile
+from gridfs import GridFS
 from bson.objectid import ObjectId
 
 from ext.app.decorators import *
@@ -21,15 +21,13 @@ from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
 import pysftp
-
 import traceback
+
+from ext.scf import E5X_SEND_TO_LT
 
 E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
-
-RESOURCE_COLLECTION = 'motorfly_observations'
-
 
 def has_permission():
     try:
@@ -200,16 +198,15 @@ def remove_empty_nodes(obj):
     # Remove all refs pointing to nonexisting id's
     obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
-
     return clean_empty(obj)
 
 
-@E5X.route("/generate/<objectid:_id>", methods=['POST'])
+@E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
-def generate(_id):
+def generate(activity, _id):
     data = request.get_json(force=True)
-    col = app.data.driver.db[RESOURCE_COLLECTION]
-    # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
+    resource_collection = '{}_observations'.format(activity)
+    col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                          {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
@@ -223,15 +220,15 @@ def generate(_id):
         # print(_items)
         ors = _items[0]
 
-        FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], 'motorfly', ors.get('id'),
+        FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], activity, ors.get('id'),
                                                 ors.get('_version'))
 
         file_name = 'nlf_{}_{}_v{}'.format(ors.get('_model', {}).get('type', None), ors.get('id'),
                                            ors.get('_version'))
 
-        if generate_structure(ors.get('_model', {}).get('type', None), ors.get('id'), ors.get('_version')) is True:
+        if generate_structure(activity, ors.get('id'), ors.get('_version')) is True:
 
-            app.logger.debug('[E5X] Structure ok')
+            app.logger.debug('[E5X] Structure ok')
 
             # Process files!
             file_list = []
@@ -255,37 +252,45 @@ def generate(_id):
                     app.logger.debug('[E5X] Created folder for files')
 
                 for key, _file in enumerate(ors.get('files', [])):
-                    file = col_files.find_one({'_id': ObjectId(_file['f'])})
-
-                    """
-                    @TODO need to verify size for LT
-                    """
                     try:
-                        grid_fs = GridFS(app.data.driver.db)
-                        if not grid_fs.exists(_id=file['file']):
-                            pass
-                        else:
+                        file = col_files.find_one({'_id': ObjectId(_file['f'])})
 
-                            stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
+                        """
+                        @TODO need to verify size for LT
+                        """
+                        try:
+                            grid_fs = GridFS(app.data.driver.db)
+                            if not grid_fs.exists(_id=file['file']):
+                                pass
+                            else:
 
-                            file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
+                                stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
 
-                            with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
-                                f.write(stream.read())
+                                file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
 
-                            try:
-                                # data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
-                                #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
-                                # )
-                                data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
-                                )
-                            except Exception as e:
-                                app.logger.exception("[ERROR] Could not add file name to report")
-                                app.logger.error(e)
+                                with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
+                                    f.write(stream.read())
 
+                                try:
+                                    # data['e5x']['entities']['reportingHistory'][0]['attributes']['report']['attributes']['resourceLocator'].append(
+                                    #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                    # )
+                                    data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
+                                        {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                    )
+                                except Exception as e:
+                                    app.logger.exception("[ERROR] Could not add file name to report")
+                                    app.logger.error(e)
+
+                        except Exception as e:
+                            app.logger.exception("[ERR] Getting files")
+                    except KeyError as e:
+                        app.logger.exception("[ERROR] Could not add file, KeyError: {}".format(_file))
+                        app.logger.error(e)
                     except Exception as e:
-                        app.logger.exception("[ERR] Getting files")
+                        app.logger.exception("[ERROR] Could not add file, unknown error: {}".format(_file))
+                        app.logger.error(e)
+
 
             try:
                 app.logger.debug('[III] In try')
@@ -305,7 +310,7 @@ def generate(_id):
                         'e5x-generate.js',
                         str(ors.get('id')),
                         str(ors.get('_version')),
-                        'motorfly',
+                        activity,
                         str(data.get('rit_version', E5X_RIT_DEFAULT_VERSION))
 
                     ],
@@ -345,6 +350,10 @@ def generate(_id):
                         from ext.scf import LT_SFTP_CFG as SFTP
                     else:
                         app.logger.warning('No SFTP settings for this instance')
+                        SFTP = False
+
+                    # Manual flag set via local E5X_SEND_TO_LT
+                    if E5X_SEND_TO_LT is False:
                         SFTP = False
 
                     transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
@@ -388,7 +397,7 @@ def generate(_id):
                         recepients = parse_acl_flat(ors.get('acl', {}))
 
                         ors_e5x(recepients=recepients,
-                                event_from=RESOURCE_COLLECTION,
+                                event_from=resource_collection,
                                 event_from_id=ors.get('_id', ''),
                                 source=ors.get('_version', ''),
                                 status=status,
@@ -407,7 +416,7 @@ def generate(_id):
                                               ))
                         # print('RECEPIENTS', recepients)
 
-                        message = 'Hei\n\nDette er en leveringsbekreftelse for ORS #{0} versjon {1}\n\n \
+                        message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
                                   Levert:\t{2}\n\
                                   Status:\t{3}\n\
                                   Fil:\t{4}\n\
@@ -420,7 +429,7 @@ def generate(_id):
                                                           'sftp',
                                                           app.config.get('APP_INSTANCE', ''))
 
-                        subject = 'E5X Leveringsbekreftelse ORS {0} v{1}'.format(ors.get('id', ''),
+                        subject = 'E5X Leveringsbekreftelse OBSREG {0} v{1}'.format(ors.get('id', ''),
                                                                                  ors.get('_version', ''))
 
                         notify(recepients, subject, message)
@@ -443,8 +452,7 @@ def generate(_id):
 @E5X.route("/download/<string:activity>/<int:ors_id>/<int:version>", methods=['GET'])
 def download(activity, ors_id, version):
     if has_permission() is True:
-        # print(app.globals.get('user_id', 'AWDFULLLL'))
-        col = app.data.driver.db['motorfly_observations']
+        col = app.data.driver.db['{}_observations'.format(activity)]
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
                                     {'$or': [

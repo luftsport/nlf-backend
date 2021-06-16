@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>
 <head style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>
-    <title>ORS #{{observation_id}}</title>
+    <title>OBSREG #{{observation_id}}</title>
     <!-- Takk til Zurb og python premailer for dette! -->
     <meta name="viewport" content="width=device-width"
           style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>
@@ -55,7 +55,7 @@
                                 <td align="right" style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0; vertical-align:top' valign="top">
 
                                 <h6 class="collapse" style='color:#444; font-family:"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; font-size:14px; font-weight:900; line-height:1.1; margin:0; margin-bottom:15px; padding:0; text-transform:uppercase'>
-                                NLF ORS
+                                NLF OBSREG
                                 </h6>
 
                                 </td>
@@ -80,7 +80,7 @@
 
                         {% if instance=='develop' %}
                         <a class="btn danger" style='background-color:#d9534f; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-weight:bold; margin:0; padding:10px 16px; text-align:center; text-decoration:none' bgcolor="#d9534f" align="center">
-                        ORS TEST
+                        OBSREG TEST
                         </a>
                         <br />
                         <br />
@@ -92,7 +92,7 @@
 
                                     {% if context=='shared' %}
                                     <p class="callout warning" style='background-color:#f0ad4e; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:14px; font-weight:normal; line-height:1.6; margin:0; margin-bottom:15px; margin-top:15px; padding:15px; text-align:center' bgcolor="#f0ad4e" align="center">
-                                        <strong style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>ORS #{{observation_id}} ble {{action}}</strong>
+                                        <strong style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>OBSREG #{{observation_id}} ble {{action}}</strong>
                                         <br style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'> av {{action_by}}
                                     </p>
                                     {% endif %}
@@ -188,7 +188,7 @@
                                     {% if context=='transition' %}
                                     <p style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:14px; font-weight:normal; line-height:1.6; margin:0; margin-bottom:10px; padding:0'>
                                         <a href="{{url_root}}{{url}}" target="_blank" class="btn success" style='background-color:#5cb85c; color:#FFF; cursor:pointer; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-weight:bold; margin:0; padding:10px 16px; text-align:center; text-decoration:none' bgcolor="#5cb85c" align="center">
-                                        Behandle ORS #{{observation_id}}
+                                        Behandle OBSREG #{{observation_id}}
                                         </a>
                                     </p>
                                     {% endif %}
@@ -196,7 +196,7 @@
                                     {% if context=='shared' %}
                                     <p style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:14px; font-weight:normal; line-height:1.6; margin:0; margin-bottom:10px; padding:0'>
                                     <a href="{{url_root}}{{url}}" target="_blank" class="btn success" style='background-color:#5cb85c; color:#FFF; cursor:pointer; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-weight:bold; margin:0; padding:10px 16px; text-align:center; text-decoration:none' bgcolor="#5cb85c" align="center">
-                                    Åpne ORS #{{observation_id}}
+                                    Åpne OBSREG #{{observation_id}}
                                     </a>
                                     </p>
                                     {% endif %}
@@ -220,7 +220,7 @@
 
                                                             <h5 class="" style='color:#000; font-family:"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; font-size:17px; font-weight:900; line-height:1.1; margin:0; margin-bottom:15px; padding:0'>Lenker:</h5>
                                                             <p class="" style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:14px; font-weight:normal; line-height:1.6; margin:0; margin-bottom:10px; padding:0'>
-                                                                <a href="https://doc.nlf.no/confluence/display/FETDOC/Observasjons+registrering" class="soc-btn info" style='background-color:#5bc0de; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#5bc0de" align="center">Brukermanual</a> <a href="https://www.facebook.com/groups/859203907492826/" class="soc-btn primary" style='background-color:#337ab7; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#337ab7" align="center">ORS på facebook</a> <a href="http://www.nlf.no" class="soc-btn gray" style='background-color:#555; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#555" align="center">NLF</a>
+                                                                <a href="https://doc.nlf.no/confluence/display/FETDOC/Observasjons+registrering" class="soc-btn info" style='background-color:#5bc0de; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#5bc0de" align="center">Brukermanual</a> <a href="https://www.facebook.com/groups/859203907492826/" class="soc-btn primary" style='background-color:#337ab7; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#337ab7" align="center">OBSREG på facebook</a> <a href="http://www.nlf.no" class="soc-btn gray" style='background-color:#555; color:#FFF; display:block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:12px; font-weight:bold; margin:0; margin-bottom:10px; padding:3px 7px; text-align:center; text-decoration:none' bgcolor="#555" align="center">NLF</a>
                                                             </p>
 
 
@@ -273,7 +273,7 @@
                             <tr style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>
                                 <td align="center" style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0; vertical-align:top' valign="top">
                                     <p style='font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; font-size:14px; font-weight:normal; line-height:1.6; margin:0; margin-bottom:10px; padding:0'>
-                                        <a href="{{url_root}}" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>NLF ORS</a> | <a href="https://www.facebook.com/groups/859203907492826/" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>ORS på Facebook</a> | <a href="http://www.nlf.no" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>NLF</a>
+                                        <a href="{{url_root}}" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>NLF OBSREG</a> | <a href="https://www.facebook.com/groups/859203907492826/" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>OBSREG på Facebook</a> | <a href="http://www.nlf.no" style='color:#2BA6CB; display:inline-block; font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; margin:0; padding:0'>NLF</a>
                                     </p>
                                 </td>
                             </tr>

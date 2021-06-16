@@ -15,7 +15,7 @@ RESOURCE_COLLECTION = 'notifications'
 
 
 '''
-ORS:
+OBSREG:
 ors_workflow
 ors_save 
 ors_acl

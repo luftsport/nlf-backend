@@ -60,5 +60,6 @@ def lungo(path):
         return eve_response(resp.json(), resp.status_code)
     except Exception as e:
         app.logger.exception('Error in Lungo response')
+        app.logger.error(resp.text)
 
     return eve_abort(502, 'Unknown error')

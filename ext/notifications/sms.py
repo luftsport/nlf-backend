@@ -25,7 +25,7 @@ class Sms:
         # print client
         result = client.service.Send(username=self.get_username(),
                                      password=self.get_password(),
-                                     sender="FNLF ORS",
+                                     sender="FNLF OBSREG",
                                      destination=mobile,
                                      pricegroup=0,
                                      contentTypeID=1,
