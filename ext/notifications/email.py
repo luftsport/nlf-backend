@@ -59,7 +59,7 @@ class Email():
             return False
 
         message.preamble = 'NLF Notification'
-        message['From'] = 'NLF ORS <%s>' % self.config['from']
+        message['From'] = 'NLF OBSREG <%s>' % self.config['from']
 
         if instance in ['dev', 'local', 'beta']:
             message['Subject'] = '[%s TEST] %s' % (prefix, subject)
@@ -78,7 +78,7 @@ class Email():
         s.send_message(message)
         s.quit()
 
-    def send(self, recepients, subject, prefix='ORS'):  # , recepients, subject, message, message_html=None, prefix=None
+    def send(self, recepients, subject, prefix='OBSREG'):  # , recepients, subject, message, message_html=None, prefix=None
         """ Sends email via async after setting some values
         @todo: check length of message
         @todo: check recepients as list and length > 0
@@ -189,6 +189,6 @@ message.update({'context': context})
 mail.add_message_html(message, 'ors')
 mail.add_message_plain(message, 'ors')
 
-mail.send(recepients, subject, prefix='ORS')
+mail.send(recepients, subject, prefix='OBSREG')
     
 """

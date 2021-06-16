@@ -113,7 +113,7 @@ def transition(observation_id, action):
     if wf.initial_state == 'draft' and action == 'approve':
         wf.wf_settings['do_not_process_in_club'] = args.get('do_not_process_in_club', False)
 
-    # Let ORS descide if not public on close
+    # Let OBSREG descide if not public on close
     if wf.initial_state == 'pending_review_ors':
         wf.wf_settings['do_not_publish'] = args.get('do_not_publish', False)
 

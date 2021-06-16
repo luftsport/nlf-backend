@@ -310,7 +310,7 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'action': 'Send til Koordinator',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'withdraw': {
         'title': 'Trekk tilbake observasjon',
@@ -338,14 +338,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'action': 'Lukk',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Godkjent av ORS Koordinator'
+        'descr': 'Godkjent av OBSREG Koordinator'
     },
     'reject_ors': {
         'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Sendt tilbake av ORS koord'
+        'descr': 'Sendt tilbake av OBSREG koord'
     },
     'send_to_ftl': {
         'title': 'Send til FTL',
@@ -359,14 +359,14 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'reject_ftl': {
         'title': 'Send observasjon tilbake',
         'action': 'Avslå',
         'resource': 'reject',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'send_to_flytjenesten': {
         'title': 'Send til Flytjenesteleder',

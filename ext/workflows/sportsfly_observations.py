@@ -260,7 +260,7 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'action': 'Send til Koordinator',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til ORS Koordinator'
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'withdraw': {
         'title': 'Trekk tilbake observasjon',

@@ -27,7 +27,7 @@ def before_delete(request, lookup):
 
 def before_aggregation(endpoint, pipeline):
     """Before get or aggregation, check permissions
-    If ORS is closed, none?"""
+    If OBSREG is closed, none?"""
 
     if endpoint == 'notifications_events':
         _id = pipeline[0].get('$match', {}).get('event_from_id')

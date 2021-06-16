@@ -50,7 +50,7 @@ def ors_before_insert_item(item):
             if ors_id:
                 item['id'] = ors_id
             else:
-                return eve_abort(422, 'Could not create ORS, missing increment')
+                return eve_abort(422, 'Could not create OBSREG, missing increment')
 
             item['when'] = datetime.utcnow()
             item['reporter'] = app.globals.get('user_id')
@@ -76,7 +76,7 @@ def ors_before_insert_item(item):
 
 
     except Exception as e:
-        return eve_abort(422, 'Could not create ORS')
+        return eve_abort(422, 'Could not create OBSREG')
 
 
 def ors_after_inserted(items):
@@ -126,7 +126,7 @@ def _ors_after_fetched(_response):
     # _response.set_data({})
     if isinstance(_response, dict):
         _response['acl_user'] = get_user_acl_mapping(_response.get('acl', {}))
-        # print('ORS state', _response.get('workflow', {}).get('state', 'NONE'))
+        # print('OBSREG state', _response.get('workflow', {}).get('state', 'NONE'))
         # print('ACL', _response.get('acl', 'NONE'))
     try:
         if isinstance(_response, list):

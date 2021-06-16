@@ -1,6 +1,6 @@
 {% import 'macros.txt' as m %}
 {% if instance=='develop' %}
---- ORS TEST ---
+--- OBSREG TEST ---
 
 {% endif %}
 #{{observation_id}} ble {{action}}

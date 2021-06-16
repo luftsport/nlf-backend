@@ -43,6 +43,6 @@ def share_observation(observation_id):
     mail.add_message_html(message, 'ors')                                                                                                                                              
     mail.add_message_plain(message, 'ors') 
         
-    mail.send(recepients, subject, 'ORS')
+    mail.send(recepients, subject, 'OBSREG')
     
     return Response(json.dumps({'status': 'ok', 'code': 200}),  mimetype='application/json')

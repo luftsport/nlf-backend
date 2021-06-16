@@ -74,7 +74,7 @@ def get_person_name_text(person_id):
     return 'Ukjent'
 
 
-def notify(recepients, subject, message, prefix='NLF', subprefix='ORS'):
+def notify(recepients, subject, message, prefix='NLF', subprefix='OBSREG'):
 
     if app.config.get('APP_INSTANCE', '') != 'local':
         ## TESTIONG

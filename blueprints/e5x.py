@@ -416,7 +416,7 @@ def generate(activity, _id):
                                               ))
                         # print('RECEPIENTS', recepients)
 
-                        message = 'Hei\n\nDette er en leveringsbekreftelse for ORS #{0} versjon {1}\n\n \
+                        message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
                                   Levert:\t{2}\n\
                                   Status:\t{3}\n\
                                   Fil:\t{4}\n\
@@ -429,7 +429,7 @@ def generate(activity, _id):
                                                           'sftp',
                                                           app.config.get('APP_INSTANCE', ''))
 
-                        subject = 'E5X Leveringsbekreftelse ORS {0} v{1}'.format(ors.get('id', ''),
+                        subject = 'E5X Leveringsbekreftelse OBSREG {0} v{1}'.format(ors.get('id', ''),
                                                                                  ors.get('_version', ''))
 
                         notify(recepients, subject, message)

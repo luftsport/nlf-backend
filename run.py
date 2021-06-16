@@ -102,7 +102,7 @@ app.register_blueprint(swagger)
 app.register_blueprint(Authenticate, url_prefix="%s/user" % app.globals.get('prefix'))
 app.register_blueprint(ACL, url_prefix="%s/acl" % app.globals.get('prefix'))
 
-# ORS NEEDS TO??
+# OBSREG NEEDS TO??
 app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
@@ -149,7 +149,7 @@ def dump_request(request):
 
 
 # ##############
-# FALLSKJERM ORS
+# FALLSKJERM OBSREG
 #
 # POST/DB Insert
 app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
@@ -169,7 +169,7 @@ app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
 
 # ################
-# MOTOR ORS
+# MOTOR OBSREG
 #
 # BEFORE AND AFTER POST INSERT
 app.on_insert_motorfly_observations += hook.motorfly.ors_before_insert
@@ -189,7 +189,7 @@ app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
 # ################
-# SEILFLY ORS
+# SEILFLY OBSREG
 #
 # BEFORE AND AFTER POST INSERT
 app.on_insert_seilfly_observations += hook.seilfly.ors_before_insert
@@ -209,7 +209,7 @@ app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
 # ################
-# SPORTSFLY ORS
+# SPORTSFLY OBSREG
 #
 # BEFORE AND AFTER POST INSERT
 app.on_insert_sportsfly_observations += hook.sportsfly.ors_before_insert
