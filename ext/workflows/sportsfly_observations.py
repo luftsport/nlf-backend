@@ -75,6 +75,7 @@ WF_SPORTSFLY_STATES = [
     'draft',
     'pending_review_ors',
     'pending_review_ftu',
+    'pending_review_fsj',
     'pending_review_operativ',
     'pending_review_oou',
     'pending_review_tku',
@@ -94,6 +95,10 @@ WF_SPORTSFLY_STATES_ATTR = {
     'pending_review_ftu': {
         'title': 'Avventer FTU',
         'description': 'Avventer Flytryggings utvalget'
+    },
+    'pending_review_fsj': {
+        'title': 'Avventer FSJ',
+        'description': 'Avventer Fagsjef'
     },
     'pending_review_operativ': {
         'title': 'Avventer Operativ',
@@ -166,6 +171,25 @@ WF_SPORTSFLY_TRANSITIONS = [
     {'trigger': 'reject_ftu',
      'source': 'pending_review_ftu',
      'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+# Send to fagsjef
+    {'trigger': 'send_to_fsj',
+     'source': 'pending_review_ftu',
+     'dest': 'pending_review_fsj',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_fsj',
+     'source': 'pending_review_fsj',
+     'dest': 'pending_review_ftu',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_fsj',
+     'source': 'pending_review_fsj',
+     'dest': 'pending_review_ftu',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -294,6 +318,13 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Gjenåpnet'
     },
+    'send_to_fsj': {
+        'title': 'Send til Fagsjef',
+        'action': 'Send Fagsjef',
+        'resource': 'fsj',
+        'comment': True,
+        'descr': 'Sendt til Fagsjef'
+    },
     'send_to_operativ': {
         'title': 'Send til Operativ Leder',
         'action': 'Send Operativ Leder',
@@ -315,7 +346,7 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til Teknisk Utvalg'
     },
-
+    # Operativ choices
     'approve_operativ': {
         'title': 'Godkjenn Operativ Leder',
         'action': 'Godkjenn',
@@ -330,7 +361,22 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake Flytryggingsutvalget'
     },
-
+    # FSJ choices
+    'approve_fsj': {
+        'title': 'Godkjenn Fagsjef',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til Flytryggingsutvalget'
+    },
+    'reject_fsj': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake Flytryggingsutvalget'
+    },
+    # OOU choices
     'approve_oou': {
         'title': 'Godkjenn O&U',
         'action': 'Godkjenn',
@@ -345,7 +391,7 @@ WF_SPORTSFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake Flytryggingsutvalget'
     },
-
+    # TKU choices
     'approve_tku': {
         'title': 'Godkjenn TKU',
         'action': 'Godkjenn',
@@ -379,7 +425,6 @@ class ObservationWorkflow(Machine):
         self._states = WF_SPORTSFLY_STATES
 
         self._state_attrs = WF_SPORTSFLY_STATES_ATTR
-
 
         """ The transition definition
         """
@@ -456,7 +501,7 @@ class ObservationWorkflow(Machine):
 
         events = []
         for transition in self._transitions:
-            if self.state in transition['source']:
+            if self.state == transition['source']:
                 events.append(transition['trigger'])
 
         return events
@@ -468,7 +513,7 @@ class ObservationWorkflow(Machine):
         """
         events = {}
         for transition in self._transitions:
-            if self.state in transition.get('source', None):
+            if self.state == transition.get('source', None):
                 events.update({self._trigger_attrs.get(transition['trigger']).get('resource'): transition['trigger']})
 
         return events
@@ -603,16 +648,25 @@ class ObservationWorkflow(Machine):
             # Only reporter can make
             if self.wf_settings.get('do_not_process_in_club', False) is False:
                 if self.initial_state == 'closed':
-                    acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_FSJ, self.acl_OPERATIV]
+                    acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_OPERATIV]
                 else:
-                    acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_FSJ, self.acl_OPERATIV]
+                    acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_OPERATIV]
             else:
                 if self.initial_state == 'closed':
-                    acl['read']['roles'] = [self.acl_ORS, self.acl_FTU, self.acl_FSJ]
+                    acl['read']['roles'] = [self.acl_ORS, self.acl_FTU]
                 else:
-                    acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_FSJ]
+                    acl['read']['roles'] += [self.acl_ORS, self.acl_FTU]
 
             acl['execute']['roles'] = [self.acl_FTU]
+        
+        elif self.state == 'pending_review_fsj':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FSJ]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTU, self.acl_FSJ]
+            acl['execute']['roles'] = [self.acl_FSJ]
 
         elif self.state == 'pending_review_operativ':
 
