@@ -201,6 +201,61 @@ def remove_empty_nodes(obj):
     return clean_empty(obj)
 
 
+def cast_item_recursive(obj, keys):
+    try:
+        if isinstance(obj, dict):
+            if any(x in keys for x in list(obj.keys())):
+                for key in keys:
+
+                    if key in list(obj.keys()):
+                        if 'value' in list(obj[key].keys()):
+                            obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
+                        elif isinstance(obj[key], list):
+                            obj[key] = ['{}'.format(int(x)) for x in obj[key]]
+                return obj
+    except Exception as e:
+        pass
+
+    # Dict
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys)
+            elif k in keys and isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
+                obj[k] = ['{}'.format(int(float(x))) for x in obj[k]]
+                return obj
+
+    # List of dicts
+    if isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict):
+
+        for k, v in enumerate(obj):
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys)
+
+    return obj
+
+
+def convert_to_integer_ids(e5x_data):
+
+    try:
+        col = app.data.driver.db['e5x_attributes']
+        data = list(col.find({"choices_key": {"$ne": None}, "rit_version": E5X_RIT_DEFAULT_VERSION}))
+        l = []
+        for k in data:
+            l.append(k['attribute'].split('.')[-1])
+        e5x_keys = [x[0].lower() + x[1:] for x in l]
+
+        return cast_item_recursive(e5x_data, e5x_keys)
+    except Exception as e:
+        app.logger.exception("[ERROR] Could not convert e5x data", e5x_data)
+
+    return e5x_data
+
+
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(activity, _id):
@@ -296,11 +351,13 @@ def generate(activity, _id):
                 app.logger.debug('[III] In try')
                 json_file_name = '{}.json'.format(file_name)
 
-                # print('PATHS', FILE_WORKING_DIR, json_file_name)
+                # Fix e5x data
+                data['e5x'] = remove_empty_nodes(data.get('e5x', {}))
+                data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(remove_empty_nodes(data.get('e5x', {})), f)
+                    json.dump(data['e5x'], f)
 
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
