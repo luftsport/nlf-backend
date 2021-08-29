@@ -209,9 +209,13 @@ def cast_item_recursive(obj, keys):
 
                     if key in list(obj.keys()):
                         if 'value' in list(obj[key].keys()):
-                            obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
+                            if isinstance(obj[key]['value'], list):
+                                obj[key]['value'] = ['{}'.format(int(x)) for x in obj[key]]
+                            elif isinstance(obj[key]['value'], dict) is False:
+                                obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
                         elif isinstance(obj[key], list):
-                            obj[key] = ['{}'.format(int(x)) for x in obj[key]]
+                            if len(obj[key]) > 0 and isinstance(obj[key][0], list) is False and isinstance(obj[key][0], dict) is False:
+                                obj[key] = ['{}'.format(int(x)) for x in obj[key]]
                 return obj
     except Exception as e:
         pass
