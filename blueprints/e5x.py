@@ -185,6 +185,10 @@ def remove_empty_nodes(obj):
 
     # Remove all single id's
     obj = scrub(obj, bad_key='id')
+    # Remove all no values only unit
+    obj = scrub(obj, bad_key='unit')
+    # Remove all with only additionalTextEncoding
+    obj = scrub(obj, bad_key='additionalTextEncoding')
 
     # Find all refs and remaining ids
     refs = []
@@ -198,28 +202,32 @@ def remove_empty_nodes(obj):
     # Remove all refs pointing to nonexisting id's
     obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
+
     return clean_empty(obj)
 
 
 def cast_item_recursive(obj, keys):
+
+    # Check if any object keys matches id/choices.
     try:
         if isinstance(obj, dict):
             if any(x in keys for x in list(obj.keys())):
                 for key in keys:
-
                     if key in list(obj.keys()):
                         if 'value' in list(obj[key].keys()):
                             if isinstance(obj[key]['value'], list):
-                                obj[key]['value'] = ['{}'.format(int(x)) for x in obj[key]]
+                                obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
                             elif isinstance(obj[key]['value'], dict) is False:
                                 obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
                         elif isinstance(obj[key], list):
                             if len(obj[key]) > 0 and isinstance(obj[key][0], list) is False and isinstance(obj[key][0], dict) is False:
-                                obj[key] = ['{}'.format(int(x)) for x in obj[key]]
+                                obj[key] = ['{}'.format(int(float(x))) for x in obj[key]]
                 return obj
     except Exception as e:
+        app.logger.exception('[E5X] Error casting value(s)')
         pass
 
+    # If not key in keys and dict or list
     # Dict
     if isinstance(obj, dict):
         for k, v in obj.items():
@@ -356,7 +364,9 @@ def generate(activity, _id):
                 json_file_name = '{}.json'.format(file_name)
 
                 # Fix e5x data
-                data['e5x'] = remove_empty_nodes(data.get('e5x', {}))
+                # Remove all empty nodes, run twice if sequence wrong
+                data['e5x'] = remove_empty_nodes(remove_empty_nodes(data.get('e5x', {})))
+                # Convert all integer id's to integers
                 data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
