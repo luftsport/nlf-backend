@@ -349,12 +349,20 @@ if 1 == 1 or not app.debug:
     app.logger.info('NLF-backend startup on database:\t %s' % app.config['MONGO_DBNAME'].upper())
     app.logger.info('NLF-backend instance:\t %s' % app.config['APP_INSTANCE'].upper())
 
+    # Log startup settings from scf
+    try:
+        from ext.scf import E5X_SEND_TO_LT, NOTIFICATION_SEND_EMAIL
+        app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
+        app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
+    except Exception as e:
+        app.logger.exception('Error importing settings from scf.py')
+
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    
+
+
     try:
         import pkg_resources
-
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
