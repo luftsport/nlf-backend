@@ -29,6 +29,7 @@ E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
+
 def has_permission():
     try:
 
@@ -204,12 +205,10 @@ def remove_empty_nodes(obj):
     # Remove all refs pointing to nonexisting id's
     obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
-
     return clean_empty(obj)
 
 
 def cast_item_recursive(obj, keys, e5x_multiple_keys):
-
     # Check if any object keys matches id/choices.
     try:
         if isinstance(obj, dict):
@@ -219,7 +218,7 @@ def cast_item_recursive(obj, keys, e5x_multiple_keys):
                     if (
                             key in list(obj.keys()) and
                             key in e5x_multiple_keys and
-                            isinstance(obj[key],dict) and
+                            isinstance(obj[key], dict) and
                             'value' in obj[key]
                     ):
                         obj[key] = [obj[key]['value']]
@@ -231,7 +230,11 @@ def cast_item_recursive(obj, keys, e5x_multiple_keys):
                             elif isinstance(obj[key]['value'], dict) is False:
                                 obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
                         elif isinstance(obj[key], list):
-                            if len(obj[key]) > 0 and isinstance(obj[key][0], list) is False and isinstance(obj[key][0], dict) is False:
+                            if (
+                                    len(obj[key]) > 0 and
+                                    isinstance(obj[key][0], list) is False and
+                                    isinstance(obj[key][0], dict) is False
+                            ):
                                 obj[key] = ['{}'.format(int(float(x))) for x in obj[key]]
                 return obj
     except Exception as e:
@@ -243,9 +246,9 @@ def cast_item_recursive(obj, keys, e5x_multiple_keys):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, dict):
-                obj[k] = cast_item_recursive(v, keys)
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
-                obj[k] = cast_item_recursive(v, keys)
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
             elif k in keys and isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
                 obj[k] = ['{}'.format(int(float(x))) for x in obj[k]]
                 return obj
@@ -255,15 +258,14 @@ def cast_item_recursive(obj, keys, e5x_multiple_keys):
 
         for k, v in enumerate(obj):
             if isinstance(v, dict):
-                obj[k] = cast_item_recursive(v, keys)
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
             elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
-                obj[k] = cast_item_recursive(v, keys)
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
 
     return obj
 
 
 def convert_to_integer_ids(e5x_data):
-
     try:
         col = app.data.driver.db['e5x_attributes']
         data = list(col.find({"choices_key": {"$ne": None}, "rit_version": E5X_RIT_DEFAULT_VERSION}))
@@ -373,7 +375,6 @@ def generate(activity, _id):
                     except Exception as e:
                         app.logger.exception("[ERROR] Could not add file, unknown error: {}".format(_file))
                         app.logger.error(e)
-
 
             try:
                 app.logger.debug('[III] In try')
