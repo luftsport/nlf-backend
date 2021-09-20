@@ -221,7 +221,10 @@ def cast_item_recursive(obj, keys, e5x_multiple_keys):
                             isinstance(obj[key], dict) and
                             'value' in obj[key]
                     ):
-                        obj[key] = [obj[key]['value']]
+                        if isinstance(obj[key]['value'], list):
+                            obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
+                        else:
+                            obj[key] = [obj[key]['value']]
 
                     if key in list(obj.keys()):
                         if 'value' in list(obj[key].keys()):
