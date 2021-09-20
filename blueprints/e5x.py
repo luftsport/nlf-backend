@@ -208,13 +208,22 @@ def remove_empty_nodes(obj):
     return clean_empty(obj)
 
 
-def cast_item_recursive(obj, keys):
+def cast_item_recursive(obj, keys, e5x_multiple_keys):
 
     # Check if any object keys matches id/choices.
     try:
         if isinstance(obj, dict):
             if any(x in keys for x in list(obj.keys())):
                 for key in keys:
+
+                    if (
+                            key in list(obj.keys()) and
+                            key in e5x_multiple_keys and
+                            isinstance(obj[key],dict) and
+                            'value' in obj[key]
+                    ):
+                        obj[key] = [obj[key]['value']]
+
                     if key in list(obj.keys()):
                         if 'value' in list(obj[key].keys()):
                             if isinstance(obj[key]['value'], list):
@@ -259,11 +268,16 @@ def convert_to_integer_ids(e5x_data):
         col = app.data.driver.db['e5x_attributes']
         data = list(col.find({"choices_key": {"$ne": None}, "rit_version": E5X_RIT_DEFAULT_VERSION}))
         l = []
+        l2 = []
         for k in data:
             l.append(k['attribute'].split('.')[-1])
-        e5x_keys = [x[0].lower() + x[1:] for x in l]
+            if k['max'] not in [0, 1]:
+                l2.append(k['attribute'].split('.')[-1])
 
-        return cast_item_recursive(e5x_data, e5x_keys)
+        e5x_keys = [x[0].lower() + x[1:] for x in l]
+        e5x_multiple_keys = [x[0].lower() + x[1:] for x in l2]
+
+        return cast_item_recursive(e5x_data, e5x_keys, e5x_multiple_keys)
     except Exception as e:
         app.logger.exception("[ERROR] Could not convert e5x data", e5x_data)
 
