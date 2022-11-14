@@ -79,7 +79,7 @@ def get_base_prefix_compat():
 
 def in_virtualenv():
     """Support different python versions"""
-    if get_base_prefix_compat() != sys.prefix is True:
+    if get_base_prefix_compat() != sys.prefix:
         return True
     elif hasattr(sys, 'real_prefix') is True:
         return True
