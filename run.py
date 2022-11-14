@@ -56,6 +56,8 @@ from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 
+from blueprints.housekeeping import Housekeeping
+
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
@@ -65,8 +67,21 @@ from ext.auth.tokenauth import TokenAuth
 # From notfication
 import ext.hooks.notifications as notifications
 
+
 # Verify startup inside virtualenv
-if not hasattr(sys, 'real_prefix'):
+# if not hasattr(sys, 'real_prefix'):
+#    print("Outside virtualenv, aborting....")
+#    sys.exit(-1)
+def get_base_prefix_compat():
+    """Get base/real prefix, or sys.prefix if there is none."""
+    return getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
+
+
+def in_virtualenv():
+    return get_base_prefix_compat() != sys.prefix
+
+
+if not in_virtualenv():
     print("Outside virtualenv, aborting....")
     sys.exit(-1)
 
@@ -131,6 +146,9 @@ app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
 
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
+
+# Housekeeping
+app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
@@ -227,7 +245,6 @@ app.on_fetched_item_sportsfly_observations_todo += hook.sportsfly.ors_after_fetc
 app.on_pre_PATCH_sportsfly_observations += hook.sportsfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
-
 
 ###############
 # Notifications
@@ -352,6 +369,7 @@ if 1 == 1 or not app.debug:
     # Log startup settings from scf
     try:
         from ext.scf import E5X_SEND_TO_LT, NOTIFICATION_SEND_EMAIL
+
         app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
         app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
     except Exception as e:
@@ -360,9 +378,9 @@ if 1 == 1 or not app.debug:
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
 
-
     try:
         import pkg_resources
+
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
