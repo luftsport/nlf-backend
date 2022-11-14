@@ -32,7 +32,6 @@ class TokenAuth(TokenAuth):
         # Can also get the database lookup for the resource and check that here!!
         # Can also issue a new token here, and that needs to be returned by injecting to pre dispatch
         # use the abort/eve_error_msg to issue errors!
-        print('******************************* TOKENAUTH *********************')
         accounts = app.data.driver.db[app.globals['auth']['auth_collection']]
 
         u = accounts.find_one({'auth.token': token})
