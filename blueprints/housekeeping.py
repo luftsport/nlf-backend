@@ -11,6 +11,8 @@ import base64
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 from ext.app.notifications import ors_housekeeping
+
+# @TODO refactor settings to a dict opening possibility for different settings between activities
 from ext.scf import (
     HOUSEKEEPING_USER_TOKEN,
     HOUSEKEEPING_USER_ID,
@@ -30,10 +32,14 @@ from ext.auth.acl import parse_acl_flat_by_permissions
 from ext.auth.tokenauth import TokenAuth
 
 # @TODO refactor after workflow refactoring
-from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_TRANSITIONS,WF_FALLSKJERM_TRANSITIONS_ATTR, ObservationWorkflow as wf_fallskjerm
-from ext.workflows.motorfly_observations import WF_MOTORFLY_TRANSITIONS, WF_MOTORFLY_TRANSITIONS_ATTR, ObservationWorkflow as wf_motorfly
-from ext.workflows.seilfly_observations import WF_SEILFLY_TRANSITIONS, WF_SEILFLY_TRANSITIONS_ATTR, ObservationWorkflow as wf_seilfly
-from ext.workflows.sportsfly_observations import WF_SPORTSFLY_TRANSITIONS, WF_SPORTSFLY_TRANSITIONS_ATTR, ObservationWorkflow as wf_sportsfly
+from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_TRANSITIONS, WF_FALLSKJERM_TRANSITIONS_ATTR, \
+    ObservationWorkflow as wf_fallskjerm
+from ext.workflows.motorfly_observations import WF_MOTORFLY_TRANSITIONS, WF_MOTORFLY_TRANSITIONS_ATTR, \
+    ObservationWorkflow as wf_motorfly
+from ext.workflows.seilfly_observations import WF_SEILFLY_TRANSITIONS, WF_SEILFLY_TRANSITIONS_ATTR, \
+    ObservationWorkflow as wf_seilfly
+from ext.workflows.sportsfly_observations import WF_SPORTSFLY_TRANSITIONS, WF_SPORTSFLY_TRANSITIONS_ATTR, \
+    ObservationWorkflow as wf_sportsfly
 
 Housekeeping = Blueprint('Housekeeping', __name__, )
 
@@ -51,29 +57,27 @@ HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende t
             )
 
 
-
 def _do_first(obsreg, activity):
-    print(obsreg)
-    print('DO FIRST', obsreg['id'])
     message = 'Det ser ut til at det har vært {0} dager uten aktivitet for OBSREG #{1} {2} og du har derfor mottatt første purring.\r\n\r\n' \
               '{3}' \
-        .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])), HOUSEKEEPING_FOOTER)
+        .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
+                HOUSEKEEPING_FOOTER)
     r = ors_housekeeping(recipients=get_recepients(obsreg),
-                     event_type=HOUSEKEEPING_FIRST_CHORE,
-                     event_from='{}_observations'.format(activity),
-                     event_from_id=obsreg['_id'],
-                     message=message,
-                     ors_id=obsreg['id'],
-                     org_id=obsreg['discipline'],
-                     ors_tags=obsreg.get('tags', []))
+                         event_type=HOUSEKEEPING_FIRST_CHORE,
+                         event_from='{}_observations'.format(activity),
+                         event_from_id=obsreg['_id'],
+                         message=message,
+                         ors_id=obsreg['id'],
+                         org_id=obsreg['discipline'],
+                         ors_tags=obsreg.get('tags', []))
 
 
 def _do_second(obsreg, activity):
-    print('DO SECOND', obsreg['id'])
     message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} {2} og du har derfor mottatt andre purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre \r\n\r\n' \
               '{3}' \
-        .format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])), HOUSEKEEPING_FOOTER)
+        .format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
+                HOUSEKEEPING_FOOTER)
     ors_housekeeping(recipients=get_recepients(obsreg),
                      event_type=HOUSEKEEPING_SECOND_CHORE,
                      event_from='{}_observations'.format(activity),
@@ -85,7 +89,6 @@ def _do_second(obsreg, activity):
 
 
 def _do_action(obsreg, activity):
-    print('DO ACTION', obsreg['id'])
     # Do transition
     # @TODO refacoring workflows this should also be refactored
     action = None
@@ -129,10 +132,6 @@ def _do_action(obsreg, activity):
 
             if len(l) == 1:
                 action = transitions_attr[l[0]['trigger']]['resource']
-
-                print('ACTION', action)
-                print('POSSIBLE TRANS',  [x for x in transitions if x['source'] == curr_state and x['dest'] == prev_state])
-                print('REJECT', [x for x in l if 'reject' in x['trigger']])
 
         if action is not None:
             comment = 'Observasjonen har vært inaktiv i over {} dager og er derfor automatisk {} tilbake' \
@@ -187,21 +186,17 @@ def get_notifications(_id, activity):
 def filter_chores(l, _date):
     """Filter by known types and then verify that it is done AFTER last _update for obsreg!!"""
     n = [x for x in l if
-            x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE, HOUSEKEEPING_ACTION_CHORE] and x[
-                '_created'] >= _date]
-    # from pprint import pprint
-    # print(n[0])
+         x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE, HOUSEKEEPING_ACTION_CHORE] and x[
+             '_created'] >= _date]
     return n
 
 
 def check_first(l):
-
     try:
         before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
         if l[0]['type'] == HOUSEKEEPING_FIRST_CHORE and before >= l[0]['_created']:
             return True
     except Exception as e:
-        print('[ERR]', 'FIRST', e)
         pass
 
     return False
@@ -209,18 +204,17 @@ def check_first(l):
 
 def check_second(l):
     try:
-        before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE-HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
+        before = datetime.now(timezone.utc) - timedelta(
+            days=HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE - HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
         if l[0]['type'] == HOUSEKEEPING_SECOND_CHORE and before >= l[0]['_created']:
             return True
     except Exception as e:
-        print('[ERR]', 'SECOND', e)
         pass
 
     return False
 
 
 def check_action(notifications):
-
     try:
         before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE)
         # if l[0]['type'] == HOUSEKEEPING_ACTION_CHORE and before >= l[0]['_created']:
@@ -232,7 +226,6 @@ def check_action(notifications):
         ):
             return True
     except Exception as e:
-        print('[ERR]', 'ACTION', e)
         pass
 
     return False
@@ -243,7 +236,6 @@ def check_any(l) -> bool:
     :param l: list of notifications
     :return: boolean has any
     """
-    print('CHECK ANY')
     if len([x['type'] for x in l if
             x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE]]) > 0:
         return True
@@ -275,6 +267,7 @@ def housekeeping(activity, token):
 
         # get all obsregs:
         status, obsregs = get_observations(activity)
+
         if status is True:
 
             # iterate every obsreg:
@@ -291,8 +284,6 @@ def housekeeping(activity, token):
                         # Har gjort andre warning
                         if check_second(filter_chores(notifications, obsreg['_updated'])) is True:
 
-                            print('[SECOND]', notifications[0]['type'])
-
                             # Build message
                             msg.append(
                                 {'id': obsreg['id'],
@@ -308,12 +299,11 @@ def housekeeping(activity, token):
 
                         # Har gjort første warning
                         elif check_first(filter_chores(notifications, obsreg['_updated'])) is True:
-                            print('[FIRST]', notifications[0]['type'])
                             msg.append(
                                 {'id': obsreg['id'],
                                  '_updated': obsreg['_updated'],
                                  'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
-                                 'action': 'SECOND',
+                                 'action': 'SECOND WARNING',
                                  'recipients': get_recepients(obsreg)
                                  }
                             )
@@ -322,8 +312,6 @@ def housekeeping(activity, token):
 
                         # Got chores, but not old enough
                         else:
-                            print('[NOTHING]', notifications[0]['type'],
-                                  '<- Denne bør ikke være noe som helst så gjør første!')
                             msg.append(
                                 {'id': obsreg['id'],
                                  '_updated': obsreg['_updated'],
@@ -337,24 +325,19 @@ def housekeeping(activity, token):
                     else:
                         # Alle er uansett før dette!
                         if obsreg['_updated'] <= CUTOFF:
-                            print('[NO PREVIOUS CHORES]')
                             msg.append(
                                 {'id': obsreg['id'],
                                  '_updated': obsreg['_updated'],
                                  'last_housekeeping': None,
                                  'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': 'FIRST',
+                                 'action': 'FIRST WARNING',
                                  'recipients': get_recepients(obsreg)
                                  }
                             )
                             _do_first(obsreg, activity)
-                #except Exception as e:
-                #    print('[ERR]', 'Loop OBSREG ID:', obsreg['id'], e)
-        from pprint import pprint
-        pprint(dir(g))
-        g.user_id = 1
-        pprint(g.user_id)
-        # Return list of
+                # except Exception as e:
+
         return eve_response({'status': 'OK', 'message': msg}, 200)
 
+    # @TODO refactor eve_* messages as eve_access_denied etc
     return eve_abort(403, 'Access denied')
