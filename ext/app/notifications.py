@@ -1,11 +1,11 @@
-from flask import current_app as app
+from flask import g, current_app as app
 from eve.methods.post import post_internal
 import datetime
 from uuid import uuid4
 import re
 
 # Broadcast socketio
-from ext.app.responseless_decorators import async
+from ext.app.responseless_decorators import _async
 import socketio
 import time
 
@@ -24,10 +24,9 @@ ors_message
 '''
 
 
-@async
+@_async
 def broadcast(message):
     try:
-        # print('BROADCAST IT')
         sio = socketio.Client()
         sio.connect('http://localhost:8080?token=tulletoken')
         sio.emit('broadcast', message)
@@ -44,7 +43,7 @@ class Notification:
             'event_id': str(uuid4()),
             'type': event_type,
             'recepient': None,  # person_id
-            'sender': app.globals.get('user_id'),  # person_id
+            'sender': g.user_id,  # person_id
             'event_from': event_from,  # collection
             'event_from_id': event_from_id,  # Document _id or id
             'event_created': datetime.datetime.utcnow(),
@@ -86,6 +85,20 @@ class Notification:
 
 
 # Specific
+def ors_housekeeping(recipients, event_type, event_from, event_from_id, message, ors_id, org_id, ors_tags):
+    n = Notification(event_from=event_from, event_from_id=event_from_id, event_type=event_type,
+                     dismissable=True, acl={})
+
+    data = {
+        'id': ors_id,
+        'tags': ors_tags,
+        'org_id': org_id,
+        'action': 'notify',
+        'context': 'housekeeping',
+        'message': message
+    }
+
+    n.notify_all(recipients, data)
 def ors_message(recepients, event_from, event_from_id, message, ors_id, org_id, ors_tags):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_message',
                      dismissable=True, acl={})
