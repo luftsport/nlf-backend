@@ -5,7 +5,7 @@
     Custom decorators for various tasks and to bridge Flask with Eve
     
 """
-from flask import current_app as app, request, Response, abort
+from flask import g, current_app as app, request, Response, abort
 from functools import wraps
 
 from ext.auth.tokenauth import TokenAuth
@@ -75,7 +75,7 @@ def require_superadmin():
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            if app.globals.get('user_id', 0) not in ACL_SUPERADMINS:
+            if g.user_id not in ACL_SUPERADMINS:
                 return eve_abort(401, 'You do not have sufficient privileges')
 
             return f(*args, **kwargs)

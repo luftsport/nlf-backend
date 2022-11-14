@@ -14,7 +14,7 @@ from ext.app.eve_jsonencoder import EveJSONEncoder
 
 from ext.notifications.sms import Sms  # Email
 
-# from ext.app.decorators import async
+# from ext.app.decorators import _async
 
 CRITICAL_ERROR_CODES = [503]
 

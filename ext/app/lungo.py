@@ -146,6 +146,9 @@ def get_org_name(org_id):
 
 
 def get_person_name(person_id):
+    if person_id == 1:
+        return True, 'Housekeeping (bot)'
+
     resp = requests.get('{}/{}/{}?projection={{"full_name": 1}}'.format(LUNGO_URL, 'persons', person_id),
                         headers=LUNGO_HEADERS,
                         verify=app['config'].get('REQUESTS_VERIFY', True))

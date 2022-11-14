@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, send_file
 from bson import json_util
 import simplejson as json
 import subprocess
@@ -296,8 +296,8 @@ def generate(activity, _id):
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                         {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                                         {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
     total_items = cursor.count()
 
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
@@ -454,7 +454,7 @@ def generate(activity, _id):
 
                     audit.append({
                         'date': datetime.datetime.now(),
-                        'person_id': app.globals.get('user_id'),
+                        'person_id': g.user_id,
                         'sent': transport_status,
                         'status': status,
                         'version': ors.get('_version'),
@@ -501,7 +501,7 @@ def generate(activity, _id):
                         """
                         
                         #### TEST EMAIL!
-                        recepients = list(set([app.globals.get('user_id')]
+                        recepients = list(set([g.user_id]
                                               + ors.get('organization', {}).get('ors', [])
                                               + ors.get('organization', {}).get('dto', [])
                                               ))
@@ -547,9 +547,9 @@ def download(activity, ors_id, version):
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
                                     {'$or': [
-                                        {'reporter': app.globals['user_id']},
-                                        {'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                        {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}
+                                        {'reporter': g.user_id},
+                                        {'acl.execute.users': {'$in': [g.user_id]}},
+                                        {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}
                                     ]
                                     }
                                     ]

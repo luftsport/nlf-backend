@@ -1,4 +1,4 @@
-from flask import current_app as app
+from flask import g, current_app as app
 from ext.app.eve_helper import eve_abort
 import json
 from bson.objectid import ObjectId
@@ -9,20 +9,20 @@ from ext.auth.acl import has_permission
 
 def before_get(request, lookup):
     """Make sure only recepient can read own messages"""
-    lookup['recepient'] = app.globals['user_id']
+    lookup['recepient'] = g.user_id
 
 
 def before_insert(items):
     for document in items:
-        document['owner'] = app.globals.get('user_id')
+        document['owner'] = g.user_id
 
 
 def before_patch(request, lookup):
-    lookup.update({'owner': app.globals.get('user_id')})
+    lookup.update({'owner': g.user_id})
 
 
 def before_delete(request, lookup):
-    lookup.update({'owner': app.globals.get('user_id')})
+    lookup.update({'owner': g.user_id})
 
 
 def before_aggregation(endpoint, pipeline):

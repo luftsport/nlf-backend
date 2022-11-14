@@ -1,8 +1,7 @@
-from flask import current_app as app
-
+from flask import g
 
 def _set_owner(item):
-    item['owner'] = app.globals.get('user_id', None)
+    item['owner'] = g.user_id
     return item
 
 

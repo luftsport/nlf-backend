@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app as app
+from flask import g, Blueprint, current_app as app
 from ext.app.decorators import require_token
 from ext.app.eve_helper import eve_abort, eve_response
 
@@ -13,7 +13,7 @@ def my_orses(collection):
     data = []
     status = 404
     try:
-        person_id = app.globals.get('user_id')
+        person_id = g.user_id
         collection = '{}_observations'.format(collection)
 
         lookup = {

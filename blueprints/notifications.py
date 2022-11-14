@@ -8,7 +8,7 @@
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
-from flask import Blueprint, current_app as app  # , Response, abort, jsonify, make_response
+from flask import g, Blueprint, current_app as app  # , Response, abort, jsonify, make_response
 import datetime
 
 # Notification
@@ -50,7 +50,7 @@ def message():
 
         k = parse_acl_flat(acl)
         # If not self too
-        recepients = [x for x in k if x != app.globals.get('user_id', None)]
+        recepients = [x for x in k if x != g.user_id]
         ors_message(recepients=recepients,
                     event_from=event_from,
                     event_from_id=event_from_id,
@@ -117,7 +117,7 @@ def reminder():
                 'Too soon to send notification')
 
         # Remove disapproved
-        recepients = [x for x in recepients if x not in disapproved_users and x != app.globals.get('user_id', None)]
+        recepients = [x for x in recepients if x not in disapproved_users and x != g.user_id]
         if len(recepients) == 0:
             return eve_response_pppd({'data': 'Fant ingen å sende til'}, 404, 'Found no recepients!')
 

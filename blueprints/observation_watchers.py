@@ -20,7 +20,7 @@
     
 """
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify
 from bson import json_util
 import json
 from bson.objectid import ObjectId
@@ -46,7 +46,7 @@ def watchers(observation_id):
 @require_token()
 def is_watching(observation_id):
     
-    if app.globals.get('user_id') in get_watchers(observation_id):
+    if g.user_id in get_watchers(observation_id):
         return jsonify(**{'watching': True})
     
     return jsonify(**{'watching': False})
@@ -58,9 +58,9 @@ def start(observation_id):
     
     w = get_watchers(observation_id)
     
-    if app.globals.get('user_id') not in w:
+    if g.user_id not in w:
         new_watchers = []
-        new_watchers.append(app.globals.get('user_id'))
+        new_watchers.append(g.user_id)
         new_watchers.extend(w)
         
         r = update_watchers(observation_id, new_watchers)
@@ -76,9 +76,9 @@ def stop(observation_id):
     
     w = get_watchers(observation_id)
     
-    if app.globals.get('user_id') in w:
+    if g.user_id in w:
 
-        w = [x for x in w if x != app.globals.get('user_id')]
+        w = [x for x in w if x != g.user_id]
 
         r = update_watchers(observation_id, w)
         

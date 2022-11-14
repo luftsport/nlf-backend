@@ -1,6 +1,6 @@
 from transitions import Machine
 
-from flask import current_app as app, request
+from flask import g, current_app as app, request
 from bson.objectid import ObjectId
 
 from eve.methods.patch import patch_internal
@@ -567,9 +567,12 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
+        # Always grant
+        if self.user_id == 1:
+            return True
         try:
-            if len([i for i in app.globals['acl'].get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
-                    or app.globals['user_id'] in self.initial_acl['execute']['users']:
+            if len([i for i in g.acl.get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
+                    or g.user_id in self.initial_acl['execute']['users']:
                 return True
         except Exception as e:
             # print('ERRRRR', e)
@@ -761,7 +764,7 @@ class ObservationWorkflow(Machine):
         new['workflow']['last_transition'] = datetime.utcnow()
 
         # New owner it is!
-        new['owner'] = app.globals['user_id']
+        new['owner'] = g.user_id
 
         if self._trigger_attrs.get(event.event.name).get('comment', False):
             new.get('workflow').update({'comment': self.comment})
