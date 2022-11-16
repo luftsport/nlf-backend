@@ -2,6 +2,7 @@
     Observation Housekeeping
     ========================
 
+    @TODO write a file lock by activity to avoid race conditions or use app.globals?
 """
 from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, make_response
 import base64
@@ -48,7 +49,7 @@ CUTOFF = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRA
 HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende tidsfrister:\r\n' \
                       '- første purring skjer etter {0} dager med inaktivitet\r\n' \
                       '- andre purring skjer etter {1} dager med inaktivitet\r\n' \
-                      '- etter {2} dager med inaktivitet sendes observasjonen automatisk tilbake der den kom fra eller den blir trukket tilbake.\r\n' \
+                      '- etter {2} dager med inaktivitet sendes observasjonen automatisk tilbake eller den blir trukket tilbake.\r\n' \
                       '\r\n' \
                       '' \
     .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE,
@@ -58,7 +59,8 @@ HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende t
 
 
 def _do_first(obsreg, activity):
-    message = 'Det ser ut til at det har vært {0} dager uten aktivitet for OBSREG #{1} {2} og du har derfor mottatt første purring.\r\n\r\n' \
+    message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er første purring.\r\n\r\n' \
+              'Fint om du tar tak i den så snart det lar seg gjøre.\r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
                 HOUSEKEEPING_FOOTER)
@@ -73,7 +75,7 @@ def _do_first(obsreg, activity):
 
 
 def _do_second(obsreg, activity):
-    message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} {2} og du har derfor mottatt andre purring.\r\n\r\n' \
+    message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er andre purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre \r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
