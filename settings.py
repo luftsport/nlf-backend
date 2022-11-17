@@ -75,7 +75,7 @@ elif APP_INSTANCE in ['dev', 'local']:
     APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
 
 if APP_INSTANCE == 'local':
-    E5X_WORKING_DIR = '/home/einar/Development/Luftfartstilsynet/RITS/'
+    E5X_WORKING_DIR = '/home/einar/einar/Development/Luftfartstilsynet/RITS/'
     REQUESTS_VERIFY = False
 else:
     E5X_WORKING_DIR = '/www/{}/e5x'.format(APP_INSTANCE)
