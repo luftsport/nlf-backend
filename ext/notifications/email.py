@@ -6,7 +6,7 @@
     
 """
 
-from ext.app.responseless_decorators import async
+from ext.app.responseless_decorators import _async
 from flask import current_app as app
 from jinja2 import Environment, FileSystemLoader
 from ext.notifications.jinja2_filters import nl2br
@@ -38,7 +38,7 @@ class Email():
         self.j2env = Environment(loader=FileSystemLoader(self.template_dir), trim_blocks=True)
         self.j2env.filters['nl2br'] = nl2br
 
-    @async
+    @_async
     def send_async(self, recepient, prefix, subject, instance):
 
         # Now we build the message part!

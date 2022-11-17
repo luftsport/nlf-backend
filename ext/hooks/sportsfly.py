@@ -66,7 +66,7 @@ def ors_before_insert_item(item):
             persons_ftu['org'] = item.get('discipline')
             _, _persons_ftu = get_person_from_role(persons_ftu)
             item['organization']['ftu'] = _persons_ftu
-            
+
             persons_ol = ACL_SPORTSFLY_CLUB_OPERATIV_LEDER.copy()
             persons_ol['org'] = item.get('discipline')
             _, _persons_ol = get_person_from_role(persons_ol)
@@ -106,16 +106,19 @@ def ors_after_fetched_diffs(response):
     else:
         ors_after_fetched(response)
 
+
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
         response['_items'][key] = _ors_after_fetched(item)
-        
+
+
 def ors_after_fetched(response):
     """ Modify response after GETing an observation
     This hook checks if permission on each observation
     If closed, then it will anonymize each observation wo w or x rights
     """
     response = _ors_after_fetched(response)
+
 
 def _ors_after_fetched(_response):
     """ Modify response after GETing an observation
@@ -169,20 +172,23 @@ def _ors_after_fetched(_response):
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
         return eve_abort(500,
-                             'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
+                         'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
         return eve_abort(500,
-                             'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(
-                                 e))
+                         'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure {}'.format(
+                             e))
 
     return _response
+
 
 @require_token()
 def ors_before_get_todo(request, lookup):
     lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
                             {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
                                      {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+
+
 @require_token()
 def ors_before_get_user(request, lookup):
     lookup.update({'reporter': app.globals.get('user_id', 0)})
@@ -198,6 +204,10 @@ def ors_before_get(request, lookup):
 def ors_before_patch(request, lookup):
     lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
+
+
+def ors_before_update(item, original):
+    item = cast_choices(item)
 
 
 def ors_after_update(updates, original):

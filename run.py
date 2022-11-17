@@ -65,8 +65,23 @@ from ext.auth.tokenauth import TokenAuth
 # From notfication
 import ext.hooks.notifications as notifications
 
+
 # Verify startup inside virtualenv
-if not hasattr(sys, 'real_prefix'):
+def in_virtualenv():
+    def get_base_prefix_compat():
+        """Get base/real prefix, or sys.prefix if there is none."""
+        return getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
+
+    """Support different python versions"""
+    if get_base_prefix_compat() != sys.prefix:
+        return True
+    elif hasattr(sys, 'real_prefix') is True:
+        return True
+
+    return False
+
+
+if not in_virtualenv():
     print("Outside virtualenv, aborting....")
     sys.exit(-1)
 
@@ -185,6 +200,8 @@ app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_di
 app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
+# BEFORE update db layer
+app.on_update_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
@@ -205,6 +222,10 @@ app.on_fetched_diffs_seilfly_observations += hook.seilfly.ors_after_fetched_diff
 app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
+# BEFORE update db layer
+app.on_updated_seilfly_observations += hook.seilfly.ors_before_update
+# BEFORE update db layer
+app.on_update_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
@@ -225,9 +246,10 @@ app.on_fetched_diffs_sportsfly_observations += hook.sportsfly.ors_after_fetched_
 app.on_fetched_item_sportsfly_observations_todo += hook.sportsfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_sportsfly_observations += hook.sportsfly.ors_before_patch
+# BEFORE update db layer
+app.on_update_sportsfly_observations += hook.sportsfly.ors_before_update
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
-
 
 ###############
 # Notifications
@@ -349,9 +371,17 @@ if 1 == 1 or not app.debug:
     app.logger.info('NLF-backend startup on database:\t %s' % app.config['MONGO_DBNAME'].upper())
     app.logger.info('NLF-backend instance:\t %s' % app.config['APP_INSTANCE'].upper())
 
+    # Log startup settings from scf
+    try:
+        from ext.scf import E5X_SEND_TO_LT, NOTIFICATION_SEND_EMAIL
+        app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
+        app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
+    except Exception as e:
+        app.logger.exception('Error importing settings from scf.py')
+
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    
+
     try:
         import pkg_resources
 

@@ -138,6 +138,7 @@ definition = {
         'club',
         'discipline',
         'tags',
+        'actions',
         'flags',
         'rating',
         'type',

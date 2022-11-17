@@ -34,7 +34,7 @@ from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
-
+from ext.hooks.common import cast_choices
 
 def ors_before_insert(items):
     for item in items:
@@ -198,7 +198,8 @@ def ors_before_get(request, lookup):
 def ors_before_patch(request, lookup):
     lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
-
+def ors_before_update(item, original):
+    item = cast_choices(item)
 
 def ors_after_update(updates, original):
     """After DB update, updates is just changed data"""

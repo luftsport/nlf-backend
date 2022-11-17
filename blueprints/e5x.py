@@ -185,6 +185,10 @@ def remove_empty_nodes(obj):
 
     # Remove all single id's
     obj = scrub(obj, bad_key='id')
+    # Remove all no values only unit
+    obj = scrub(obj, bad_key='unit')
+    # Remove all with only additionalTextEncoding
+    obj = scrub(obj, bad_key='additionalTextEncoding')
 
     # Find all refs and remaining ids
     refs = []
