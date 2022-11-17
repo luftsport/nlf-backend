@@ -198,8 +198,7 @@ def ors_before_get(request, lookup):
 def ors_before_patch(request, lookup):
     lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
                            {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
-
-def ors_before_update(item):
+def ors_before_update(item, original):
     item = cast_choices(item)
 
 def ors_after_update(updates, original):
