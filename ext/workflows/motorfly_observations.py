@@ -15,6 +15,7 @@ from ext.scf import \
     ACL_MOTORFLY_ORS, \
     ACL_MOTORFLY_CLUB_TEKNISK_LEDER, \
     ACL_MOTORFLY_CLUB_OPERATIV_LEDER, \
+    ACL_MOTORFLY_FLYTJENESTEADM, \
     ACL_MOTORFLY_CLUB_FTL, \
     ACL_MOTORFLY_CLUB_SKOLESJEF, \
     ACL_MOTORFLY_CLUB_DTO, \
@@ -75,6 +76,7 @@ def get_acl_init(person_id, discipline_id):
 WF_MOTORFLY_STATES = [
     'draft',
     'pending_review_ors',
+    'pending_review_flytjenesteadm',
     'pending_review_ftl',
     'pending_review_flytjenesten',
     'pending_review_dto',
@@ -101,6 +103,10 @@ WF_MOTORFLY_STATES_ATTR = {
     'pending_review_flytjenesten': {
         'title': 'Avventer Flytjenesten',
         'description': 'Avventer Flytjenesteleder i klubb'
+    },
+    'pending_review_flytjenesteadm': {
+        'title': 'Avventer Flytjenesteadm',
+        'description': 'Avventer Flytjenesteadm'
     },
     'pending_review_dto': {
         'title': 'Avventer DTO',
@@ -164,6 +170,25 @@ WF_MOTORFLY_TRANSITIONS = [
     {'trigger': 'reject_ors',
      'source': 'pending_review_ors',
      'dest': 'draft',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    # FLytjenesteADM
+    {'trigger': 'send_to_flytjenesteadm',
+     'source': 'pending_review_ors',
+     'dest': 'pending_review_flytjenesteadm',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'approve_flytjenesteadm',
+     'source': 'pending_review_flytjenesteadm',
+     'dest': 'pending_review_ors',
+     'after': 'save_workflow',
+     'conditions': ['has_permission']
+     },
+    {'trigger': 'reject_flytjenesteadm',
+     'source': 'pending_review_flytjenesteadm',
+     'dest': 'pending_review_ors',
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
@@ -346,6 +371,27 @@ WF_MOTORFLY_TRANSITIONS_ATTR = {
         'resource': 'reject',
         'comment': True,
         'descr': 'Sendt tilbake av OBSREG koord'
+    },
+    'send_to_flytjenesteadm': {
+        'title': 'Send til Flytjenesteadm',
+        'action': 'Send til Flytjenesteadm',
+        'resource': 'flytjenesteadm',
+        'comment': True,
+        'descr': 'Sendt til FTL'
+    },
+    'approve_flytjenesteadm': {
+        'title': 'Godkjent Flytjenesteadm',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til OBSREG Koordinator'
+    },
+    'reject_flytjenesteadm': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt til OBSREG Koordinator'
     },
     'send_to_ftl': {
         'title': 'Send til FTL',
@@ -568,6 +614,7 @@ class ObservationWorkflow(Machine):
         self.acl_ORS = ACL_MOTORFLY_ORS.copy()
         # self.acl_ORS['org'] = self.discipline
 
+        self.acl_FLYTJENESTEADM = ACL_MOTORFLY_FLYTJENESTEADM.copy()
         self.acl_SKOLE = ACL_MOTORFLY_CLUB_SKOLESJEF.copy()
         self.acl_SKOLE['org'] = self.discipline
 
@@ -623,7 +670,7 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            if self.initial_state == 'pending_review_ors' and event=='send_to_ftl':
+            if self.initial_state == 'pending_review_ors' and event == 'send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
                 tmp['permission'] = self.has_permission(None)
@@ -743,6 +790,15 @@ class ObservationWorkflow(Machine):
             acl['write']['roles'] = [self.acl_ORS]
             acl['execute']['roles'] = [self.acl_ORS]
 
+        elif self.state == 'pending_review_flytjenesteadm':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['write']['roles'] = [self.acl_FLYTJENESTEADM]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FLYTJENESTEADM]
+            acl['execute']['roles'] = [self.acl_FLYTJENESTEADM]
+
         elif self.state == 'pending_review_ftl':
 
             acl['write']['users'] = []
@@ -750,7 +806,7 @@ class ObservationWorkflow(Machine):
 
             acl['write']['roles'] = [self.acl_FTL]
             acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_OPERATIV,
-                                    self.acl_TEKNISK, self.acl_DTO]
+                                     self.acl_TEKNISK, self.acl_DTO]
             acl['execute']['roles'] = [self.acl_FTL]
 
         elif self.state == 'pending_review_flytjenesten':
