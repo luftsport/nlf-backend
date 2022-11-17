@@ -42,9 +42,9 @@ def cast_choices(_item, wc=None):
             if k in wc and isinstance(_item, dict):
                 try:
                     if _item[k].get('value', None) is not None:
-                        print("CASTING****", k)
                         _item[k]['value'] = int(float(_item[k]['value']))
                 except:
+                    # Just let it pass, it might be wrong but let user save
                     pass
             elif isinstance(v, dict):
                 _item[k] = cast_choices(v, wc)
