@@ -1,4 +1,4 @@
-from ext.app.responseless_decorators import async
+from ext.app.responseless_decorators import _async
 from flask import current_app as app
 from jinja2 import Environment, FileSystemLoader
 from ext.notifications.jinja2_filters import nl2br
@@ -89,7 +89,7 @@ def notify(recepients, subject, message, prefix='NLF', subprefix='OBSREG'):
         send_async(recepients, msg)
 
 
-@async
+@_async
 def send_async(recepients, message):
     s = smtplib.SMTP(EMAIL_CFG['smtp'], EMAIL_CFG['smtp_port'])
     s.ehlo()
