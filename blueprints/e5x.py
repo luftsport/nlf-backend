@@ -20,6 +20,8 @@ from ext.auth.tokenauth import TokenAuth
 from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
+from ext.hooks.common import cast_choices
+
 import pysftp
 import traceback
 
@@ -221,8 +223,12 @@ def generate(activity, _id):
 
     if (len(_items) == 1):
 
-        # print(_items)
-        ors = _items[0]
+        # cast choices
+        # @TODO remove when/if db update
+        try:
+            ors = cast_choices(_items[0])
+        except:
+            ors = _items[0]
 
         FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], activity, ors.get('id'),
                                                 ors.get('_version'))
