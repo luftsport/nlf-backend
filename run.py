@@ -185,6 +185,8 @@ app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_di
 app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
+# BEFORE update db layer
+app.on_updated_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
@@ -205,6 +207,10 @@ app.on_fetched_diffs_seilfly_observations += hook.seilfly.ors_after_fetched_diff
 app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
+# BEFORE update db layer
+app.on_updated_seilfly_observations += hook.seilfly.ors_before_update
+# BEFORE update db layer
+app.on_updated_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
@@ -225,6 +231,8 @@ app.on_fetched_diffs_sportsfly_observations += hook.sportsfly.ors_after_fetched_
 app.on_fetched_item_sportsfly_observations_todo += hook.sportsfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_sportsfly_observations += hook.sportsfly.ors_before_patch
+# BEFORE update db layer
+app.on_updated_sportsfly_observations += hook.sportsfly.ors_before_update
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
 
