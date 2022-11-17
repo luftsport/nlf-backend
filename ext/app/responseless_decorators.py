@@ -9,7 +9,7 @@ from functools import wraps
 from threading import Thread
 from datetime import datetime
 
-def async(f):
+def _async(f):
     """ An async decorator
     Will spawn a seperate thread executing whatever call you have
     """
@@ -19,7 +19,7 @@ def async(f):
     return wrapper
 
 
-def track_time_spent(name):
+def track_time_spent(name='Unnamed test'):
     """Time something
     """
     def decorator(f):

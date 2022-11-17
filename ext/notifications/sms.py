@@ -7,7 +7,7 @@
         
 """
 
-from ext.app.responseless_decorators import async
+from ext.app.responseless_decorators import _async
 
 from zeep import Client
 from ..scf import Scf
@@ -20,7 +20,7 @@ class Sms:
         self.config = self.c.get_sms()
         self.prod = self.c.is_production()
 
-    @async
+    @_async
     def send_async(self, mobile, message, client):
         # print client
         result = client.service.Send(username=self.get_username(),

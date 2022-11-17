@@ -5,7 +5,7 @@ from uuid import uuid4
 import re
 
 # Broadcast socketio
-from ext.app.responseless_decorators import async
+from ext.app.responseless_decorators import _async
 import socketio
 import time
 
@@ -24,7 +24,7 @@ ors_message
 '''
 
 
-@async
+@_async
 def broadcast(message):
     try:
         # print('BROADCAST IT')

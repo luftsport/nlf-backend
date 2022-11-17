@@ -66,7 +66,21 @@ from ext.auth.tokenauth import TokenAuth
 import ext.hooks.notifications as notifications
 
 # Verify startup inside virtualenv
-if not hasattr(sys, 'real_prefix'):
+def in_virtualenv():
+    def get_base_prefix_compat():
+        """Get base/real prefix, or sys.prefix if there is none."""
+        return getattr(sys, "base_prefix", None) or getattr(sys, "real_prefix", None) or sys.prefix
+
+    """Support different python versions"""
+    if get_base_prefix_compat() != sys.prefix:
+        return True
+    elif hasattr(sys, 'real_prefix') is True:
+        return True
+
+    return False
+
+
+if not in_virtualenv():
     print("Outside virtualenv, aborting....")
     sys.exit(-1)
 
@@ -185,6 +199,8 @@ app.on_fetched_diffs_motorfly_observations += hook.motorfly.ors_after_fetched_di
 app.on_fetched_item_motorfly_observations_todo += hook.motorfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_motorfly_observations += hook.motorfly.ors_before_patch
+# BEFORE update db layer
+app.on_update_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_motorfly_observations += hook.motorfly.ors_after_update
 
@@ -205,6 +221,10 @@ app.on_fetched_diffs_seilfly_observations += hook.seilfly.ors_after_fetched_diff
 app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
+# BEFORE update db layer
+app.on_updated_seilfly_observations += hook.seilfly.ors_before_update
+# BEFORE update db layer
+app.on_update_motorfly_observations += hook.motorfly.ors_before_update
 # AFTER update db layer
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
@@ -225,6 +245,8 @@ app.on_fetched_diffs_sportsfly_observations += hook.sportsfly.ors_after_fetched_
 app.on_fetched_item_sportsfly_observations_todo += hook.sportsfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_sportsfly_observations += hook.sportsfly.ors_before_patch
+# BEFORE update db layer
+app.on_update_sportsfly_observations += hook.sportsfly.ors_before_update
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
 
@@ -359,10 +381,10 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-
-
+    
     try:
         import pkg_resources
+
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
