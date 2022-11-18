@@ -28,7 +28,13 @@ from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 import json
 
-from ext.scf import ACL_MOTORFLY_CLUB_SKOLESJEF, ACL_MOTORFLY_ORS, ACL_MOTORFLY_CLUB_DTO, ACL_MOTORFLY_CLUB_FTL, ACL_MOTORFLY_FLYTJENESTEADM
+from ext.scf import (
+    ACL_MOTORFLY_CLUB_SKOLESJEF,
+    ACL_MOTORFLY_ORS,
+    ACL_MOTORFLY_CLUB_DTO,
+    ACL_MOTORFLY_CLUB_FTL,
+    ACL_MOTORFLY_FLYTJENESTEADM
+)
 from ext.workflows.motorfly_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
