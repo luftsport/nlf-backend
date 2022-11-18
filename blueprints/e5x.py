@@ -31,6 +31,7 @@ E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
+
 def has_permission():
     try:
 
@@ -163,48 +164,52 @@ def remove_empty_nodes(obj):
             return d
         if isinstance(d, list):
             return [v for v in (clean_empty(v) for v in d) if v]
-        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v}
+            # 'NaN' is empty
+            return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
-    def scrub(obj, bad_key="id", bad_values=[]):
-        if isinstance(obj, dict):
-            for key in list(obj.keys()):
-                if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
-                    del obj[key]
-                else:
-                    scrub(obj[key], bad_key)
-        elif isinstance(obj, list):
-            for i in reversed(range(len(obj))):
-                if obj[i] == bad_key and len(obj) == 1:
-                    del obj[i]
-                else:
-                    scrub(obj[i], bad_key)
 
-        else:
-            # neither a dict nor a list, do nothing
-            pass
+def scrub(obj, bad_key="id", bad_values=[]):
+    if isinstance(obj, dict):
+        for key in list(obj.keys()):
+            if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
+                del obj[key]
+            else:
+                scrub(obj[key], bad_key)
+    elif isinstance(obj, list):
+        for i in reversed(range(len(obj))):
+            if obj[i] == bad_key and len(obj) == 1:
+                del obj[i]
+            else:
+                scrub(obj[i], bad_key)
 
-        return obj
+    else:
+        # neither a dict nor a list, do nothing
+        pass
+
+    return obj
 
     # Remove all single id's
-    obj = scrub(obj, bad_key='id')
-    # Remove all no values only unit
-    obj = scrub(obj, bad_key='unit')
-    # Remove all with only additionalTextEncoding
-    obj = scrub(obj, bad_key='additionalTextEncoding')
 
-    # Find all refs and remaining ids
-    refs = []
-    ids = []
-    for keys, item in recursive_iter(obj):
-        if keys[len(keys) - 1] == 'ref':
-            refs.append(item)
-        elif keys[len(keys) - 1] == 'id':
-            ids.append(item)
 
-    # Remove all refs pointing to nonexisting id's
-    obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
+obj = scrub(obj, bad_key='id')
+# Remove all no values only unit
+obj = scrub(obj, bad_key='unit')
+# Remove all with only additionalTextEncoding
+obj = scrub(obj, bad_key='additionalTextEncoding')
 
-    return clean_empty(obj)
+# Find all refs and remaining ids
+refs = []
+ids = []
+for keys, item in recursive_iter(obj):
+    if keys[len(keys) - 1] == 'ref':
+        refs.append(item)
+    elif keys[len(keys) - 1] == 'id':
+        ids.append(item)
+
+# Remove all refs pointing to nonexisting id's
+obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
+
+return clean_empty(obj)
 
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
@@ -301,16 +306,23 @@ def generate(activity, _id):
                         app.logger.exception("[ERROR] Could not add file, unknown error: {}".format(_file))
                         app.logger.error(e)
 
-
             try:
                 app.logger.debug('[III] In try')
                 json_file_name = '{}.json'.format(file_name)
 
-                # print('PATHS', FILE_WORKING_DIR, json_file_name)
+                # Fix e5x data
+                # Remove all empty nodes, run twice if sequence wrong
+                data['e5x'] = remove_empty_nodes(remove_empty_nodes(data.get('e5x', {})))
+                # Convert all integer id's to integers
+                # data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(remove_empty_nodes(data.get('e5x', {})), f)
+                    json.dump(data['e5x'], f)
+
+                # 1 Dump to json file
+                with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
+                    json.dump(data['e5x'], f)
 
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
