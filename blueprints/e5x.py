@@ -31,6 +31,7 @@ E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
 
 E5X = Blueprint('E5X Blueprint', __name__, )
 
+
 def has_permission():
     try:
 
@@ -163,9 +164,9 @@ def remove_empty_nodes(obj):
             return d
         if isinstance(d, list):
             return [v for v in (clean_empty(v) for v in d) if v]
+            # 'NaN' is empty
+            return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
-	# 'NaN' is empty
-	return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
     def scrub(obj, bad_key="id", bad_values=[]):
         if isinstance(obj, dict):
@@ -188,6 +189,8 @@ def remove_empty_nodes(obj):
         return obj
 
     # Remove all single id's
+
+
     obj = scrub(obj, bad_key='id')
     # Remove all no values only unit
     obj = scrub(obj, bad_key='unit')
@@ -303,16 +306,23 @@ def generate(activity, _id):
                         app.logger.exception("[ERROR] Could not add file, unknown error: {}".format(_file))
                         app.logger.error(e)
 
-
             try:
                 app.logger.debug('[III] In try')
                 json_file_name = '{}.json'.format(file_name)
 
-                # print('PATHS', FILE_WORKING_DIR, json_file_name)
+                # Fix e5x data
+                # Remove all empty nodes, run twice if sequence wrong
+                data['e5x'] = remove_empty_nodes(remove_empty_nodes(data.get('e5x', {})))
+                # Convert all integer id's to integers
+                # data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(remove_empty_nodes(data.get('e5x', {})), f)
+                    json.dump(data['e5x'], f)
+
+                # 1 Dump to json file
+                with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
+                    json.dump(data['e5x'], f)
 
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
