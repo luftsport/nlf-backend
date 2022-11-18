@@ -164,52 +164,53 @@ def remove_empty_nodes(obj):
             return d
         if isinstance(d, list):
             return [v for v in (clean_empty(v) for v in d) if v]
-            # 'NaN' is empty
-            return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
+
+        # 'NaN' is empty
+        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
 
-def scrub(obj, bad_key="id", bad_values=[]):
-    if isinstance(obj, dict):
-        for key in list(obj.keys()):
-            if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
-                del obj[key]
-            else:
-                scrub(obj[key], bad_key)
-    elif isinstance(obj, list):
-        for i in reversed(range(len(obj))):
-            if obj[i] == bad_key and len(obj) == 1:
-                del obj[i]
-            else:
-                scrub(obj[i], bad_key)
+    def scrub(obj, bad_key="id", bad_values=[]):
+        if isinstance(obj, dict):
+            for key in list(obj.keys()):
+                if key == bad_key and (len(obj.keys()) == 1 or obj[key] in bad_values):
+                    del obj[key]
+                else:
+                    scrub(obj[key], bad_key)
+        elif isinstance(obj, list):
+            for i in reversed(range(len(obj))):
+                if obj[i] == bad_key and len(obj) == 1:
+                    del obj[i]
+                else:
+                    scrub(obj[i], bad_key)
 
-    else:
-        # neither a dict nor a list, do nothing
-        pass
+        else:
+            # neither a dict nor a list, do nothing
+            pass
 
-    return obj
+        return obj
 
-    # Remove all single id's
+        # Remove all single id's
 
 
-obj = scrub(obj, bad_key='id')
-# Remove all no values only unit
-obj = scrub(obj, bad_key='unit')
-# Remove all with only additionalTextEncoding
-obj = scrub(obj, bad_key='additionalTextEncoding')
+    obj = scrub(obj, bad_key='id')
+    # Remove all no values only unit
+    obj = scrub(obj, bad_key='unit')
+    # Remove all with only additionalTextEncoding
+    obj = scrub(obj, bad_key='additionalTextEncoding')
 
-# Find all refs and remaining ids
-refs = []
-ids = []
-for keys, item in recursive_iter(obj):
-    if keys[len(keys) - 1] == 'ref':
-        refs.append(item)
-    elif keys[len(keys) - 1] == 'id':
-        ids.append(item)
+    # Find all refs and remaining ids
+    refs = []
+    ids = []
+    for keys, item in recursive_iter(obj):
+        if keys[len(keys) - 1] == 'ref':
+            refs.append(item)
+        elif keys[len(keys) - 1] == 'id':
+            ids.append(item)
 
-# Remove all refs pointing to nonexisting id's
-obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
+    # Remove all refs pointing to nonexisting id's
+    obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
-return clean_empty(obj)
+    return clean_empty(obj)
 
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
