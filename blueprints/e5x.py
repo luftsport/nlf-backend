@@ -164,8 +164,9 @@ def remove_empty_nodes(obj):
             return d
         if isinstance(d, list):
             return [v for v in (clean_empty(v) for v in d) if v]
-            # 'NaN' is empty
-            return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
+
+        # 'NaN' is empty
+        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
 
 def scrub(obj, bad_key="id", bad_values=[]):
