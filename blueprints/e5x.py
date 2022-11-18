@@ -20,6 +20,8 @@ from ext.auth.tokenauth import TokenAuth
 from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
+from ext.hooks.common import cast_choices
+
 import pysftp
 import traceback
 
@@ -305,8 +307,12 @@ def generate(activity, _id):
 
     if (len(_items) == 1):
 
-        # print(_items)
-        ors = _items[0]
+        # cast choices
+        # @TODO remove when/if db update
+        try:
+            ors = cast_choices(_items[0])
+        except:
+            ors = _items[0]
 
         FILE_WORKING_DIR = '{}/{}/{}/{}'.format(app.config['E5X_WORKING_DIR'], activity, ors.get('id'),
                                                 ors.get('_version'))
@@ -463,17 +469,6 @@ def generate(activity, _id):
                         'e5y': transport
                     })
 
-                    """
-                    'e5y': {
-                        'key': 'abrakadabra',
-                        'number': 'c5de0c62-fbc9-4202-bbe8-ff52c1e79ae0',
-                        'path': '/OCCS/A24A5466CDD843FFAAAA2DA663762C5E.E4O',
-                        'created': '2019-06-19T22:57:46.6719259+02:00',
-                        'modified': '2019-06-19T22:57:46.6719259+02:00',
-                        'taxonomy': '4.1.0.6'
-                    }
-                    """
-
                     e5x = {'audit': audit,
                            'status': 'sent',
                            'latest_version': ors.get('_version')}
@@ -498,33 +493,7 @@ def generate(activity, _id):
                                 transport='sftp',
                                 context='sent'
                                 )
-                        """
-                        
-                        #### TEST EMAIL!
-                        recepients = list(set([app.globals.get('user_id')]
-                                              + ors.get('organization', {}).get('ors', [])
-                                              + ors.get('organization', {}).get('dto', [])
-                                              ))
-                        # print('RECEPIENTS', recepients)
 
-                        message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
-                                  Levert:\t{2}\n\
-                                  Status:\t{3}\n\
-                                  Fil:\t{4}\n\
-                                  Levert via:\t{5}\n\
-                                  Instans:\t{6}\n'.format(ors.get('id', ''),
-                                                          ors.get('_version', ''),
-                                                          datetime.datetime.now(),
-                                                          status,
-                                                          '{}.e5x'.format(file_name),
-                                                          'sftp',
-                                                          app.config.get('APP_INSTANCE', ''))
-
-                        subject = 'E5X Leveringsbekreftelse OBSREG {0} v{1}'.format(ors.get('id', ''),
-                                                                                 ors.get('_version', ''))
-
-                        notify(recepients, subject, message)
-                        """
                     except Exception as e:
                         app.logger.exception('Error delivering e5x delivery notification')
 
