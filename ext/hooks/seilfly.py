@@ -34,6 +34,7 @@ from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
+from ext.hooks.common import cast_choices
 
 
 def ors_before_insert(items):
