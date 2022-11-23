@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, send_file
 from bson import json_util
 import simplejson as json
 import subprocess
@@ -298,8 +298,8 @@ def generate(activity, _id):
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                         {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                                         {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
     total_items = cursor.count()
 
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
@@ -343,7 +343,7 @@ def generate(activity, _id):
                 files_working_path = '{}/{}'.format(FILE_WORKING_DIR, file_name)
                 if os.path.exists(files_working_path) is False:
                     _, stdout, stderr = execute(['mkdir', file_name], FILE_WORKING_DIR)
-                    app.logger.debug('[E5X] Created folder for files')
+                    app.logger.debug('[E5X] Created folder for files')
 
                 for key, _file in enumerate(ors.get('files', [])):
                     try:
@@ -393,7 +393,7 @@ def generate(activity, _id):
                 # Remove all empty nodes, run twice if sequence wrong
                 data['e5x'] = remove_empty_nodes(remove_empty_nodes(data.get('e5x', {})))
                 # Convert all integer id's to integers
-                data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
+                # data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
@@ -469,17 +469,6 @@ def generate(activity, _id):
                         'e5y': transport
                     })
 
-                    """
-                    'e5y': {
-                        'key': 'abrakadabra',
-                        'number': 'c5de0c62-fbc9-4202-bbe8-ff52c1e79ae0',
-                        'path': '/OCCS/A24A5466CDD843FFAAAA2DA663762C5E.E4O',
-                        'created': '2019-06-19T22:57:46.6719259+02:00',
-                        'modified': '2019-06-19T22:57:46.6719259+02:00',
-                        'taxonomy': '4.1.0.6'
-                    }
-                    """
-
                     e5x = {'audit': audit,
                            'status': 'sent',
                            'latest_version': ors.get('_version')}
@@ -507,7 +496,7 @@ def generate(activity, _id):
                         """
                         
                         #### TEST EMAIL!
-                        recepients = list(set([app.globals.get('user_id')]
+                        recepients = list(set([g.user_id]
                                               + ors.get('organization', {}).get('ors', [])
                                               + ors.get('organization', {}).get('dto', [])
                                               ))
@@ -553,9 +542,9 @@ def download(activity, ors_id, version):
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
                                     {'$or': [
-                                        {'reporter': app.globals['user_id']},
-                                        {'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                        {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}
+                                        {'reporter': g.user_id},
+                                        {'acl.execute.users': {'$in': [g.user_id]}},
+                                        {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}
                                     ]
                                     }
                                     ]
@@ -577,7 +566,7 @@ def download(activity, ors_id, version):
                 file_name = 'nlf_{}_{}_v{}.e5x'.format(activity,
                                                        ors_id,
                                                        version)
-                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
+                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
                 # print('####',
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
