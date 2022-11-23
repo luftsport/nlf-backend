@@ -2,7 +2,7 @@
 Lungo functions defined here
 """
 import requests
-from ext.scf import LUNGO_HEADERS, LUNGO_URL
+from ext.scf import LUNGO_HEADERS, LUNGO_URL, HOUSEKEEPING_USER_ID, HOUSEKEEPING_USER_NAME
 
 # To be able to use this standalone
 from flask import current_app as app
@@ -146,8 +146,8 @@ def get_org_name(org_id):
 
 
 def get_person_name(person_id):
-    if person_id == 1:
-        return True, 'Housekeeping (bot)'
+    if person_id == HOUSEKEEPING_USER_ID:
+        return True, HOUSEKEEPING_USER_NAME
 
     resp = requests.get('{}/{}/{}?projection={{"full_name": 1}}'.format(LUNGO_URL, 'persons', person_id),
                         headers=LUNGO_HEADERS,
