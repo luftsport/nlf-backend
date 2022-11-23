@@ -22,6 +22,7 @@ from ext.scf import \
 
 from ext.app.notifications import ors_workflow
 from ext.auth.acl import parse_acl_flat
+from ext.scf import HOUSEKEEPING_USER_ID
 
 RESOURCE_COLLECTION = 'sportsfly_observations'
 
@@ -557,14 +558,13 @@ class ObservationWorkflow(Machine):
         check if in execute!
         """
         # Always grant
-        if self.user_id == 1:
+        if self.user_id == HOUSEKEEPING_USER_ID:
             return True
         try:
             if len([i for i in g.acl.get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
                     or g.user_id in self.initial_acl['execute']['users']:
                 return True
         except Exception as e:
-            # print('ERRRRR', e)
             pass
 
         return False
