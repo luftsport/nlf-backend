@@ -8,7 +8,7 @@
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
-from flask import Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
+from flask import g, Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
 from ext.workflows.fallskjerm_observations import ObservationWorkflow
@@ -28,7 +28,7 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
-    wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_current_state(), 200)
 
@@ -38,7 +38,7 @@ def state(observation_id):
 def audit(observation_id):
     """ Get audit trail for observation
     """
-    wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_audit(), 200)
 
@@ -66,8 +66,8 @@ def get_observations():
     col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
     cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                         {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                                         {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
 
     total_items = cursor.count()
 
@@ -109,8 +109,8 @@ def transition(observation_id, action):
         print('ERR', e)
         pass
 
-    # Instantiate with observation_id and current user (user is from app.globals.user_id
-    wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'), comment=comment)
+    # Instantiate with observation_id and current user (user is from g.user_id
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id, comment=comment)
 
     # Now just do a
 
@@ -132,7 +132,7 @@ def transition(observation_id, action):
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
 @require_token()
 def graphit(observation_id, state):
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
     from ext.workflows.fallskjerm_observations import WF_FALLSKJERM_STATES, WF_FALLSKJERM_TRANSITIONS
     if state in WF_FALLSKJERM_STATES:
         wf = Dummy()
@@ -162,7 +162,7 @@ def tasks(observation_id):
     
     Most likely this will make for another transition where state is 'waiting for tasks to complete'
     """
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=app.globals.get('user_id'))
+    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     raise NotImplemented
 

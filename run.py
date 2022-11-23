@@ -145,6 +145,9 @@ app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
 
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
+
+# Housekeeping
+app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
@@ -381,10 +384,10 @@ if 1 == 1 or not app.debug:
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    
+
+
     try:
         import pkg_resources
-
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)

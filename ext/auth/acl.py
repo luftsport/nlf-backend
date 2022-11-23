@@ -9,10 +9,11 @@
     @todo: Handle id and _id gracefully
 """
 
-from flask import current_app as app
+from flask import g, current_app as app
 from bson.objectid import ObjectId
 from ext.app.lungo import get_users_from_role, get_orgs_in_activivity
 from ext.scf import ACL_NANON_ROLES
+
 
 def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     acl = {}
@@ -30,8 +31,8 @@ def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     res = col.find_one({'$and': [match,
                                  {'$or':
                                      [
-                                         {'acl.{}.users'.format(right): {'$in': [app.globals['user_id']]}},
-                                         {'acl.{}.roles'.format(right): {'$in': app.globals['acl']['roles']}}
+                                         {'acl.{}.users'.format(right): {'$in': [g.user_id]}},
+                                         {'acl.{}.roles'.format(right): {'$in': g.acl.get('roles', [])}}
                                      ]
                                  }
                                  ]
@@ -72,7 +73,6 @@ def modify_user_acl(collection, _id, person_id, right, operation):
 
 
 def parse_acl(acl):
-
     users = {
         'read': acl.get('read', {}).get('users', []),
         'write': acl.get('write', {}).get('users', []),
@@ -95,7 +95,6 @@ def parse_acl(acl):
 
         users[right] = list(set(users[right]))
 
-
     return users
 
 
@@ -104,15 +103,36 @@ def parse_acl_flat(acl, exclude_current_user=False):
     res = parse_acl(acl)
 
     if exclude_current_user is True:
-        return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if p != app.globals.get('user_id', 0)]
+        return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete'])) if
+                p != g.user_id]
 
     return [p for p in list(set(res['read'] + res['write'] + res['execute'] + res['delete']))]
+
+
+def parse_acl_flat_by_permissions(acl, permissions=['write', 'execute'], exclude_current_user=False):
+    """Parses acl then flattens to list of users"""
+    res = parse_acl(acl)
+
+    access_list = list(
+        set(
+            res['read'] if 'read' in permissions else []
+            + res['write'] if 'write' in permissions else []
+            + res['execute'] if 'execute' in permissions else []
+            + res['delete'] if 'delete' in permissions else []
+        )
+    )
+
+    if exclude_current_user is True:
+        return [p for p in access_list if p != g.user_id]
+
+    return [p for p in access_list]
+
 
 def _has_permission(resource_acl, perm):
     """@TODO Global"""
     if (
-            any(pid for pid in app.globals['acl']['roles'] if pid in resource_acl[perm]['roles']) is True
-            or (app.globals['user_id'] in resource_acl[perm]['users']) is True
+            any(pid for pid in g.acl.get('roles', []) if pid in resource_acl[perm]['roles']) is True
+            or (g.user_id in resource_acl[perm]['users']) is True
     ):
         return True
     return False
@@ -130,11 +150,11 @@ def has_nanon_permission(resource_acl, perm, state, model, org=0):
             roles.append(role)
 
         if state == 'closed' and perm == 'execute':
-            # print('NANON', [pid for pid in app.globals['acl']['roles'] if pid in roles])
-            # print(app.globals['user_id'] in resource_acl[perm]['roles'])
+            # print('NANON', [pid for pid in g.acl']['roles'] if pid in roles])
+            # print(g.user_id in resource_acl[perm]['roles'])
             if (
-                    any(pid for pid in app.globals['acl']['roles'] if pid in roles) is True
-                    or app.globals['user_id'] in resource_acl[perm]['roles'] is True
+                    any(pid for pid in g.acl.get('roles', []) if pid in roles) is True
+                    or g.user_id in resource_acl[perm]['roles'] is True
             ):
                 return True
 
@@ -143,6 +163,7 @@ def has_nanon_permission(resource_acl, perm, state, model, org=0):
         pass
 
     return False
+
 
 def has_permission(id, permission_type, collection):
     """ Checks if current user has type (execute, read, write, delete) permissions on an collection or not
@@ -185,29 +206,29 @@ def get_user_acl_mapping(acl) -> dict:
     d = False
 
     try:
-        if len([i for i in app.globals['acl']['roles'] if i in acl['execute']['roles']]) > 0 \
-                or app.globals['user_id'] in acl['execute']['users']:
+        if len([i for i in g.acl.get('roles', []) if i in acl['execute']['roles']]) > 0 \
+                or g.user_id in acl['execute']['users']:
             x = True
     except:
         pass
 
     try:
-        if len([i for i in app.globals['acl']['roles'] if i in acl['read']['roles']]) > 0 \
-                or app.globals['user_id'] in acl['read']['users']:
+        if len([i for i in g.acl.get('roles', []) if i in acl['read']['roles']]) > 0 \
+                or g.user_id in acl['read']['users']:
             r = True
     except:
         pass
 
     try:
-        if len([i for i in app.globals['acl']['roles'] if i in acl['write']['roles']]) > 0 \
-                or app.globals['user_id'] in acl['write']['users']:
+        if len([i for i in g.acl.get('roles', []) if i in acl['write']['roles']]) > 0 \
+                or g.user_id in acl['write']['users']:
             w = True
     except:
         pass
 
     try:
-        if len([i for i in app.globals['acl']['roles'] if i in acl['delete']['roles']]) > 0 \
-                or app.globals['user_id'] in acl['delete']['users']:
+        if len([i for i in g.acl.get('roles', []) if i in acl['delete']['roles']]) > 0 \
+                or g.user_id in acl['delete']['users']:
             d = True
     except:
         pass
@@ -217,7 +238,7 @@ def get_user_acl_mapping(acl) -> dict:
 
 def get_user_permissions(_id, collection):
     """
-    len([pid for pid in app.globals[all_person_ids] if pid in ])
+    len([pid for pid in g[all_person_ids] if pid in ])
     eller
     any(pid for pid in dict1 if pid in dict2)
     :param id:
@@ -225,7 +246,7 @@ def get_user_permissions(_id, collection):
     :return:
     """
     try:
-        if collection not in ['fallskjerm_observations', 'motorfly_observations' 'users']:
+        if collection not in ['fallskjerm_observations', 'motorfly_observations', 'seilfly_observations', 'sportsfly_observations', 'users']:
             collection = 'fallskjerm_observations'
 
         col = app.data.driver.db[collection]
@@ -246,7 +267,7 @@ def get_user_permissions(_id, collection):
         except:
             mapping = {'r': False, 'w': False, 'x': False, 'd': False}
 
-        return {'id': acl['id'], '_id': acl['_id'], 'resource': collection, 'u': app.globals['user_id'],
+        return {'id': acl['id'], '_id': acl['_id'], 'resource': collection, 'u': g.user_id,
                 'r': mapping['r'], 'w': mapping['w'], 'x': mapping['x'], 'd': mapping['d']}
 
 
@@ -270,6 +291,3 @@ def user_persmissions(resource_acl, state):
         permissions[perm] = has_nanon_permission(resource_acl, perm, state)
 
     return permissions
-
-
-

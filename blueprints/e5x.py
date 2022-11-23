@@ -164,9 +164,9 @@ def remove_empty_nodes(obj):
             return d
         if isinstance(d, list):
             return [v for v in (clean_empty(v) for v in d) if v]
-            # 'NaN' is empty
-            return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
+        # 'NaN' is empty
+        return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
     def scrub(obj, bad_key="id", bad_values=[]):
         if isinstance(obj, dict):
@@ -189,8 +189,6 @@ def remove_empty_nodes(obj):
         return obj
 
     # Remove all single id's
-
-
     obj = scrub(obj, bad_key='id')
     # Remove all no values only unit
     obj = scrub(obj, bad_key='unit')
@@ -210,6 +208,87 @@ def remove_empty_nodes(obj):
     obj = scrub(obj, bad_key='ref', bad_values=[x for x in refs if x not in ids])
 
     return clean_empty(obj)
+
+
+def cast_item_recursive(obj, keys, e5x_multiple_keys):
+    # Check if any object keys matches id/choices.
+    try:
+        if isinstance(obj, dict):
+            if any(x in keys for x in list(obj.keys())):
+                for key in keys:
+
+                    if (
+                            key in list(obj.keys()) and
+                            key in e5x_multiple_keys and
+                            isinstance(obj[key], dict) and
+                            'value' in obj[key]
+                    ):
+                        if isinstance(obj[key]['value'], list):
+                            obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
+                        else:
+                            obj[key] = [obj[key]['value']]
+
+                    if key in list(obj.keys()):
+                        if 'value' in list(obj[key].keys()):
+                            if isinstance(obj[key]['value'], list):
+                                obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
+                            elif isinstance(obj[key]['value'], dict) is False:
+                                obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
+                        elif isinstance(obj[key], list):
+                            if (
+                                    len(obj[key]) > 0 and
+                                    isinstance(obj[key][0], list) is False and
+                                    isinstance(obj[key][0], dict) is False
+                            ):
+                                obj[key] = ['{}'.format(int(float(x))) for x in obj[key]]
+                return obj
+    except Exception as e:
+        app.logger.exception('[E5X] Error casting value(s)')
+        pass
+
+    # If not key in keys and dict or list
+    # Dict
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif k in keys and isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
+                obj[k] = ['{}'.format(int(float(x))) for x in obj[k]]
+                return obj
+
+    # List of dicts
+    if isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict):
+
+        for k, v in enumerate(obj):
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+
+    return obj
+
+
+def convert_to_integer_ids(e5x_data):
+    try:
+        col = app.data.driver.db['e5x_attributes']
+        data = list(col.find({"choices_key": {"$ne": None}, "rit_version": E5X_RIT_DEFAULT_VERSION}))
+        l = []
+        l2 = []
+        for k in data:
+            l.append(k['attribute'].split('.')[-1])
+            if k['max'] not in [0, 1]:
+                l2.append(k['attribute'].split('.')[-1])
+
+        e5x_keys = [x[0].lower() + x[1:] for x in l]
+        e5x_multiple_keys = [x[0].lower() + x[1:] for x in l2]
+
+        return cast_item_recursive(e5x_data, e5x_keys, e5x_multiple_keys)
+    except Exception as e:
+        app.logger.exception("[ERROR] Could not convert e5x data", e5x_data)
+
+    return e5x_data
 
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
@@ -314,11 +393,7 @@ def generate(activity, _id):
                 # Remove all empty nodes, run twice if sequence wrong
                 data['e5x'] = remove_empty_nodes(remove_empty_nodes(data.get('e5x', {})))
                 # Convert all integer id's to integers
-                # data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
-
-                # 1 Dump to json file
-                with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(data['e5x'], f)
+                data['e5x'] = convert_to_integer_ids(data.get('e5x', {}))
 
                 # 1 Dump to json file
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
@@ -394,6 +469,17 @@ def generate(activity, _id):
                         'e5y': transport
                     })
 
+                    """
+                    'e5y': {
+                        'key': 'abrakadabra',
+                        'number': 'c5de0c62-fbc9-4202-bbe8-ff52c1e79ae0',
+                        'path': '/OCCS/A24A5466CDD843FFAAAA2DA663762C5E.E4O',
+                        'created': '2019-06-19T22:57:46.6719259+02:00',
+                        'modified': '2019-06-19T22:57:46.6719259+02:00',
+                        'taxonomy': '4.1.0.6'
+                    }
+                    """
+
                     e5x = {'audit': audit,
                            'status': 'sent',
                            'latest_version': ors.get('_version')}
@@ -418,7 +504,33 @@ def generate(activity, _id):
                                 transport='sftp',
                                 context='sent'
                                 )
+                        """
+                        
+                        #### TEST EMAIL!
+                        recepients = list(set([app.globals.get('user_id')]
+                                              + ors.get('organization', {}).get('ors', [])
+                                              + ors.get('organization', {}).get('dto', [])
+                                              ))
+                        # print('RECEPIENTS', recepients)
 
+                        message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
+                                  Levert:\t{2}\n\
+                                  Status:\t{3}\n\
+                                  Fil:\t{4}\n\
+                                  Levert via:\t{5}\n\
+                                  Instans:\t{6}\n'.format(ors.get('id', ''),
+                                                          ors.get('_version', ''),
+                                                          datetime.datetime.now(),
+                                                          status,
+                                                          '{}.e5x'.format(file_name),
+                                                          'sftp',
+                                                          app.config.get('APP_INSTANCE', ''))
+
+                        subject = 'E5X Leveringsbekreftelse OBSREG {0} v{1}'.format(ors.get('id', ''),
+                                                                                 ors.get('_version', ''))
+
+                        notify(recepients, subject, message)
+                        """
                     except Exception as e:
                         app.logger.exception('Error delivering e5x delivery notification')
 

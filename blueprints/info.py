@@ -16,10 +16,10 @@ Info = Blueprint('Custom info resource', __name__,)
 @Info.route("/", methods=['GET'])
 def api_info():
     # Build a dictionary
-    dict = {'api': 'F/NLF Elektroniske tjenester', 
+    dict = {'api': 'NLF Platform',
             'version': '0.1.0', 
-            'contact': 'Jan Erik Wang', 
-            'email': 'Jan Erik Wang <janerik.wang@nlf.no>', 
+            'contact': 'NLF',
+            'email': 'NLF <post@nlf.no>',
             'api_url': request.base_url, 
             'doc_url': request.base_url + '/docs',
             'base_url': request.base_url,

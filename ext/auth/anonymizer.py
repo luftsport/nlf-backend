@@ -1,4 +1,4 @@
-from flask import current_app as app
+from flask import g, current_app as app
 from bson.objectid import ObjectId
 import ext.auth.acl as acl_helper
 from ext.app.eve_helper import eve_abort
@@ -15,7 +15,7 @@ class Anon(object):
         """Keep track of all assigned persons"""
 
         # See yourself
-        if int(person) == int(app.globals['id']):
+        if int(person) == int(g.user_id):
             return int(person)
 
         if person in self.persons:
@@ -37,7 +37,7 @@ class Anon(object):
             x['id'] = 0
 
         # Allow users to see themself
-        if int(x['id']) == int(app.globals['id']):
+        if int(x['id']) == int(g.user_id):
             # Always delete tmp_ and full_name!
             x.pop('tmp_name', None)
             x.pop('full_name', None)
@@ -229,7 +229,7 @@ def anonymize_ors(item):
 
                 # USER MACRO
                 if macros[key].get('data-type', '') == 'user' and int(macros[key].get('data-id', 0)) != int(
-                        app.globals['id']):
+                        g.user_id):
 
                     macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
 

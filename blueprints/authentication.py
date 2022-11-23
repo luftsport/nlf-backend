@@ -6,7 +6,7 @@
         
 """
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify
 from eve.methods.post import post_internal
 from eve.methods.patch import patch_internal
 from eve.methods.get import getitem_internal, get_internal
@@ -176,7 +176,7 @@ def get_user():
     Only return 'I am username'"""
 
     try:
-        response, last_modified, etag, status = getitem_internal(resource='users', **{'id': app.globals['id']})
+        response, last_modified, etag, status = getitem_internal(resource='users', **{'id': g.user_id})
 
         if status == 200 and '_id' in response:
             return eve_response(data={'iam': response['id']})
@@ -189,6 +189,6 @@ def get_user():
 @Authenticate.route("/groups", methods=['GET'])
 @require_token()
 def get_user_groups():
-    return eve_response(data=app.globals['acl'])
+    return eve_response(data=g.acl)
 
 """
