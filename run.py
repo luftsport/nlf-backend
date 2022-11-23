@@ -55,6 +55,7 @@ from blueprints.lungo import Lungo
 from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
+from blueprints.housekeeping import Housekeeping
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
