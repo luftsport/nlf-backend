@@ -274,8 +274,8 @@ def housekeeping(activity, token):
 
             # iterate every obsreg:
             for obsreg in obsregs:
-                if obsreg['id'] != 578:
-                    continue
+                #if obsreg['id'] != 652:
+                #    continue
                 # get all notifications for observation
                 n_status, notifications = get_notifications(obsreg['_id'], activity)
 
@@ -314,10 +314,16 @@ def housekeeping(activity, token):
 
                         # Got chores, but not old enough
                         else:
+                            tmp_type = None
+                            try:
+                                tmp_type = filter_chores(notifications, obsreg['_updated'])[0]['type']
+                            except:
+                                pass
+
                             msg.append(
                                 {'id': obsreg['id'],
                                  '_updated': obsreg['_updated'],
-                                 'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
+                                 'last_housekeeping': tmp_type,
                                  'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                  'action': 'NONE AT THIS TIME'
                                  }
