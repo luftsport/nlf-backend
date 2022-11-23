@@ -5,6 +5,7 @@
     @TODO write a file lock by activity to avoid race conditions or use app.globals?
 """
 from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, make_response
+from eve.methods.post import post_internal
 import base64
 # from ext.workflows.fallskjerm_observations import ObservationWorkflow
 
@@ -289,10 +290,14 @@ def housekeeping(activity, token):
                             # Build message
                             msg.append(
                                 {'id': obsreg['id'],
-                                 '_updated': obsreg['_updated'],
+                                 'last_updated': obsreg['_updated'],
                                  'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
+                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                  'action': 'ACTION',
-                                 'recipients': get_recepients(obsreg)
+                                 'recipients': get_recepients(obsreg),
+                                 'activity': activity,
+                                 'event_from': f'{activity}_observations',
+                                 'event_from_id': obsreg['_id']
                                  }
                             )
 
@@ -303,10 +308,14 @@ def housekeeping(activity, token):
                         elif check_first(filter_chores(notifications, obsreg['_updated'])) is True:
                             msg.append(
                                 {'id': obsreg['id'],
-                                 '_updated': obsreg['_updated'],
+                                 'last_updated': obsreg['_updated'],
                                  'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
+                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                  'action': 'SECOND WARNING',
-                                 'recipients': get_recepients(obsreg)
+                                 'recipients': get_recepients(obsreg),
+                                 'activity': activity,
+                                 'event_from': f'{activity}_observations',
+                                 'event_from_id': obsreg['_id']
                                  }
                             )
                             _do_second(obsreg, activity)
@@ -322,10 +331,14 @@ def housekeeping(activity, token):
 
                             msg.append(
                                 {'id': obsreg['id'],
-                                 '_updated': obsreg['_updated'],
+                                 'last_updated': obsreg['_updated'],
                                  'last_housekeeping': tmp_type,
                                  'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': 'NONE AT THIS TIME'
+                                 'action': None,
+                                 'recepients': [],
+                                 'activity': activity,
+                                 'event_from': f'{activity}_observations',
+                                 'event_from_id': obsreg['_id']
                                  }
                             )
 
@@ -335,16 +348,23 @@ def housekeeping(activity, token):
                         if obsreg['_updated'] <= CUTOFF:
                             msg.append(
                                 {'id': obsreg['id'],
-                                 '_updated': obsreg['_updated'],
+                                 'last_updated': obsreg['_updated'],
                                  'last_housekeeping': None,
                                  'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                  'action': 'FIRST WARNING',
-                                 'recipients': get_recepients(obsreg)
+                                 'recipients': get_recepients(obsreg),
+                                 'activity': activity,
+                                 'event_from': f'{activity}_observations',
+                                 'event_from_id': obsreg['_id']
                                  }
                             )
                             _do_first(obsreg, activity)
                 # except Exception as e:
-
+        try:
+            response, _, _, return_code, location_header = post_internal('housekeeping', msg)
+            print('[POST]', response, return_code)
+        except Exception as e:
+            print('[ERR housekeeping]', e)
         return eve_response({'status': 'OK', 'message': msg}, 200)
 
     # @TODO refactor eve_* messages as eve_access_denied etc
