@@ -8,7 +8,7 @@ _schema = {
     'last_housekeeping': {'type': 'string', 'nullable': True},
     'days_since_last_action': {'type': 'integer'},
     'action': {'type': 'string', 'nullable': True},
-    'recepients': {'type': 'list', 'default': []},
+    'recipients': {'type': 'list', 'default': []},
     'activity': {'type': 'string'},
     'event_from': {'type': 'string'},
     'event_from_id': {'type': 'objectid'},
