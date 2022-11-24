@@ -335,7 +335,7 @@ def housekeeping(activity, token):
                                  'last_housekeeping': tmp_type,
                                  'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                  'action': None,
-                                 'recepients': [],
+                                 'recipients': [],
                                  'activity': activity,
                                  'event_from': f'{activity}_observations',
                                  'event_from_id': obsreg['_id']
