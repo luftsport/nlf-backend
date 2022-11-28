@@ -308,35 +308,6 @@ def _aggregation(endpoint, pipeline):
 # Before any aggregation run this
 app.before_aggregation += _aggregation
 
-
-def ooh(request, lookup):
-    print('[AGGG]', request, lookup)
-
-
-# app.on_pre_GET_notifications_events += ooh
-# Motor
-
-# app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
-# app.on_pre_POST_fallskjerm_observations += dump_request
-
-# app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
-
-# app.on_post_PATCH_fallskjerm_observations += hook.fallskjerm.after_patch
-
-# app.on_insert_oplog += hook.oplog.before_insert
-
-# app.on_pre_GET_observations += observations_before_get
-# app.on_pre_POST_observations += observations_before_post
-# app.on_pre_PATCH_observations += observations_before_patch
-
-
-# app.on_insert += hook.observations.before_post_comments
-# app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
-
-# app.on_post_GET_fallskjerm_observations += hook.observations.after_get
-# app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
-
-
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
