@@ -45,7 +45,7 @@ from ext.workflows.sportsfly_observations import WF_SPORTSFLY_TRANSITIONS, WF_SP
 
 Housekeeping = Blueprint('Housekeeping', __name__, )
 
-CUTOFF = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRACE_MIN)
+
 
 HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende tidsfrister:\r\n' \
                       '- første purring skjer etter {0} dager med inaktivitet\r\n' \
@@ -150,11 +150,12 @@ def _do_action(obsreg, activity):
                 result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
 
-def get_observations(activity):
+def get_observations(activity, cutoff):
+
     col = app.data.driver.db['{}_observations'.format(activity)]
     cursor = col.find(
         {
-            '_updated': {'$lte': CUTOFF},
+            '_updated': {'$lte': cutoff},
             'workflow.state': {'$nin': ['withdrawn', 'closed']}
         },
         {
@@ -269,7 +270,8 @@ def housekeeping(activity, token):
         msg = []
 
         # get all obsregs:
-        status, obsregs = get_observations(activity)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRACE_MIN)
+        status, obsregs = get_observations(activity, cutoff)
 
         if status is True:
 
@@ -345,7 +347,7 @@ def housekeeping(activity, token):
                     # Vi er over første warning uten noe har skjedd!!
                     else:
                         # Alle er uansett før dette!
-                        if obsreg['_updated'] <= CUTOFF:
+                        if obsreg['_updated'] <= cutoff:
                             msg.append(
                                 {'id': obsreg['id'],
                                  'last_updated': obsreg['_updated'],
@@ -365,7 +367,7 @@ def housekeeping(activity, token):
             print('[POST]', response, return_code)
         except Exception as e:
             print('[ERR housekeeping]', e)
-        return eve_response({'status': 'OK', 'message': msg}, 200)
+        return eve_response(msg, 200)
 
     # @TODO refactor eve_* messages as eve_access_denied etc
     return eve_abort(403, 'Access denied')
