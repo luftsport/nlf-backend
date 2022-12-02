@@ -201,7 +201,8 @@ def check_first(l):
         if l[0]['type'] == HOUSEKEEPING_FIRST_CHORE and before >= l[0]['_created']:
             return True
     except Exception as e:
-        pass
+        app.logger.exception(f'Error checking for {HOUSEKEEPING_FIRST_CHORE}')
+
 
     return False
 
@@ -213,7 +214,7 @@ def check_second(l):
         if l[0]['type'] == HOUSEKEEPING_SECOND_CHORE and before >= l[0]['_created']:
             return True
     except Exception as e:
-        pass
+        app.logger.exception(f'Error checking for {HOUSEKEEPING_SECOND_CHORE}')
 
     return False
 
@@ -230,7 +231,7 @@ def check_action(notifications):
         ):
             return True
     except Exception as e:
-        pass
+        app.logger.exception(f'Error checking for {HOUSEKEEPING_ACTION_CHORE}')
 
     return False
 
