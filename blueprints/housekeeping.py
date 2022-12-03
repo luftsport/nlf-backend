@@ -269,7 +269,7 @@ def get_recepients(obsreg) -> list:
             r = [HOUSEKEEPING_USER_ID]
         return r
     except:
-        app.logger.exception('Error parsing acl to flat permissions for housekeeping')
+        app.logger.exception('Error parsing acl to flat permissions for housekeeping, failed OBSREG ID {}'.format(obsreg.get('id', None)))
 
     return []
 
