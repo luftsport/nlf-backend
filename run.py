@@ -348,9 +348,21 @@ if 1 == 1 or not app.debug:
 
     # Log startup settings from scf
     try:
-        from ext.scf import E5X_SEND_TO_LT, NOTIFICATION_SEND_EMAIL
+        from ext.scf import (
+            E5X_SEND_TO_LT,
+            NOTIFICATION_SEND_EMAIL,
+            HOUSEKEEPING,
+            HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE,
+            HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE,
+            HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE
+        )
         app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
         app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
+        app.logger.info('[HOUSEKEEPING] Enabled:\t {}'.format(HOUSEKEEPING))
+        if HOUSEKEEPING is True:
+            app.logger.info('[HOUSEKEEPING] Days to first warning:\t {}'.format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE))
+            app.logger.info('[HOUSEKEEPING] Days to second warning:\t {}'.format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE))
+            app.logger.info('[HOUSEKEEPING] Days to action taken:\t {}'.format(HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE))
     except Exception as e:
         app.logger.exception('Error importing settings from scf.py')
 
