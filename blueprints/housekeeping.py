@@ -27,9 +27,12 @@ from ext.scf import (
     HOUSEKEEPING_CHORE_DAYS_GRACE_MIN,
     HOUSEKEEPING_TOKEN,
     HOUSEKEEPING_ACL_RECIPIENTS,
+    HOUSEKEEPING_ANY_CHORE_BEFORE,
+    HOUSEKEEPING,
     ACTIVITIES
 )
 from datetime import datetime, timedelta, timezone
+import pytz
 from ext.auth.acl import parse_acl_flat_by_permissions
 from ext.auth.tokenauth import TokenAuth
 
@@ -44,8 +47,6 @@ from ext.workflows.sportsfly_observations import WF_SPORTSFLY_TRANSITIONS, WF_SP
     ObservationWorkflow as wf_sportsfly
 
 Housekeeping = Blueprint('Housekeeping', __name__, )
-
-
 
 HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende tidsfrister:\r\n' \
                       '- første purring skjer etter {0} dager med inaktivitet\r\n' \
@@ -150,12 +151,11 @@ def _do_action(obsreg, activity):
                 result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
 
-def get_observations(activity, cutoff):
-
+def get_observations(activity, cutoff_date):
     col = app.data.driver.db['{}_observations'.format(activity)]
     cursor = col.find(
         {
-            '_updated': {'$lte': cutoff},
+            '_updated': {'$lte': cutoff_date},
             'workflow.state': {'$nin': ['withdrawn', 'closed']}
         },
         {
@@ -187,51 +187,59 @@ def get_notifications(_id, activity):
     return True, _items
 
 
-def filter_chores(l, _date):
+def filter_chores(notifications, _date):
     """Filter by known types and then verify that it is done AFTER last _update for obsreg!!"""
-    n = [x for x in l if
-         x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE, HOUSEKEEPING_ACTION_CHORE] and x[
-             '_created'] >= _date]
-    return n
+    try:
+        return [
+            x for x in notifications if
+            x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE, HOUSEKEEPING_ACTION_CHORE]
+            and x['_created'] >= _date
+        ]
+    except:
+        pass
+
+    return []
 
 
 def check_first(l):
-    try:
-        before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
-        if l[0]['type'] == HOUSEKEEPING_FIRST_CHORE and before >= l[0]['_created']:
-            return True
-    except Exception as e:
-        app.logger.exception(f'Error checking for {HOUSEKEEPING_FIRST_CHORE}')
-
+    if len(l) > 0:
+        try:
+            before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
+            if l[0]['type'] == HOUSEKEEPING_FIRST_CHORE and before >= l[0]['_created']:
+                return True
+        except Exception as e:
+            app.logger.exception(f'Error checking for {HOUSEKEEPING_FIRST_CHORE}')
 
     return False
 
 
 def check_second(l):
-    try:
-        before = datetime.now(timezone.utc) - timedelta(
-            days=HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE - HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
-        if l[0]['type'] == HOUSEKEEPING_SECOND_CHORE and before >= l[0]['_created']:
-            return True
-    except Exception as e:
-        app.logger.exception(f'Error checking for {HOUSEKEEPING_SECOND_CHORE}')
+    if len(l) > 0:
+        try:
+            before = datetime.now(timezone.utc) - timedelta(
+                days=HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE - HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE)
+            if l[0]['type'] == HOUSEKEEPING_SECOND_CHORE and before >= l[0]['_created']:
+                return True
+        except Exception as e:
+            app.logger.exception(f'Error checking for {HOUSEKEEPING_SECOND_CHORE}')
 
     return False
 
 
 def check_action(notifications):
-    try:
-        before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE)
-        # if l[0]['type'] == HOUSEKEEPING_ACTION_CHORE and before >= l[0]['_created']:
-        if (
-                notifications[0]['type'] == 'ors_workflow'
-                and notifications[0]['sender'] == 1
-                and notifications[0]['data']['action'] == 'reject'
-                and before >= notifications[0]['_created']
-        ):
-            return True
-    except Exception as e:
-        app.logger.exception(f'Error checking for {HOUSEKEEPING_ACTION_CHORE}')
+    if len(notifications) > 0:
+        try:
+            before = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE)
+            # if l[0]['type'] == HOUSEKEEPING_ACTION_CHORE and before >= l[0]['_created']:
+            if (
+                    notifications[0]['type'] == 'ors_workflow'
+                    and notifications[0]['sender'] == 1
+                    and notifications[0]['data']['action'] == 'reject'
+                    and before >= notifications[0]['_created']
+            ):
+                return True
+        except Exception as e:
+            app.logger.exception(f'Error checking for {HOUSEKEEPING_ACTION_CHORE}')
 
     return False
 
@@ -262,113 +270,163 @@ def housekeeping(activity, token):
     """
     """
 
-    if token == HOUSEKEEPING_TOKEN and activity in ACTIVITIES:
+    if HOUSEKEEPING is True and token == HOUSEKEEPING_TOKEN and activity in ACTIVITIES:
 
         # Assign bot to user:
-        # Set in app context
         g.user_id = HOUSEKEEPING_USER_ID
 
         msg = []
 
+        # Set cutoff date
+        cutoff_date = pytz.utc.localize(datetime.utcnow()) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRACE_MIN)
         # get all obsregs:
-        cutoff = datetime.now(timezone.utc) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRACE_MIN)
-        status, obsregs = get_observations(activity, cutoff)
+        status, obsregs = get_observations(activity, cutoff_date)
 
         if status is True:
 
             # iterate every obsreg:
             for obsreg in obsregs:
-                #if obsreg['id'] != 652:
-                #    continue
-                # get all notifications for observation
-                n_status, notifications = get_notifications(obsreg['_id'], activity)
 
-                if n_status is True:
+                # catchall for each
+                try:
+                    # get all notifications for observation
+                    n_status, notifications = get_notifications(obsreg['_id'], activity)
 
-                    if check_any(notifications) is True:
+                    if n_status is True:
 
-                        # Har gjort andre warning
-                        if check_second(filter_chores(notifications, obsreg['_updated'])) is True:
+                        # Check if anything is done over all notifications
+                        if check_any(notifications) is True:
 
-                            # Build message
-                            msg.append(
-                                {'id': obsreg['id'],
-                                 'last_updated': obsreg['_updated'],
-                                 'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
-                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': HOUSEKEEPING_ACTION_CHORE,
-                                 'recipients': get_recepients(obsreg),
-                                 'activity': activity,
-                                 'event_from': f'{activity}_observations',
-                                 'event_from_id': obsreg['_id']
-                                 }
-                            )
+                            # Filter chores - chores after obsreg last updated:
+                            filtered_chores = filter_chores(notifications, obsreg['_updated'])
 
-                            # Do action
-                            _do_action(obsreg, activity)
+                            if len(filtered_chores) > 0:
 
-                        # Har gjort første warning
-                        elif check_first(filter_chores(notifications, obsreg['_updated'])) is True:
-                            msg.append(
-                                {'id': obsreg['id'],
-                                 'last_updated': obsreg['_updated'],
-                                 'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0]['type'],
-                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': HOUSEKEEPING_SECOND_CHORE,
-                                 'recipients': get_recepients(obsreg),
-                                 'activity': activity,
-                                 'event_from': f'{activity}_observations',
-                                 'event_from_id': obsreg['_id']
-                                 }
-                            )
-                            _do_second(obsreg, activity)
+                                # Has second warning since obsreg last _updated?
+                                if check_second(filtered_chores) is True:
+
+                                    # Build message
+                                    msg.append(
+                                        {'id': obsreg['id'],
+                                         'last_updated': obsreg['_updated'],
+                                         'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
+                                             'type'],
+                                         'days_since_last_action': (
+                                                     pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                         'action': HOUSEKEEPING_ACTION_CHORE,
+                                         'recipients': get_recepients(obsreg),
+                                         'activity': activity,
+                                         'event_from': f'{activity}_observations',
+                                         'event_from_id': obsreg['_id']
+                                         }
+                                    )
+
+                                    # Do workflow action
+                                    _do_action(obsreg, activity)
+
+                                # Has first warning since obsreg last _updated
+                                elif check_first(filter_chores(notifications, obsreg['_updated'])) is True:
+                                    msg.append(
+                                        {'id': obsreg['id'],
+                                         'last_updated': obsreg['_updated'],
+                                         'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
+                                             'type'],
+                                         'days_since_last_action': (
+                                                     pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                         'action': HOUSEKEEPING_SECOND_CHORE,
+                                         'recipients': get_recepients(obsreg),
+                                         'activity': activity,
+                                         'event_from': f'{activity}_observations',
+                                         'event_from_id': obsreg['_id']
+                                         }
+                                    )
+                                    _do_second(obsreg, activity)
 
 
-                        # Got chores, but not old enough
+                                # Got chores, but not old enough
+                                # Could it be broken data?
+                                else:
+                                    tmp_type = None
+                                    try:
+                                        tmp_type = filter_chores(notifications, obsreg['_updated'])[0]['type']
+                                    except:
+                                        pass
+
+                                    if tmp_type is not None:
+                                        pass
+
+                                    msg.append(
+                                        {'id': obsreg['id'],
+                                         'last_updated': obsreg['_updated'],
+                                         'last_housekeeping': tmp_type,
+                                         'days_since_last_action': (
+                                                     datetime.now(timezone.utc) - obsreg['_updated']).days,
+                                         'action': None,
+                                         'recipients': [],
+                                         'activity': activity,
+                                         'event_from': f'{activity}_observations',
+                                         'event_from_id': obsreg['_id']
+                                         }
+                                    )
+
+                            # Check if chores but no chores since last update
+                            else:
+                                # Check what is last action?
+                                # Filter from start
+                                filtered_chores_all_time = filter_chores(notifications, datetime(1970, 1, 1, 0, 0))
+
+                                # Chores has been done
+                                if len(filtered_chores_all_time) > 0:
+
+                                    # Make sure chores are before or eq last updated
+                                    if filtered_chores_all_time[0]['_created'] <= obsreg['_updated']:
+                                        _do_first(obsreg, activity)
+
+                                        msg.append({
+                                            'id': obsreg['id'],
+                                            'last_updated': obsreg['_updated'],
+                                            'last_housekeeping': HOUSEKEEPING_ANY_CHORE_BEFORE,
+                                            # Do not verify which chore
+                                            'days_since_last_action': (
+                                                        pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                            'action': HOUSEKEEPING_FIRST_CHORE,
+                                            'recipients': get_recepients(obsreg),
+                                            'activity': activity,
+                                            'event_from': f'{activity}_observations',
+                                            'event_from_id': obsreg['_id']
+                                        })
+
+                        # No housekeeping registered at all
+                        # _updated beyond grace for first warning => do first warning
                         else:
-                            tmp_type = None
-                            try:
-                                tmp_type = filter_chores(notifications, obsreg['_updated'])[0]['type']
-                            except:
-                                pass
+                            # Unnecessary comparison but to be sure
+                            if obsreg['_updated'] <= cutoff_date:
+                                msg.append(
+                                    {'id': obsreg['id'],
+                                     'last_updated': obsreg['_updated'],
+                                     'last_housekeeping': None,
+                                     'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
+                                     'action': HOUSEKEEPING_FIRST_CHORE,
+                                     'recipients': get_recepients(obsreg),
+                                     'activity': activity,
+                                     'event_from': f'{activity}_observations',
+                                     'event_from_id': obsreg['_id']
+                                     }
+                                )
+                                _do_first(obsreg, activity)
 
-                            msg.append(
-                                {'id': obsreg['id'],
-                                 'last_updated': obsreg['_updated'],
-                                 'last_housekeeping': tmp_type,
-                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': None,
-                                 'recipients': [],
-                                 'activity': activity,
-                                 'event_from': f'{activity}_observations',
-                                 'event_from_id': obsreg['_id']
-                                 }
-                            )
-
-                    # Vi er over første warning uten noe har skjedd!!
-                    else:
-                        # Alle er uansett før dette!
-                        if obsreg['_updated'] <= cutoff:
-                            msg.append(
-                                {'id': obsreg['id'],
-                                 'last_updated': obsreg['_updated'],
-                                 'last_housekeeping': None,
-                                 'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
-                                 'action': HOUSEKEEPING_FIRST_CHORE,
-                                 'recipients': get_recepients(obsreg),
-                                 'activity': activity,
-                                 'event_from': f'{activity}_observations',
-                                 'event_from_id': obsreg['_id']
-                                 }
-                            )
-                            _do_first(obsreg, activity)
-                # except Exception as e:
+                except Exception as e:
+                    app.logger('Error looping over obsregs for housekeeping')
         try:
             response, _, _, return_code, location_header = post_internal('housekeeping', msg)
-            print('[POST]', response, return_code)
         except Exception as e:
-            print('[ERR housekeeping]', e)
+            app.logger.exception('Error saving obsreg housekeeping audit log')
+
+        # always return a 200
         return eve_response(msg, 200)
+
+    elif HOUSEKEEPING is False:
+        return eve_abort(503, 'No housekeeping enabled')
 
     # @TODO refactor eve_* messages as eve_access_denied etc
     return eve_abort(403, 'Access denied')
