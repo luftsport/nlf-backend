@@ -426,7 +426,7 @@ def housekeeping(activity, token):
                                 _do_first(obsreg, activity)
 
                 except Exception as e:
-                    app.logger('Error looping over obsregs for housekeeping')
+                    app.logger('Error looping over obsregs for housekeeping. Failed OBSREG ID: {}'.obsreg.get('id', None))
         try:
             response, _, _, return_code, location_header = post_internal('housekeeping', msg)
         except Exception as e:
