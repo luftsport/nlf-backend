@@ -75,6 +75,8 @@ def _do_first(obsreg, activity):
                          org_id=obsreg['discipline'],
                          ors_tags=obsreg.get('tags', []))
 
+    print('DO FIRST', r)
+
 
 def _do_second(obsreg, activity):
     message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er andre purring.\r\n\r\n' \
@@ -258,9 +260,16 @@ def check_any(l) -> bool:
 
 def get_recepients(obsreg) -> list:
     try:
-        return parse_acl_flat_by_permissions(obsreg.get('acl', {}), permissions=HOUSEKEEPING_ACL_RECIPIENTS)
+        r = parse_acl_flat_by_permissions(obsreg.get('acl', {}), permissions=HOUSEKEEPING_ACL_RECIPIENTS)
+        app.logger.info('{}:Got following recepients {}'.format(obsreg['id'], r))
+
+        # Make sure we have one recipient at least to make a notification!
+        # There can be functions->person that do not exist anymore since organization is no longer active in NIF
+        if len(r) == 0:
+            r = [HOUSEKEEPING_USER_ID]
+        return r
     except:
-        pass
+        app.logger.exception('Error parsing acl to flat permissions for housekeeping')
 
     return []
 
@@ -268,6 +277,7 @@ def get_recepients(obsreg) -> list:
 @Housekeeping.route("/<string:activity>/<string:token>", methods=['POST'])
 def housekeeping(activity, token):
     """
+    @TODO get_recipients is called twice for each both msg for audit log and in _do_*
     """
 
     if HOUSEKEEPING is True and token == HOUSEKEEPING_TOKEN and activity in ACTIVITIES:
@@ -312,7 +322,7 @@ def housekeeping(activity, token):
                                          'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
                                              'type'],
                                          'days_since_last_action': (
-                                                     pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                                 pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                          'action': HOUSEKEEPING_ACTION_CHORE,
                                          'recipients': get_recepients(obsreg),
                                          'activity': activity,
@@ -332,7 +342,7 @@ def housekeeping(activity, token):
                                          'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
                                              'type'],
                                          'days_since_last_action': (
-                                                     pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                                 pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                          'action': HOUSEKEEPING_SECOND_CHORE,
                                          'recipients': get_recepients(obsreg),
                                          'activity': activity,
@@ -360,7 +370,7 @@ def housekeeping(activity, token):
                                          'last_updated': obsreg['_updated'],
                                          'last_housekeeping': tmp_type,
                                          'days_since_last_action': (
-                                                     datetime.now(timezone.utc) - obsreg['_updated']).days,
+                                                 datetime.now(timezone.utc) - obsreg['_updated']).days,
                                          'action': None,
                                          'recipients': [],
                                          'activity': activity,
@@ -388,7 +398,7 @@ def housekeeping(activity, token):
                                             'last_housekeeping': HOUSEKEEPING_ANY_CHORE_BEFORE,
                                             # Do not verify which chore
                                             'days_since_last_action': (
-                                                        pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                                    pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                             'action': HOUSEKEEPING_FIRST_CHORE,
                                             'recipients': get_recepients(obsreg),
                                             'activity': activity,
