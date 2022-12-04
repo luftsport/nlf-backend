@@ -61,7 +61,7 @@ HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende t
 
 
 def _do_first(obsreg, activity):
-    message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er første purring.\r\n\r\n' \
+    message = 'Det ser ut til at det har gått over {0} dager uten aktivitet for OBSREG #{1} {2}. Dette er første purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre.\r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
@@ -79,7 +79,7 @@ def _do_first(obsreg, activity):
 
 
 def _do_second(obsreg, activity):
-    message = 'Det ser ut til at det har gått {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er andre purring.\r\n\r\n' \
+    message = 'Det ser ut til at det har gått over {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er andre purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre \r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
@@ -197,8 +197,8 @@ def filter_chores(notifications, _date):
             x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE, HOUSEKEEPING_ACTION_CHORE]
             and x['_created'] >= _date
         ]
-    except:
-        pass
+    except Exception as e:
+        app.logger.exception('Could not filter notifications')
 
     return []
 
@@ -251,9 +251,12 @@ def check_any(l) -> bool:
     :param l: list of notifications
     :return: boolean has any
     """
-    if len([x['type'] for x in l if
-            x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE]]) > 0:
-        return True
+    try:
+        if len([x['type'] for x in l if
+                x['type'] in [HOUSEKEEPING_FIRST_CHORE, HOUSEKEEPING_SECOND_CHORE]]) > 0:
+            return True
+    except Exception as e:
+        app.logger.exception('Could not check for any chores')
 
     return False
 
@@ -269,7 +272,8 @@ def get_recepients(obsreg) -> list:
             r = [HOUSEKEEPING_USER_ID]
         return r
     except:
-        app.logger.exception('Error parsing acl to flat permissions for housekeeping, failed OBSREG ID {}'.format(obsreg.get('id', None)))
+        app.logger.exception('Error parsing acl to flat permissions for housekeeping, failed OBSREG ID {}'.format(
+            obsreg.get('id', None)))
 
     return []
 
@@ -296,6 +300,8 @@ def housekeeping(activity, token):
 
             # iterate every obsreg:
             for obsreg in obsregs:
+                # if obsreg['id'] != 652:
+                #    continue
 
                 # catchall for each
                 try:
@@ -310,6 +316,8 @@ def housekeeping(activity, token):
                             # Filter chores - chores after obsreg last updated:
                             filtered_chores = filter_chores(notifications, obsreg['_updated'])
 
+                            # There is chores within cutoff
+                            # Make sure we do the right chore next
                             if len(filtered_chores) > 0:
 
                                 # Has second warning since obsreg last _updated?
@@ -381,30 +389,35 @@ def housekeeping(activity, token):
 
                             # Check if chores but no chores since last update
                             else:
-                                # Check what is last action?
-                                # Filter from start
-                                filtered_chores_all_time = filter_chores(notifications, datetime(1970, 1, 1, 0, 0))
+                                # Chores,  but no chores in grace period
+                                # => It's been activity after last chore
+                                # => send first warning
 
+                                _do_first(obsreg, activity)
+
+                                msg.append({
+                                    'id': obsreg['id'],
+                                    'last_updated': obsreg['_updated'],
+                                    # Do not verify which chore we start all over again anyway
+                                    'last_housekeeping': HOUSEKEEPING_ANY_CHORE_BEFORE,
+                                    'days_since_last_action': (
+                                            pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
+                                    'action': HOUSEKEEPING_FIRST_CHORE,
+                                    'recipients': get_recepients(obsreg),
+                                    'activity': activity,
+                                    'event_from': f'{activity}_observations',
+                                    'event_from_id': obsreg['_id']
+                                })
+
+                                """
+                                # If one should start from last chore
+                                # Filter from start of time
+                                # filtered_chores_all_time = filter_chores(notifications, datetime(1970, 1, 1, 0, 0))
                                 # Chores has been done
                                 if len(filtered_chores_all_time) > 0:
-
-                                    # Make sure chores are before or eq last updated
-                                    if filtered_chores_all_time[0]['_created'] <= obsreg['_updated']:
-                                        _do_first(obsreg, activity)
-
-                                        msg.append({
-                                            'id': obsreg['id'],
-                                            'last_updated': obsreg['_updated'],
-                                            'last_housekeeping': HOUSEKEEPING_ANY_CHORE_BEFORE,
-                                            # Do not verify which chore
-                                            'days_since_last_action': (
-                                                    pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
-                                            'action': HOUSEKEEPING_FIRST_CHORE,
-                                            'recipients': get_recepients(obsreg),
-                                            'activity': activity,
-                                            'event_from': f'{activity}_observations',
-                                            'event_from_id': obsreg['_id']
-                                        })
+                                # Make sure chores are before or eq last updated
+                                # if filtered_chores_all_time[0]['_created'] <= obsreg['_updated']:
+                                """
 
                         # No housekeeping registered at all
                         # _updated beyond grace for first warning => do first warning
@@ -426,11 +439,15 @@ def housekeeping(activity, token):
                                 _do_first(obsreg, activity)
 
                 except Exception as e:
-                    app.logger('Error looping over obsregs for housekeeping. Failed OBSREG ID: {}'.obsreg.get('id', None))
+                    app.logger('Error looping {} obsregs for housekeeping. Failed ID: {}'.format(
+                        activity,
+                        obsreg.get('id', None)
+                    )
+                    )
         try:
             response, _, _, return_code, location_header = post_internal('housekeeping', msg)
         except Exception as e:
-            app.logger.exception('Error saving obsreg housekeeping audit log')
+            app.logger.exception(f'Error saving obsreg housekeeping audit log for {activity}')
 
         # always return a 200
         return eve_response(msg, 200)
