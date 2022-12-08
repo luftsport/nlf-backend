@@ -12,7 +12,8 @@ _schema = {
     'activity': {'type': 'string'},
     'event_from': {'type': 'string'},
     'event_from_id': {'type': 'objectid'},
-    'last_updated': {'type': 'datetime'}
+    'last_updated': {'type': 'datetime'},
+    'error': {'type': 'string', 'nullable': True}
 }
 
 definition = {
