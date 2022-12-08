@@ -60,13 +60,13 @@ HOUSEKEEPING_FOOTER = 'Dette er en automatisk generert purring etter følgende t
             )
 
 
-def _do_first(obsreg, activity):
+def _do_first(obsreg, activity, recipients):
     message = 'Det ser ut til at det har gått over {0} dager uten aktivitet for OBSREG #{1} {2}. Dette er første purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre.\r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
                 HOUSEKEEPING_FOOTER)
-    r = ors_housekeeping(recipients=get_recepients(obsreg),
+    r = ors_housekeeping(recipients=recipients,
                          event_type=HOUSEKEEPING_FIRST_CHORE,
                          event_from='{}_observations'.format(activity),
                          event_from_id=obsreg['_id'],
@@ -75,16 +75,14 @@ def _do_first(obsreg, activity):
                          org_id=obsreg['discipline'],
                          ors_tags=obsreg.get('tags', []))
 
-    print('DO FIRST', r)
 
-
-def _do_second(obsreg, activity):
+def _do_second(obsreg, activity, recipients):
     message = 'Det ser ut til at det har gått over {0} dager uten aktivitet for OBSREG #{1} "{2}". Dette er andre purring.\r\n\r\n' \
               'Fint om du tar tak i den så snart det lar seg gjøre \r\n\r\n' \
               '{3}' \
         .format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE, obsreg['id'], '/'.join(obsreg.get('tags', [])),
                 HOUSEKEEPING_FOOTER)
-    ors_housekeeping(recipients=get_recepients(obsreg),
+    ors_housekeeping(recipients=recipients,
                      event_type=HOUSEKEEPING_SECOND_CHORE,
                      event_from='{}_observations'.format(activity),
                      event_from_id=obsreg['_id'],
@@ -116,14 +114,14 @@ def _do_action(obsreg, activity):
         transitions = WF_FALLSKJERM_TRANSITIONS
         transitions_attr = WF_FALLSKJERM_TRANSITIONS_ATTR
 
-    if wf_activity:
+    if wf_activity is not None:
 
         # current state:
         curr_state = obsreg['workflow']['audit'][0].get('d', None)
         # previous state
         prev_state = obsreg['workflow']['audit'][0].get('s', None)
 
-        # Only draft - withdraw!
+        # Only draft with no workflow interactions should be withdrawn!
         if curr_state == 'draft' and prev_state is None:
             action = 'withdraw'
             verb = 'trukket'
@@ -148,7 +146,7 @@ def _do_action(obsreg, activity):
                              user_id=1,
                              comment=comment)
 
-            # Now just do a transition
+            # Now just do the transition
             if wf.get_resource_mapping().get(action, False):
                 result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
@@ -261,7 +259,7 @@ def check_any(l) -> bool:
     return False
 
 
-def get_recepients(obsreg) -> list:
+def get_recipients(obsreg) -> list:
     try:
         r = parse_acl_flat_by_permissions(obsreg.get('acl', {}), permissions=HOUSEKEEPING_ACL_RECIPIENTS)
         app.logger.info('{}:Got following recepients {}'.format(obsreg['id'], r))
@@ -275,7 +273,8 @@ def get_recepients(obsreg) -> list:
         app.logger.exception('Error parsing acl to flat permissions for housekeeping, failed OBSREG ID {}'.format(
             obsreg.get('id', None)))
 
-    return []
+    # Always return a recipient so notifications work
+    return [HOUSEKEEPING_USER_ID]
 
 
 @Housekeeping.route("/<string:activity>/<string:token>", methods=['POST'])
@@ -286,13 +285,15 @@ def housekeeping(activity, token):
 
     if HOUSEKEEPING is True and token == HOUSEKEEPING_TOKEN and activity in ACTIVITIES:
 
-        # Assign bot to user:
+        # Assign bot to current user:
         g.user_id = HOUSEKEEPING_USER_ID
 
+        # Keep all audit messages in list
         msg = []
 
         # Set cutoff date
         cutoff_date = pytz.utc.localize(datetime.utcnow()) - timedelta(days=HOUSEKEEPING_CHORE_DAYS_GRACE_MIN)
+
         # get all obsregs:
         status, obsregs = get_observations(activity, cutoff_date)
 
@@ -300,8 +301,13 @@ def housekeeping(activity, token):
 
             # iterate every obsreg:
             for obsreg in obsregs:
-                # if obsreg['id'] != 652:
-                #    continue
+
+                # If error include in audit
+                _error = None
+                # Reset to self always => make sure notifications work
+                _recipients = [HOUSEKEEPING_USER_ID]
+                # Make sure to reset
+                filtered_chores = []
 
                 # catchall for each
                 try:
@@ -323,42 +329,54 @@ def housekeeping(activity, token):
                                 # Has second warning since obsreg last _updated?
                                 if check_second(filtered_chores) is True:
 
+                                    try:
+                                        # Do workflow action
+                                        _do_action(obsreg, activity)
+                                    except Exception as e:
+                                        _error = 'Error in housekeeping workflow transition id {}'.format(obsreg['id'])
+                                        app.logger.exception(_error)
+
+                                    _recipients = get_recipients(obsreg)
                                     # Build message
                                     msg.append(
                                         {'id': obsreg['id'],
                                          'last_updated': obsreg['_updated'],
-                                         'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
-                                             'type'],
+                                         'last_housekeeping': filtered_chores[0]['type'],
                                          'days_since_last_action': (
                                                  pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                          'action': HOUSEKEEPING_ACTION_CHORE,
-                                         'recipients': get_recepients(obsreg),
+                                         'recipients': _recipients,
                                          'activity': activity,
                                          'event_from': f'{activity}_observations',
-                                         'event_from_id': obsreg['_id']
+                                         'event_from_id': obsreg['_id'],
+                                         'error': _error
                                          }
                                     )
 
-                                    # Do workflow action
-                                    _do_action(obsreg, activity)
+                                # Having first warning since obsreg last _updated
+                                elif check_first(filtered_chores) is True:
 
-                                # Has first warning since obsreg last _updated
-                                elif check_first(filter_chores(notifications, obsreg['_updated'])) is True:
+                                    _recipients = get_recipients(obsreg)
+                                    try:
+                                        _do_second(obsreg, activity, _recipients)
+                                    except Exception as e:
+                                        _error = 'Error in housekeeping second warning id {}'.format(obsreg['id'])
+                                        app.logger.exception(_error)
+
                                     msg.append(
                                         {'id': obsreg['id'],
                                          'last_updated': obsreg['_updated'],
-                                         'last_housekeeping': filter_chores(notifications, obsreg['_updated'])[0][
-                                             'type'],
+                                         'last_housekeeping': filtered_chores[0]['type'],
                                          'days_since_last_action': (
                                                  pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                          'action': HOUSEKEEPING_SECOND_CHORE,
-                                         'recipients': get_recepients(obsreg),
+                                         'recipients': _recipients,
                                          'activity': activity,
                                          'event_from': f'{activity}_observations',
-                                         'event_from_id': obsreg['_id']
+                                         'event_from_id': obsreg['_id'],
+                                         'error': _error
                                          }
                                     )
-                                    _do_second(obsreg, activity)
 
 
                                 # Got chores, but not old enough
@@ -366,7 +384,7 @@ def housekeeping(activity, token):
                                 else:
                                     tmp_type = None
                                     try:
-                                        tmp_type = filter_chores(notifications, obsreg['_updated'])[0]['type']
+                                        tmp_type = filtered_chores[0]['type']
                                     except:
                                         pass
 
@@ -377,13 +395,13 @@ def housekeeping(activity, token):
                                         {'id': obsreg['id'],
                                          'last_updated': obsreg['_updated'],
                                          'last_housekeeping': tmp_type,
-                                         'days_since_last_action': (
-                                                 datetime.now(timezone.utc) - obsreg['_updated']).days,
+                                         'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                          'action': None,
                                          'recipients': [],
                                          'activity': activity,
                                          'event_from': f'{activity}_observations',
-                                         'event_from_id': obsreg['_id']
+                                         'event_from_id': obsreg['_id'],
+                                         'error': _error
                                          }
                                     )
 
@@ -392,8 +410,12 @@ def housekeeping(activity, token):
                                 # Chores,  but no chores in grace period
                                 # => It's been activity after last chore
                                 # => send first warning
-
-                                _do_first(obsreg, activity)
+                                _recipients = get_recipients(obsreg)
+                                try:
+                                    _do_first(obsreg, activity, _recipients)
+                                except Exception as e:
+                                    _error = 'Error in housekeeping first warning id {}'.format(obsreg['id'])
+                                    app.logger.exception(_error)
 
                                 msg.append({
                                     'id': obsreg['id'],
@@ -403,10 +425,11 @@ def housekeeping(activity, token):
                                     'days_since_last_action': (
                                             pytz.utc.localize(datetime.utcnow()) - obsreg['_updated']).days,
                                     'action': HOUSEKEEPING_FIRST_CHORE,
-                                    'recipients': get_recepients(obsreg),
+                                    'recipients': _recipients,
                                     'activity': activity,
                                     'event_from': f'{activity}_observations',
-                                    'event_from_id': obsreg['_id']
+                                    'event_from_id': obsreg['_id'],
+                                    'error': _error
                                 })
 
                                 """
@@ -424,19 +447,27 @@ def housekeeping(activity, token):
                         else:
                             # Unnecessary comparison but to be sure
                             if obsreg['_updated'] <= cutoff_date:
+                                _recipients = get_recipients(obsreg)
+                                try:
+                                    _do_first(obsreg, activity, _recipients)
+                                except Exception as e:
+                                    _error = 'Error in housekeeping first warning id {}'.format(obsreg['id'])
+                                    app.logger.exception(_error)
+
                                 msg.append(
                                     {'id': obsreg['id'],
                                      'last_updated': obsreg['_updated'],
                                      'last_housekeeping': None,
                                      'days_since_last_action': (datetime.now(timezone.utc) - obsreg['_updated']).days,
                                      'action': HOUSEKEEPING_FIRST_CHORE,
-                                     'recipients': get_recepients(obsreg),
+                                     'recipients': _recipients,
                                      'activity': activity,
                                      'event_from': f'{activity}_observations',
-                                     'event_from_id': obsreg['_id']
+                                     'event_from_id': obsreg['_id'],
+                                     'error': _error
                                      }
                                 )
-                                _do_first(obsreg, activity)
+
 
                 except Exception as e:
                     app.logger('Error looping {} obsregs for housekeeping. Failed ID: {}'.format(
