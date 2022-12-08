@@ -15,6 +15,7 @@ import requests
 import xmltodict
 
 from ext.app.decorators import require_token
+from ext.scf import GOOGLE_MAPS_API_KEY
 
 LOCATIONS_URL = 'https://ws.geonorge.no/SKWS3Index/ssr/sok'
 Locations = Blueprint('Location service via kartverket', __name__, )
@@ -44,6 +45,7 @@ def search(name=None, max=10, epgs=4326):
     r = requests.get(LOCATIONS_URL,
                      params={'navn': q, 'epsgKode': epgs, 'eksakteForst': True, 'maxAnt': max},
                      headers={'Accept-Encoding': 'gzip, deflate, br', 'Charset': 'utf-8'})
+
     if r.status_code == 200:
         r.encoding = 'UTF-8'
         p = xmltodict.parse(r.text)
@@ -97,8 +99,6 @@ def transform(item):
 @Locations.route("/google", methods=['GET'])
 @require_token()
 def google():
-    # enter your api key here
-    api_key = 'AIzaSyCt7ni1T6AtGNlx-45DVirffvav8l7hlMw'
 
     # url variable store url
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
@@ -109,7 +109,7 @@ def google():
     # get method of requests module
     # return response object
     query = request.args.get('q', default='', type=str)
-    r = requests.get(url, params={'query': query, 'key': api_key})
+    r = requests.get(url, params={'query': query, 'key': GOOGLE_MAPS_API_KEY})
 
     # json method of response object convert
     #  json format data into python format data
