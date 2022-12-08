@@ -64,7 +64,6 @@ class Notification:
         payload['uuid'] = str(uuid4())
 
         response, _, _, return_code, location_header = post_internal('notifications', payload)
-        # print('Response from', response, return_code)
         if return_code == 201:
             return True, response
 

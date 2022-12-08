@@ -8,7 +8,6 @@ def after_fetched_item(response):
         response = _anon(response)
 
     except Exception as e:
-        print('Error', e)
         return eve_abort(500, 'Anon file aborted')
 
 
@@ -17,7 +16,6 @@ def after_fetched_list(response):
         for key, item in enumerate(response.get('_items', [])):
             response['_items'][key] = _anon(item)
     except Exception as e:
-        print('Error', e)
         return eve_abort(500, 'Anon file aborted')
 
 

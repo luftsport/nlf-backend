@@ -46,15 +46,12 @@ class Anon(object):
 
 
         elif 'id' in x and 'tmp_name' not in x:
-            # print("ID: %s" % x['id'])
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
             else:
-                # print("X her: " % x)
                 pass
 
         elif 'id' in x and 'tmp_name' in x:
-            # print("ID TMP: %s %s" % (x['id'], x['tmp_name']))
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
             else:
@@ -62,18 +59,15 @@ class Anon(object):
 
 
         elif 'id' not in x and 'tmp_name' in x:
-            # print("TMP: %s" % x['tmp_name'])
             x['id'] = 0  # self.assign(x['tmp_name'])
 
         else:
-            # print("ERROR")
             x['id'] = 0
 
         # Always delete tmp_ and full_name!
         x.pop('tmp_name', None)
         x.pop('full_name', None)
 
-        # print("NEW: %s" % x['id'])
         return x
 
     def assign_pair(self, x):

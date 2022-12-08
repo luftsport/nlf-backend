@@ -520,7 +520,6 @@ class ObservationWorkflow(Machine):
     def __init__(self, object_id=None, initial_state=None, user_id=None, comment=None):
 
         self.user_id = user_id
-        print('[WF USER ID]', self.user_id)
         # The states
         # states 'name', 'on_enter', 'on_exit'
         self._states = WF_FALLSKJERM_STATES
@@ -557,7 +556,7 @@ class ObservationWorkflow(Machine):
         """
 
         """
-        Workflows also have wathcers, so call them when something happens!
+        Workflows also have watchers, so call them when something happens!
         And all involved ARE watchers
         @todo: Signals implementation with watchers
 
@@ -628,7 +627,9 @@ class ObservationWorkflow(Machine):
         for transition in self._transitions:
             app.logger.info('WF: transition iter: {}'.format(transition))
             if self.state == transition['source']:
-                app.logger.info('WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'], transition['trigger']))
+                app.logger.info(
+                    'WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'],
+                                                                              transition['trigger']))
                 events.append(transition['trigger'])
 
         return events
@@ -650,13 +651,11 @@ class ObservationWorkflow(Machine):
         resources = []
 
         for event in self.get_actions():
-            print('[EVENT]', event)
             tmp = self._trigger_attrs.get(event)
-            print('[tmp]', tmp)
             try:
                 tmp['permission'] = self.has_permission()
             except Exception as e:
-                print('[ERRRR] ', e)
+                app.logger.exception('Error in wf_fallskjerm.get_resources')
 
             resources.append(tmp)
 

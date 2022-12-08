@@ -33,7 +33,6 @@ def require_token(allowed_roles=None):
         def wrapped(*args, **kwargs):
 
             try:
-                # print(request.headers.get('User-Agent'))
                 # No authorization in request
                 # Let it raise an exception
                 try:

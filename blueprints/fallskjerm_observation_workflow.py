@@ -106,7 +106,6 @@ def transition(observation_id, action):
         comment = args.get('comment', '')
     except Exception as e:
         # Could try form etc
-        print('ERR', e)
         pass
 
     # Instantiate with observation_id and current user (user is from g.user_id

@@ -423,7 +423,6 @@ def generate(activity, _id):
                     cmds += file_list
                     # dir:
                     # cmds += file_name
-                    # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
                         FILE_WORKING_DIR
@@ -478,7 +477,6 @@ def generate(activity, _id):
                     if not _update:
                         app.logger.error('Error storing e5x delivery message in database')
 
-                    # print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
                     try:
                         recepients = parse_acl_flat(ors.get('acl', {}))
 
@@ -500,7 +498,6 @@ def generate(activity, _id):
                                               + ors.get('organization', {}).get('ors', [])
                                               + ors.get('organization', {}).get('dto', [])
                                               ))
-                        # print('RECEPIENTS', recepients)
 
                         message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
                                   Levert:\t{2}\n\
@@ -567,7 +564,6 @@ def download(activity, ors_id, version):
                                                        ors_id,
                                                        version)
                 app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
-                # print('####',
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
                 #    
@@ -576,7 +572,6 @@ def download(activity, ors_id, version):
                                  attachment_filename=file_name,
                                  mimetype="'application/octet-stream'")
             except Exception as e:
-                # print('Download failed', e)
                 app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
 
         app.logger.debug(

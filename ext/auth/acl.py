@@ -27,7 +27,6 @@ def get_acl(collection, _id, projection={'acl': 1}, right='read'):
     else:
         match = {'id': _id}
 
-    # print('MATCH', match)
     res = col.find_one({'$and': [match,
                                  {'$or':
                                      [
@@ -67,7 +66,6 @@ def modify_user_acl(collection, _id, person_id, right, operation):
 
         return True
     except Exception as e:
-        # print('ERRR', e)
         pass
     return False
 
@@ -82,7 +80,6 @@ def parse_acl(acl):
 
     for right in acl.keys():
         for role in acl.get(right, {}).get('roles', []):
-            # print('ROLE', role)
 
             if role.get('org', None) is not None and role.get('org', 0) > 0:
                 _orgs = [role.get('org')]
@@ -150,8 +147,6 @@ def has_nanon_permission(resource_acl, perm, state, model, org=0):
             roles.append(role)
 
         if state == 'closed' and perm == 'execute':
-            # print('NANON', [pid for pid in g.acl']['roles'] if pid in roles])
-            # print(g.user_id in resource_acl[perm]['roles'])
             if (
                     any(pid for pid in g.acl.get('roles', []) if pid in roles) is True
                     or g.user_id in resource_acl[perm]['roles'] is True

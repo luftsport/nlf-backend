@@ -128,8 +128,6 @@ def _ors_after_fetched(_response):
     # _response.set_data({})
     if isinstance(_response, dict):
         _response['acl_user'] = get_user_acl_mapping(_response.get('acl', {}))
-        # print('OBSREG state', _response.get('workflow', {}).get('state', 'NONE'))
-        # print('ACL', _response.get('acl', 'NONE'))
     try:
         if isinstance(_response, list):
 

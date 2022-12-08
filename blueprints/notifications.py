@@ -93,7 +93,7 @@ def reminder():
             return eve_abort(422, 'Missing parameters')
 
         status, acl, rest = get_acl(event_from, event_from_id, projection={'acl': 1, 'workflow.state': 1, 'id': 1, 'discipline': 1, 'tags': 1})
-        # print('ACLS', acl)
+
         if rest.get('workflow', {}).get('state', 'closed') in ['closed', 'withdrawn']:
             return eve_response_pppd(
                 {'data': 'Observasjonen er {}'.format(rest.get('workflow', {}).get('state', 'closed'))},

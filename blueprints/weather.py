@@ -29,7 +29,7 @@ Weather = Blueprint('Weather', __name__, )
 
 
 def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
-    print('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
+
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
         try:
@@ -71,7 +71,6 @@ def get_metar_as_dict(metar):
                 elif 'metar.Datatypes' in '{}'.format(type(metar.__dict__[k])):
                     m[k] = metar.__dict__[k].__dict__
                 elif k == 'runway':
-                    print(metar.__dict__[k])
                     i = 0
                     for rwy in metar.__dict__[k]:
                         j = 0
@@ -217,13 +216,11 @@ New metar methods using api.met.no
 @require_token()
 def met_tafmetar(icao, date):
     try:
-        # print(icao, date)
         status, taf, metar = get_taf_metar(icao, date)
 
         if status is True:
             return eve_response({'taf': taf, 'metar': metar}, 200)
         else:
-            # print(get_taf_metar(icao, date))
             pass
     except Exception as e:
         app.logger.error(e)

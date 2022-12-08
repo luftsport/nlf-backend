@@ -27,7 +27,6 @@ def track_time_spent(name='Unnamed test'):
         def wrapped(*args, **kwargs):
             start = datetime.now()
             delta = datetime.now() - start
-            print(name, "took", delta.total_seconds(), "seconds")
             return f(*args, **kwargs)
         return wrapped
     return decorator

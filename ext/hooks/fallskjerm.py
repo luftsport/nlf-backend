@@ -78,6 +78,7 @@ def ors_before_insert_item(item):
     except Exception as e:
         return eve_abort(422, 'Could not create OBSREG')
 
+
 def ors_after_inserted(items):
     for item in items:
         ors_after_inserted_item(item)

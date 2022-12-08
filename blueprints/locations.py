@@ -45,7 +45,6 @@ def search(name=None, max=10, epgs=4326):
                      params={'navn': q, 'epsgKode': epgs, 'eksakteForst': True, 'maxAnt': max},
                      headers={'Accept-Encoding': 'gzip, deflate, br', 'Charset': 'utf-8'})
     if r.status_code == 200:
-        print(r.encoding)
         r.encoding = 'UTF-8'
         p = xmltodict.parse(r.text)
 
@@ -94,6 +93,7 @@ def transform(item):
 
     return p
 
+
 @Locations.route("/google", methods=['GET'])
 @require_token()
 def google():
@@ -121,9 +121,9 @@ def google():
     y = x['results']
 
     # keep looping upto length of y
-    for i in range(len(y)):
-        # Print value corresponding to the
-        # 'name' key at the ith index of y
-        print(y[i])
+    # for i in range(len(y)):
+    #     # Print value corresponding to the
+    #    # 'name' key at the ith index of y
+    #    print(y[i])
 
     return jsonify(**x)

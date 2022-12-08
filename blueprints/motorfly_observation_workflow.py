@@ -30,7 +30,6 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
-    # print(observation_id)
 
     wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 

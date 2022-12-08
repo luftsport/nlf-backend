@@ -17,8 +17,6 @@ Content = Blueprint('Custom content resource', __name__, )
 @Content.route("/publish/<objectid:content_id>", methods=['POST', 'DELETE'])
 @require_token()
 def publish(content_id):
-
-
     lookup = {
         '_id': content_id,
         '$or': [{"acl.execute.roles": {'$in': g.acl.get('roles', [])}},
@@ -56,12 +54,7 @@ def publish(content_id):
                                                            False,
                                                            True,
                                                            **lookup)
-    print(response, status)
-    if status in [200,201]:
+    if status in [200, 201]:
         return eve_response(response, status)
 
-    else:
-        print(response, status)
-
     return eve_error_response('Error', 403)
-

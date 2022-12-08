@@ -72,7 +72,6 @@ def login():
             if person_id is None:
                 return eve_abort(401, 'Could not validate the token, could not find username')
             else:
-                #  print('Username', person_id)
                 _user = User(int(person_id), app)
 
         except jwt.exceptions.InvalidTokenError:

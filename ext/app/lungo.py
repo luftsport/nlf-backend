@@ -35,7 +35,6 @@ def get_person_acl(person_id) -> (bool, dict):
 
         # Prepare acl roles
         for item in r.get('_items', []):
-            # print(item)
             acl.append(item)
             # All orgs
             acl.append({
@@ -134,7 +133,6 @@ def get_person_email(person_id) -> (bool, dict):
 
 
 def get_org_name(org_id):
-    # print('{}/{}/{}'.format(LUNGO_URL, 'organizations', org_id))
     resp = requests.get('{}/{}/{}?projection={{"name": 1}}'.format(LUNGO_URL, 'organizations', org_id),
                         headers=LUNGO_HEADERS,
                         verify=app['config'].get('REQUESTS_VERIFY', True))
@@ -175,12 +173,10 @@ def get_orgs_in_activivity(activity_id, org_type_ids=[6, 14, 19]):
 
     if resp.status_code == 200:
         try:
-            # print(resp.json())
             return resp.json().get('_items', [{}])[0].get('org_ids', [])
         except IndexError as e:
             pass
 
-    # print(resp.text)
     return []
 
 
@@ -201,12 +197,10 @@ def get_users_from_role(type_id, org_type_ids=[6, 14, 19]):
 
     if resp.status_code == 200:
         try:
-            # print(resp.json())
             return resp.json().get('_items', [{}])[0].get('person_ids', [])
         except IndexError as e:
             pass
 
-    # print(resp.text)
     return []
 
 
@@ -219,7 +213,6 @@ def get_recepients(recepients):
 
     try:
         query = 'where={{"id": {{"$in": {} }}}}&projection={{"full_name": 1, "address.email": 1}}'.format(recepients)
-        # print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
         resp = requests.get('{}/{}?{}'.format(LUNGO_URL, 'persons', query), headers=LUNGO_HEADERS)
 
         if resp.status_code == 200:
