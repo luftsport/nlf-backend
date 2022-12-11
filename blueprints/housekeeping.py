@@ -470,7 +470,7 @@ def housekeeping(activity, token):
 
 
                 except Exception as e:
-                    app.logger('Error looping {} obsregs for housekeeping. Failed ID: {}'.format(
+                    app.logger.exception('Error looping {} obsregs for housekeeping. Failed ID: {}'.format(
                         activity,
                         obsreg.get('id', None)
                     )
