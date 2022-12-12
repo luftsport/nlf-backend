@@ -12,7 +12,7 @@ from sys import exit
 try:
     from instance import APP_INSTANCE
 except:
-    print("[ERR] No instance file 'instance.py' found, exiting")
+    print("[ERR] No instance file 'instance.py' found, exiting")
     exit(0)
 
 # Make importing sliced up apps easy as pees
