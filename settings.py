@@ -12,7 +12,7 @@ from sys import exit
 try:
     from instance import APP_INSTANCE
 except:
-    print("[ERR] No instance file 'instance.py' found, exiting")
+    print("[ERR] No instance file 'instance.py' found, exiting")
     exit(0)
 
 # Make importing sliced up apps easy as pees
@@ -75,7 +75,7 @@ elif APP_INSTANCE in ['dev', 'local']:
     APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
 
 if APP_INSTANCE == 'local':
-    E5X_WORKING_DIR = '/home/einar/einar/Development/Luftfartstilsynet/RITS/'
+    E5X_WORKING_DIR = 'path to local instance of E5X RIT'
     REQUESTS_VERIFY = False
 else:
     E5X_WORKING_DIR = '/www/{}/e5x'.format(APP_INSTANCE)

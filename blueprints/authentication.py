@@ -6,7 +6,7 @@
         
 """
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify
 from eve.methods.post import post_internal
 from eve.methods.patch import patch_internal
 from eve.methods.get import getitem_internal, get_internal
@@ -47,6 +47,7 @@ def login():
     """
     username = None
     password = None
+    id_token = None
     token_valid = False
 
     # Request via json
@@ -55,6 +56,7 @@ def login():
     try:
         username = rq['username']
         password = rq['password']
+        id_token = rq['id_token']
     except:
         # Now it will fail in the next if
         pass
@@ -72,7 +74,6 @@ def login():
             if person_id is None:
                 return eve_abort(401, 'Could not validate the token, could not find username')
             else:
-                #  print('Username', person_id)
                 _user = User(int(person_id), app)
 
         except jwt.exceptions.InvalidTokenError:
@@ -119,7 +120,9 @@ def login():
                 acl = []
             response, _, _, status = patch_internal(resource='users_auth',
                                                     payload={'auth': {'token': token,
-                                                                      'valid': valid},  # Arrow utc.datetime
+                                                                      'valid': valid,
+                                                                      'id_token': id_token
+                                                                      },  # Arrow utc.datetime
                                                              'acl': [{'activity': a['activity'],
                                                                       'org': a['org'],
                                                                       'role': a['role']
@@ -136,6 +139,7 @@ def login():
                                           'username': _user.person_id,
                                           'token': token,
                                           'token64': b64.decode('utf-8'),
+                                          'id_token': id_token,
                                           'valid': valid,
                                           'activities': activities,
                                           'acl': acl,
@@ -158,6 +162,7 @@ def login():
                               'username': None,
                               'token': None,
                               'token64': None,
+                              'id_token': None,
                               'valid': None,
                               'activities': [],
                               'acl': [],
@@ -176,7 +181,7 @@ def get_user():
     Only return 'I am username'"""
 
     try:
-        response, last_modified, etag, status = getitem_internal(resource='users', **{'id': app.globals['id']})
+        response, last_modified, etag, status = getitem_internal(resource='users', **{'id': g.user_id})
 
         if status == 200 and '_id' in response:
             return eve_response(data={'iam': response['id']})
@@ -189,6 +194,6 @@ def get_user():
 @Authenticate.route("/groups", methods=['GET'])
 @require_token()
 def get_user_groups():
-    return eve_response(data=app.globals['acl'])
+    return eve_response(data=g.acl)
 
 """

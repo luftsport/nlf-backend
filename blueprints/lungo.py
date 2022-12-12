@@ -33,8 +33,6 @@ def syncdaemon_workers_start():
 @Lungo.route("/syncdaemon/worker/reboot/<int:index>", methods=["POST"])
 @require_token()
 def lungo_worker_reboot(index):
-    # print('test')
-    # print('{}'.format(request.args))
 
     resp = requests.post('{}/syncdaemon/worker/reboot/{}'.format(LUNGO_URL, index),
                          data=None,
@@ -49,7 +47,6 @@ def lungo_worker_reboot(index):
 @Lungo.route("/<path:path>", methods=['GET'])
 @require_token()
 def lungo(path):
-    # print('{}'.format(request.args))
 
     resp = requests.get('{}/{}'.format(LUNGO_URL, path),
                         params=request.args.to_dict(),

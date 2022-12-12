@@ -1,5 +1,5 @@
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify
 from bson import json_util
 import json
 
@@ -24,7 +24,7 @@ def share_observation(observation_id):
 
     raise NotImplementedError
     recepients = get_person_email(users)
-    status, action_by = get_person_email(app.globals.get('user_id'))
+    status, action_by = get_person_email(g.user_id)
         
     subject = '%s har delt observasjon #%i' % (action_by, observation_id)
     

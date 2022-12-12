@@ -46,7 +46,6 @@ class Sms:
         # ErrorNumber = 0
         # Success = True
         # }
-        # print(result.Success)
         return
 
     def send(self, mobile, message):

@@ -1,4 +1,4 @@
-from flask import current_app as app
+from flask import g, current_app as app
 from bson.objectid import ObjectId
 import ext.auth.acl as acl_helper
 from ext.app.eve_helper import eve_abort
@@ -15,7 +15,7 @@ class Anon(object):
         """Keep track of all assigned persons"""
 
         # See yourself
-        if int(person) == int(app.globals['id']):
+        if int(person) == int(g.user_id):
             return int(person)
 
         if person in self.persons:
@@ -37,7 +37,7 @@ class Anon(object):
             x['id'] = 0
 
         # Allow users to see themself
-        if int(x['id']) == int(app.globals['id']):
+        if int(x['id']) == int(g.user_id):
             # Always delete tmp_ and full_name!
             x.pop('tmp_name', None)
             x.pop('full_name', None)
@@ -46,15 +46,12 @@ class Anon(object):
 
 
         elif 'id' in x and 'tmp_name' not in x:
-            # print("ID: %s" % x['id'])
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
             else:
-                # print("X her: " % x)
                 pass
 
         elif 'id' in x and 'tmp_name' in x:
-            # print("ID TMP: %s %s" % (x['id'], x['tmp_name']))
             if x['id'] > 0:
                 x['id'] = self.assign(x['id'])
             else:
@@ -62,18 +59,15 @@ class Anon(object):
 
 
         elif 'id' not in x and 'tmp_name' in x:
-            # print("TMP: %s" % x['tmp_name'])
             x['id'] = 0  # self.assign(x['tmp_name'])
 
         else:
-            # print("ERROR")
             x['id'] = 0
 
         # Always delete tmp_ and full_name!
         x.pop('tmp_name', None)
         x.pop('full_name', None)
 
-        # print("NEW: %s" % x['id'])
         return x
 
     def assign_pair(self, x):
@@ -229,7 +223,7 @@ def anonymize_ors(item):
 
                 # USER MACRO
                 if macros[key].get('data-type', '') == 'user' and int(macros[key].get('data-id', 0)) != int(
-                        app.globals['id']):
+                        g.user_id):
 
                     macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, send_file
 from bson import json_util
 import simplejson as json
 import subprocess
@@ -168,7 +168,6 @@ def remove_empty_nodes(obj):
         # 'NaN' is empty
         return {k: v for k, v in ((k, clean_empty(v)) for k, v in d.items()) if v and v != 'NaN'}
 
-
     def scrub(obj, bad_key="id", bad_values=[]):
         if isinstance(obj, dict):
             for key in list(obj.keys()):
@@ -189,9 +188,7 @@ def remove_empty_nodes(obj):
 
         return obj
 
-        # Remove all single id's
-
-
+    # Remove all single id's
     obj = scrub(obj, bad_key='id')
     # Remove all no values only unit
     obj = scrub(obj, bad_key='unit')
@@ -213,6 +210,87 @@ def remove_empty_nodes(obj):
     return clean_empty(obj)
 
 
+def cast_item_recursive(obj, keys, e5x_multiple_keys):
+    # Check if any object keys matches id/choices.
+    try:
+        if isinstance(obj, dict):
+            if any(x in keys for x in list(obj.keys())):
+                for key in keys:
+
+                    if (
+                            key in list(obj.keys()) and
+                            key in e5x_multiple_keys and
+                            isinstance(obj[key], dict) and
+                            'value' in obj[key]
+                    ):
+                        if isinstance(obj[key]['value'], list):
+                            obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
+                        else:
+                            obj[key] = [obj[key]['value']]
+
+                    if key in list(obj.keys()):
+                        if 'value' in list(obj[key].keys()):
+                            if isinstance(obj[key]['value'], list):
+                                obj[key]['value'] = ['{}'.format(int(float(x))) for x in obj[key]['value']]
+                            elif isinstance(obj[key]['value'], dict) is False:
+                                obj[key]['value'] = '{}'.format(int(float(obj[key]['value'])))
+                        elif isinstance(obj[key], list):
+                            if (
+                                    len(obj[key]) > 0 and
+                                    isinstance(obj[key][0], list) is False and
+                                    isinstance(obj[key][0], dict) is False
+                            ):
+                                obj[key] = ['{}'.format(int(float(x))) for x in obj[key]]
+                return obj
+    except Exception as e:
+        app.logger.exception('[E5X] Error casting value(s)')
+        pass
+
+    # If not key in keys and dict or list
+    # Dict
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif k in keys and isinstance(v, list) and len(v) > 0 and isinstance(v[0], str):
+                obj[k] = ['{}'.format(int(float(x))) for x in obj[k]]
+                return obj
+
+    # List of dicts
+    if isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict):
+
+        for k, v in enumerate(obj):
+            if isinstance(v, dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+            elif isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
+                obj[k] = cast_item_recursive(v, keys, e5x_multiple_keys)
+
+    return obj
+
+
+def convert_to_integer_ids(e5x_data):
+    try:
+        col = app.data.driver.db['e5x_attributes']
+        data = list(col.find({"choices_key": {"$ne": None}, "rit_version": E5X_RIT_DEFAULT_VERSION}))
+        l = []
+        l2 = []
+        for k in data:
+            l.append(k['attribute'].split('.')[-1])
+            if k['max'] not in [0, 1]:
+                l2.append(k['attribute'].split('.')[-1])
+
+        e5x_keys = [x[0].lower() + x[1:] for x in l]
+        e5x_multiple_keys = [x[0].lower() + x[1:] for x in l2]
+
+        return cast_item_recursive(e5x_data, e5x_keys, e5x_multiple_keys)
+    except Exception as e:
+        app.logger.exception("[ERROR] Could not convert e5x data", e5x_data)
+
+    return e5x_data
+
+
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
 def generate(activity, _id):
@@ -220,8 +298,8 @@ def generate(activity, _id):
     resource_collection = '{}_observations'.format(activity)
     col = app.data.driver.db[resource_collection]
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
-                                {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                         {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                                {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                                         {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
     total_items = cursor.count()
 
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
@@ -265,7 +343,7 @@ def generate(activity, _id):
                 files_working_path = '{}/{}'.format(FILE_WORKING_DIR, file_name)
                 if os.path.exists(files_working_path) is False:
                     _, stdout, stderr = execute(['mkdir', file_name], FILE_WORKING_DIR)
-                    app.logger.debug('[E5X] Created folder for files')
+                    app.logger.debug('[E5X] Created folder for files')
 
                 for key, _file in enumerate(ors.get('files', [])):
                     try:
@@ -321,10 +399,6 @@ def generate(activity, _id):
                 with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
                     json.dump(data['e5x'], f)
 
-                # 1 Dump to json file
-                with open('{}/{}'.format(FILE_WORKING_DIR, json_file_name), 'w') as f:
-                    json.dump(data['e5x'], f)
-
                 # 2 Generate xml file
                 # e5x-generate.js will make folder relative to e5x-generate.js
                 _, stdout, stderr = execute(
@@ -349,7 +423,6 @@ def generate(activity, _id):
                     cmds += file_list
                     # dir:
                     # cmds += file_name
-                    # print('CMDS', file_list, cmds)
                     _, stdout, stderr = execute(
                         cmds,
                         FILE_WORKING_DIR
@@ -404,7 +477,6 @@ def generate(activity, _id):
                     if not _update:
                         app.logger.error('Error storing e5x delivery message in database')
 
-                    # print('UPDATED DB SAID: ', _update.raw_result, dir(_update))
                     try:
                         recepients = parse_acl_flat(ors.get('acl', {}))
 
@@ -419,7 +491,32 @@ def generate(activity, _id):
                                 transport='sftp',
                                 context='sent'
                                 )
+                        """
+                        
+                        #### TEST EMAIL!
+                        recepients = list(set([g.user_id]
+                                              + ors.get('organization', {}).get('ors', [])
+                                              + ors.get('organization', {}).get('dto', [])
+                                              ))
 
+                        message = 'Hei\n\nDette er en leveringsbekreftelse for OBSREG #{0} versjon {1}\n\n \
+                                  Levert:\t{2}\n\
+                                  Status:\t{3}\n\
+                                  Fil:\t{4}\n\
+                                  Levert via:\t{5}\n\
+                                  Instans:\t{6}\n'.format(ors.get('id', ''),
+                                                          ors.get('_version', ''),
+                                                          datetime.datetime.now(),
+                                                          status,
+                                                          '{}.e5x'.format(file_name),
+                                                          'sftp',
+                                                          app.config.get('APP_INSTANCE', ''))
+
+                        subject = 'E5X Leveringsbekreftelse OBSREG {0} v{1}'.format(ors.get('id', ''),
+                                                                                 ors.get('_version', ''))
+
+                        notify(recepients, subject, message)
+                        """
                     except Exception as e:
                         app.logger.exception('Error delivering e5x delivery notification')
 
@@ -442,9 +539,9 @@ def download(activity, ors_id, version):
         # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
         cursor = col.find({'$and': [{'id': ors_id},
                                     {'$or': [
-                                        {'reporter': app.globals['user_id']},
-                                        {'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                        {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}
+                                        {'reporter': g.user_id},
+                                        {'acl.execute.users': {'$in': [g.user_id]}},
+                                        {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}
                                     ]
                                     }
                                     ]
@@ -466,8 +563,7 @@ def download(activity, ors_id, version):
                 file_name = 'nlf_{}_{}_v{}.e5x'.format(activity,
                                                        ors_id,
                                                        version)
-                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
-                # print('####',
+                app.logger.debug('[E5X DOWNLOAD] {}/{}'.format(FILE_WORKING_DIR, file_name))
                 app.config['static_url_path'] = FILE_WORKING_DIR
                 # with open('{}/{}'.format(FILE_WORKING_DIR, file_name), 'wb') as f:
                 #    
@@ -476,7 +572,6 @@ def download(activity, ors_id, version):
                                  attachment_filename=file_name,
                                  mimetype="'application/octet-stream'")
             except Exception as e:
-                # print('Download failed', e)
                 app.logger.debug('[E5X DOWNLOAD ERR] {}'.format(e))
 
         app.logger.debug(

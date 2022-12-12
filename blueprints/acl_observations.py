@@ -6,7 +6,7 @@
 
 """
 
-from flask import Blueprint, current_app as app, request, Response, abort, jsonify
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify
 from bson import json_util
 import json
 
@@ -26,7 +26,7 @@ ACLObservations = Blueprint('Acl for observations', __name__, )
 @require_token()
 def acl_toggle(activity, _id, right, person_id ):
 
-    if person_id != app.globals.get('user_id'):
+    if person_id != g.user_id:
         # projection={'acl': 1}, right='read'
         status, acl, _ = get_acl('{}_observations'.format(activity), _id, projection={'acl': 1, 'reporter': 1}, right='execute')
 

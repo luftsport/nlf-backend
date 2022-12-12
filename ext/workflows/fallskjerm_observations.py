@@ -1,13 +1,12 @@
 from transitions import Machine
 
-from flask import current_app as app, request
+from flask import g, current_app as app, request
 from bson.objectid import ObjectId
 
 from eve.methods.patch import patch_internal
 
 from datetime import datetime, timedelta
 
-from flask import current_app as app
 import re
 
 from ext.auth.acl import has_permission as acl_has_permission
@@ -26,6 +25,7 @@ from ext.scf import ACL_CLOSED_ALL_LIST, \
 
 from ext.app.notifications import ors_workflow
 from ext.auth.acl import parse_acl_flat
+from ext.scf import HOUSEKEEPING_USER_ID
 
 RESOURCE_COLLECTION = 'fallskjerm_observations'
 
@@ -139,7 +139,7 @@ WF_FALLSKJERM_TRANSITIONS = [
         'source': 'draft',
         'dest': 'pending_review_hi',
         'after': 'save_workflow',
-        'conditions': ['has_permission']
+        'conditions': ['has_permission'],
     },
     {
         'trigger': 'withdraw',
@@ -556,7 +556,7 @@ class ObservationWorkflow(Machine):
         """
 
         """
-        Workflows also have wathcers, so call them when something happens!
+        Workflows also have watchers, so call them when something happens!
         And all involved ARE watchers
         @todo: Signals implementation with watchers
 
@@ -627,7 +627,9 @@ class ObservationWorkflow(Machine):
         for transition in self._transitions:
             app.logger.info('WF: transition iter: {}'.format(transition))
             if self.state == transition['source']:
-                app.logger.info('WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'], transition['trigger']))
+                app.logger.info(
+                    'WF: self state is in transition source: {} {} {}'.format(self.state, transition['source'],
+                                                                              transition['trigger']))
                 events.append(transition['trigger'])
 
         return events
@@ -649,13 +651,11 @@ class ObservationWorkflow(Machine):
         resources = []
 
         for event in self.get_actions():
-            print('[EVENT]', event)
             tmp = self._trigger_attrs.get(event)
-            print('[tmp]', tmp)
             try:
                 tmp['permission'] = self.has_permission()
             except Exception as e:
-                print('[ERRRR] ', e)
+                app.logger.exception('Error in wf_fallskjerm.get_resources')
 
             resources.append(tmp)
 
@@ -681,12 +681,15 @@ class ObservationWorkflow(Machine):
         return False
         check if in execute!
         """
+
+        # Always grant
+        if self.user_id == HOUSEKEEPING_USER_ID:
+            return True
         try:
-            if len([i for i in app.globals['acl'].get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
-                    or app.globals['user_id'] in self.initial_acl['execute']['users']:
+            if len([i for i in g.acl.get('roles', []) if i in self.initial_acl['execute']['roles']]) > 0 \
+                    or g.user_id in self.initial_acl['execute']['users']:
                 return True
         except Exception as e:
-            print('Error in has_permission', e)
             pass
 
         return False
@@ -887,7 +890,7 @@ class ObservationWorkflow(Machine):
         new['workflow']['last_transition'] = datetime.utcnow()
 
         # New owner it is!
-        new['owner'] = app.globals['user_id']
+        new['owner'] = g.user_id
 
         if self._trigger_attrs.get(event.event.name).get('comment'):
             new.get('workflow').update({'comment': self.comment})

@@ -18,7 +18,6 @@ from ext.app.lungo import get_person_from_role, get_org_name, get_person_name
 def get_recepients(recepients):
     result = []
     query = 'where={{"id": {{"$in": {} }}}}&projection={{"full_name": 1, "address.email": 1}}'.format(recepients)
-    # print('{}/{}?{}'.format(LUNGO_URL, 'persons', query))
     resp = requests.get('{}/{}?{}'.format(LUNGO_URL, 'persons', query), headers=LUNGO_HEADERS)
 
     if resp.status_code == 200:
@@ -30,7 +29,6 @@ def get_recepients(recepients):
                         'full_name': person.get('full_name', ''),
                         'email': person.get('address', {}).get('email', [])[0]})
                 except Exception as e:
-                    #print('Ugha', e)
                     pass
 
     return list({v['email']: v for v in result if len(v['email']) > 4}.values())
@@ -98,12 +96,11 @@ def send_async(recepients, message):
     # s.login(EMAIL_CFG['username'], EMAIL_CFG['password'])
 
     for recepient in get_recepients(recepients):
-        # print(recepient)
         message['To'] = '{} <{}>'.format(recepient['full_name'], recepient['email'])
         try:
             s.send_message(message)
-        except:
-            #print('Error sending message')
+        except Exception as e:
+            app.logger.exception('There was an error sending the messag')
             pass
 
     s.quit()

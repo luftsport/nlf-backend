@@ -55,6 +55,7 @@ from blueprints.lungo import Lungo
 from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
+from blueprints.housekeeping import Housekeeping
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
@@ -64,7 +65,6 @@ from ext.auth.tokenauth import TokenAuth
 
 # From notfication
 import ext.hooks.notifications as notifications
-
 
 # Verify startup inside virtualenv
 def in_virtualenv():
@@ -146,6 +146,9 @@ app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
 
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
+
+# Housekeeping
+app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
@@ -251,6 +254,7 @@ app.on_update_sportsfly_observations += hook.sportsfly.ors_before_update
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
 
+
 ###############
 # Notifications
 app.on_pre_GET_notifications += hook.notifications.before_get
@@ -304,35 +308,6 @@ def _aggregation(endpoint, pipeline):
 # Before any aggregation run this
 app.before_aggregation += _aggregation
 
-
-def ooh(request, lookup):
-    print('[AGGG]', request, lookup)
-
-
-# app.on_pre_GET_notifications_events += ooh
-# Motor
-
-# app.on_post_POST_g_observations += hook.fallskjerm.after_g_post
-# app.on_pre_POST_fallskjerm_observations += dump_request
-
-# app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.before_patch
-
-# app.on_post_PATCH_fallskjerm_observations += hook.fallskjerm.after_patch
-
-# app.on_insert_oplog += hook.oplog.before_insert
-
-# app.on_pre_GET_observations += observations_before_get
-# app.on_pre_POST_observations += observations_before_post
-# app.on_pre_PATCH_observations += observations_before_patch
-
-
-# app.on_insert += hook.observations.before_post_comments
-# app.on_insert_f_observation_comments += hook.fallskjerm.ors_before_post_comments
-
-# app.on_post_GET_fallskjerm_observations += hook.observations.after_get
-# app.on_fetched_item_fallskjerm_observations += hook.observations.after_fetched
-
-
 # App error hooks
 @app.errorhandler(401)
 def http_401(e):
@@ -373,18 +348,30 @@ if 1 == 1 or not app.debug:
 
     # Log startup settings from scf
     try:
-        from ext.scf import E5X_SEND_TO_LT, NOTIFICATION_SEND_EMAIL
+        from ext.scf import (
+            E5X_SEND_TO_LT,
+            NOTIFICATION_SEND_EMAIL,
+            HOUSEKEEPING,
+            HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE,
+            HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE,
+            HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE
+        )
         app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
         app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
+        app.logger.info('[HOUSEKEEPING] Enabled:\t {}'.format(HOUSEKEEPING))
+        if HOUSEKEEPING is True:
+            app.logger.info('[HOUSEKEEPING] Days to first warning:\t {}'.format(HOUSEKEEPING_FIRST_CHORE_DAYS_GRACE))
+            app.logger.info('[HOUSEKEEPING] Days to second warning:\t {}'.format(HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE))
+            app.logger.info('[HOUSEKEEPING] Days to action taken:\t {}'.format(HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE))
     except Exception as e:
         app.logger.exception('Error importing settings from scf.py')
 
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
 
+
     try:
         import pkg_resources
-
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)

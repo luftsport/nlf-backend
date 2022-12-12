@@ -39,6 +39,7 @@ import dev
 # from notifications import definition as notification_definition
 # from notifications import agg_events as notification_agg_events
 import app_notifications
+import housekeeping
 
 # LEGACY
 import legacy_melwin_clubs, legacy_melwin_licenses, legacy_melwin_membership, legacy_melwin_users
@@ -80,6 +81,9 @@ DOMAIN = {
     # Notfication
     "notifications": app_notifications.definition,
     "notifications_events": app_notifications.agg_events,
+
+    # Housekeeping logs
+    "housekeeping": housekeeping.definition,
 
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,

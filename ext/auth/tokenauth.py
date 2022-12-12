@@ -9,7 +9,7 @@
 
 # Atuhentication
 from eve.auth import TokenAuth
-from flask import current_app as app, request, Response, abort
+from flask import g, current_app as app, request, Response, abort
 # from eve.methods.get import getitem as get_internal
 # from bson.objectid import ObjectId
 # TIME & DATE - better with arrow only?
@@ -32,7 +32,6 @@ class TokenAuth(TokenAuth):
         # Can also get the database lookup for the resource and check that here!!
         # Can also issue a new token here, and that needs to be returned by injecting to pre dispatch
         # use the abort/eve_error_msg to issue errors!
-
         accounts = app.data.driver.db[app.globals['auth']['auth_collection']]
 
         u = accounts.find_one({'auth.token': token})
@@ -54,7 +53,7 @@ class TokenAuth(TokenAuth):
                 # app.globals.update({'_id':  u['_id']})
 
                 # Set acl
-                app.globals.update({'user_id': u['id']})
+                # app.globals.update({'user_id': u['id']})
                 # self.set_acl(u['acl'], u['_id'], u['id'])
                 self._set_globals(u['id'], u['user'])
 
@@ -86,8 +85,9 @@ class TokenAuth(TokenAuth):
         return self.person_id
 
     def _set_globals(self, id, _id):
-        app.globals.update({'id': id})
-        app.globals.update({'_id': "%s" % _id})
+        g.id = id #app.globals.update({'id': id})
+        g.user_id = id #app.globals.update({'user_id': id})
+        g._id = _id #app.globals.update({'_id': "%s" % _id})
 
     def authenticate(self):
         """ Overridden by NOT returning a WWW-Authenticate header
@@ -103,111 +103,16 @@ class TokenAuth(TokenAuth):
         # col = app.data.driver.db[app.globals['auth']['users_collection']]
         # user = col.find_one({'id': u['id']}, {'acl': 1})
         # app.globals['acl'] = {'roles': user.get('acl', [])}
-
-        if u['id'] == 301041:
-            # app.globals['acl']['roles'] = ['5857158426867a5adfc40550']
-            # SU
-
-            u['acl'].append({"activity": 109,
-                             "org": 0,
-                             "role": 999})
-            # "type": 19})
-            u['acl'].append({"activity": 0,
-                             "org": 0,
-                             "role": 999})
-            # "type": 19})
-
-            # HI
-            """
-            u['acl'].append({"activity": 109, # Bgn gren
-                             "org": 817492,
-                             "role": 201120,
-                             "type": 14})
-            u['acl'].append({"activity": 109, # Seksjon
-                             "org": 0,
-                             "role": 201120, 
-                             "type": 19})
-            u['acl'].append({"activity": 0, # Særforbund
-                             "org": 0,
-                             "role": 201120,
-                             "type": 2})
-            """
         # Set acl directly!
-        app.globals['acl'] = {
+        # app.globals['acl']
+        g.acl = {
             'roles': [{'activity': v['activity'], 'org': v['org'], 'role': v['role']} for v in u['acl']]}
 
-        return
 
-        #
-        # To be removed below...
-        #
 
-        # Aarg need to remove name and func!!!
-        acl_ = user.get('acl_roles', [])
-        acl = []
-        for role in acl_:
-            # Seksjon og klubb
-            acl.append(role)
-            # Seksjon
-            acl.append({"activity": role['activity'],
-                        "club": 0,
-                        "role": role['role'],
-                        "type": 19})
-            # Kun rolle
-            acl.append({"activity": 0,
-                        "club": 0,
-                        "role": role['role'],
-                        "type": 2})
-
-        # TO BE REMOVED
-        if person_id == 301041:
-            # app.globals['acl']['roles'] = ['5857158426867a5adfc40550']
-            # SU
-            acl.append({"activity": 109,
-                        "club": 0,
-                        "role": 999})
-            acl.append({"activity": 0,
-                        "club": 0,
-                        "role": 999})
-            # HI
-            """
-            acl.append({"activity": 109,
-                        "club": 24779,
-                        "role": 201120})
-            acl.append({"activity": 109,
-                        "club": 0,
-                        "role": 201120})
-            acl.append({"activity": 0,
-                        "club": 0,
-                        "role": 201120})
-            """
-
-        # print(acl)
-
-        app.globals['acl'] = {'roles': acl}
-
-        # LEGACY below, needed for fallskjerm
-        # return
-
-        # Get users acl
-        # col = app.data.driver.db[app.globals['auth']['users_collection']]
-        # user = col.find_one({'melwin_id': user.get('melwin_id', 0)}, {'acl': 1})
-        # acl = user['acl']
-
-        # Now get from all clubs!
-        # melwin = app.data.driver.db['legacy_melwin_users']
-        # melwin_user = melwin.find_one({'id': user.get('melwin_id', 0)}, {'membership': 1})
-        # print('Melwin Id', user.get('melwin_id', 0))
-
-        # acl['roles'] = list(set(acl['roles']))
-
-        # app.globals.update({'acl': acl})
 
     def _set_acl(self, acl, _person_id, person_id):
 
         raise NotImplemented
-
-        if acl:
-            app.globals.update({'acl': acl})
 
 

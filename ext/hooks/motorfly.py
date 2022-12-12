@@ -59,10 +59,10 @@ def ors_before_insert_item(item):
                 return eve_abort(422, 'Could not create OBSREG, missing increment')
 
             item['when'] = datetime.utcnow()
-            item['reporter'] = app.globals.get('user_id')
-            item['owner'] = app.globals.get('user_id')
-            item['watchers'] = [app.globals.get('user_id')]
-            item['workflow'] = get_wf_init(app.globals.get('user_id'))
+            item['reporter'] = g.user_id
+            item['owner'] = g.user_id
+            item['watchers'] = [g.user_id]
+            item['workflow'] = get_wf_init(g.user_id)
 
             item['organization'] = {}
             _, _person_ors = get_person_from_role(ACL_MOTORFLY_ORS)
@@ -78,7 +78,7 @@ def ors_before_insert_item(item):
             _, _persons_ftl = get_person_from_role(persons_ftl)
             item['organization']['ftl'] = _persons_ftl
 
-            item['acl'] = get_acl_init(app.globals.get('user_id'), item.get('discipline'))
+            item['acl'] = get_acl_init(g.user_id, item.get('discipline'))
 
 
     except Exception as e:
@@ -91,7 +91,7 @@ def ors_after_inserted(items):
 
 
 def ors_after_inserted_item(item):
-    wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=app.globals.get('user_id'))
+    wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=g.user_id)
     if wf.get_current_state().get('state', '') == 'draft':
         wf.notify_created()
 
@@ -132,8 +132,6 @@ def _ors_after_fetched(_response):
     # _response.set_data({})
     if isinstance(_response, dict):
         _response['acl_user'] = get_user_acl_mapping(_response.get('acl', {}))
-        # print('OBSREG state', _response.get('workflow', {}).get('state', 'NONE'))
-        # print('ACL', _response.get('acl', 'NONE'))
     try:
         if isinstance(_response, list):
 
@@ -187,23 +185,24 @@ def _ors_after_fetched(_response):
 @require_token()
 def ors_before_get_todo(request, lookup):
     lookup.update({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
-                            {'$or': [{'acl.execute.users': {'$in': [app.globals['user_id']]}},
-                                     {'acl.execute.roles': {'$in': app.globals['acl']['roles']}}]}]})
+                            {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                                     {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
 @require_token()
 def ors_before_get_user(request, lookup):
-    lookup.update({'reporter': app.globals.get('user_id', 0)})
+    lookup.update({'reporter': g.user_id})
 
 
 @require_token()
 def ors_before_get(request, lookup):
-    lookup.update({'$or': [{"acl.read.roles": {'$in': app.globals['acl']['roles']}},
-                           {"acl.read.users": {'$in': [app.globals.get('user_id')]}}]})
+    lookup.update({'$or': [{"acl.read.roles": {'$in': g.acl.get('roles', [])}},
+                           {"acl.read.users": {'$in': [g.user_id]}}]})
 
 
 @require_token()
 def ors_before_patch(request, lookup):
-    lookup.update({'$or': [{"acl.write.roles": {'$in': app.globals['acl']['roles']}},
-                           {"acl.write.users": {'$in': [app.globals.get('user_id')]}}]})
+    lookup.update({'$or': [{"acl.write.roles": {'$in': g.acl.get('roles', [])}},
+                           {"acl.write.users": {'$in': [g.user_id]}}]})
+
 def ors_before_update(item, original):
     item = cast_choices(item)
 
@@ -226,4 +225,4 @@ def ors_after_update(updates, original):
 @require_token()
 def ors_before_post_comments(resource, items):
     if resource == 'motorfly/observation/comments':
-        items[0].update({'user': int(app.globals.get('user_id'))})
+        items[0].update({'user': int(g.user_id)})

@@ -171,7 +171,7 @@ definition = {
 
 }
 
-# Hook setting only exececute
+# Hook setting only execute
 workflow_todo = {
     'item_title': 'Fallskjerm Observations Todo',
     'url': '{}/workflow/todo'.format(BASE_URL),
