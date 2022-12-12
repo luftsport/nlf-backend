@@ -22,6 +22,7 @@ _schema = {  # Medlemsnummer
     'auth': {'type': 'dict',
              'schema': {'token': {'type': 'string'},
                         'valid': {'type': 'datetime'},
+                        'id_token': {'type': 'string'}
                         }
              },
 

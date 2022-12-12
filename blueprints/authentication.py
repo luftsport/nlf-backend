@@ -47,6 +47,7 @@ def login():
     """
     username = None
     password = None
+    id_token = None
     token_valid = False
 
     # Request via json
@@ -55,6 +56,7 @@ def login():
     try:
         username = rq['username']
         password = rq['password']
+        id_token = rq['id_token']
     except:
         # Now it will fail in the next if
         pass
@@ -118,7 +120,9 @@ def login():
                 acl = []
             response, _, _, status = patch_internal(resource='users_auth',
                                                     payload={'auth': {'token': token,
-                                                                      'valid': valid},  # Arrow utc.datetime
+                                                                      'valid': valid,
+                                                                      'id_token': id_token
+                                                                      },  # Arrow utc.datetime
                                                              'acl': [{'activity': a['activity'],
                                                                       'org': a['org'],
                                                                       'role': a['role']
@@ -135,6 +139,7 @@ def login():
                                           'username': _user.person_id,
                                           'token': token,
                                           'token64': b64.decode('utf-8'),
+                                          'id_token': id_token,
                                           'valid': valid,
                                           'activities': activities,
                                           'acl': acl,
@@ -157,6 +162,7 @@ def login():
                               'username': None,
                               'token': None,
                               'token64': None,
+                              'id_token': None,
                               'valid': None,
                               'activities': [],
                               'acl': [],
