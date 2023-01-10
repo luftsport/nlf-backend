@@ -183,7 +183,7 @@ def has_permission(id, permission_type, collection):
     acl = col.find_one({'_id': ObjectId(id)}, {'acl': 1})
     try:
         # if len([i for i in app.globals['acl']['roles'] if i in acl['acl'][type]['roles']]) > 0 \
-        #        or app.globals['user_id'] in acl['acl'][type]['users']:
+        #        or g['user_id'] in acl['acl'][type]['users']:
         #    return True
         return _has_permission(acl['acl'], permission_type)
     except:

@@ -429,10 +429,10 @@ def generate(activity, _id):
                     )
 
                     try:
-                        status = data.get('e5x').get('entities', {}) \
-                            .get('reportingHistory', [])[0] \
-                            .get('attributes', {}) \
-                            .get('reportStatus', {}).get('value', 5)
+                        status = int(data.get('e5x').get('entities', {})
+                                     .get('reportingHistory', [])[0]
+                                     .get('attributes', {})
+                                     .get('reportStatus', {}).get('value', 5))
 
                     except Exception as e:
                         app.logger.exception('Error gettings status {}'.format(status))
