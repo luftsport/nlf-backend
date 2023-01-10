@@ -6,6 +6,7 @@ from ext.scf import LUNGO_HEADERS, LUNGO_URL, HOUSEKEEPING_USER_ID, HOUSEKEEPING
 
 # To be able to use this standalone
 from flask import current_app as app
+
 try:
     if app.config:
         pass
@@ -33,26 +34,29 @@ def get_person_acl(person_id) -> (bool, dict):
     if resp.status_code == 200:
         r = resp.json()
 
-        # Prepare acl roles
-        for item in r.get('_items', []):
-            acl.append(item)
-            # All orgs
-            acl.append({
-                'activity': item['activity'],
-                'org': 0,
-                'role': item['role'],
-                'type': item['type']
-            })
-            # All org and activity
-            acl.append({
-                'activity': 0,
-                'org': 0,
-                'role': item['role'],
-                'type': item['type']
-            })
+        try:
+            # Prepare acl roles
+            for item in r.get('_items', []):
+                acl.append(item)
+                # All orgs
+                acl.append({
+                    'activity': item['activity'],
+                    'org': 0,
+                    'role': item['role'],
+                    'type': item['type']
+                })
+                # All org and activity
+                acl.append({
+                    'activity': 0,
+                    'org': 0,
+                    'role': item['role'],
+                    'type': item['type']
+                })
 
-        # return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
-        return True, acl
+            # return True, [{'activity': a['activity'], 'org': a['org'], 'role': a['role']} for a in acl]
+            return True, acl
+        except Exception as e:
+            pass
 
     return False, None
 
@@ -74,12 +78,14 @@ def get_person_activities(person_id):
                         verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
+        try:
+            r = resp.json()
+            if '_items' in r:
+                activities = r['_items']
 
-        r = resp.json()
-        if '_items' in r:
-            activities = r['_items']
-
-        return True, activities
+            return True, activities
+        except Exception as e:
+            pass
 
     return False, None
 
@@ -92,11 +98,14 @@ def get_person_merged_from(person_id):
                         verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
-        r = resp.json()
-        if '_item' in r and len(r['_items']) == 1:
-            return r.get('_items', [{}])[0].get('merged_from', [])
+        try:
+            r = resp.json()
+            if '_item' in r and len(r['_items']) == 1:
+                return r.get('_items', [{}])[0].get('merged_from', [])
 
-        return True, merged_from
+            return True, merged_from
+        except Exception as e:
+            pass
 
     return False, None
 
@@ -108,12 +117,15 @@ def get_person_from_role(role) -> (bool, [int]):
         headers=LUNGO_HEADERS, verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
-        r = resp.json()
-        if '_items' in r:
-            if len(r['_items']) == 1:
-                return True, [r['_items'][0]['person_id']]
-            elif len(r['_items']) > 1:
-                return True, [i['person_id'] for i in r['_items']]
+        try:
+            r = resp.json()
+            if '_items' in r:
+                if len(r['_items']) == 1:
+                    return True, [r['_items'][0]['person_id']]
+                elif len(r['_items']) > 1:
+                    return True, [i['person_id'] for i in r['_items']]
+        except Exception as e:
+            pass
 
     return False, None
 
@@ -124,10 +136,13 @@ def get_person_email(person_id) -> (bool, dict):
                         verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
-        r = resp.json()
-        email = r.get('address', {}).get('email', [])[0]
-        name = r.get('full_name', '')
-        return True, {'full_name': name, 'email': email}
+        try:
+            r = resp.json()
+            email = r.get('address', {}).get('email', [])[0]
+            name = r.get('full_name', '')
+            return True, {'full_name': name, 'email': email}
+        except Exception as e:
+            pass
 
     return False, None
 
@@ -175,6 +190,8 @@ def get_orgs_in_activivity(activity_id, org_type_ids=[6, 14, 19]):
         try:
             return resp.json().get('_items', [{}])[0].get('org_ids', [])
         except IndexError as e:
+            pass
+        except Exception as e:
             pass
 
     return []
