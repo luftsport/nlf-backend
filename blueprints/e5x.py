@@ -459,7 +459,7 @@ def generate(activity, _id):
 
                     audit.append({
                         'date': datetime.datetime.now(),
-                        'person_id': app.globals.get('user_id'),
+                        'person_id': g.user_id,
                         'sent': transport_status,
                         'status': status,
                         'version': ors.get('_version'),
