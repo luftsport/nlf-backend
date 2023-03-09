@@ -32,7 +32,6 @@ definition = {
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET'],
 
-    'pagination_strategy': '',
     'mongo_indexes': {'name': ([('name', 1)], {'background': True}),
                       'type': ([('type', 1)], {'background': True}),
                       'geometry': ([('geometry', '2dsphere')], {'background': True}),
