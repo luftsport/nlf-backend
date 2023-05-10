@@ -28,11 +28,12 @@ from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
 from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
-from ext.workflows.fallskjerm_observations import ObservationWorkflow, get_wf_init, get_acl_init
+from ext.workflows.fallskjerm_observations import ObservationWorkflow, get_wf_init, get_acl_init, WF_FALLSKJERM_ATTR
 from ext.app.seq import increment
-from ext.app.lungo import get_person_from_role
+from ext.app.lungo import get_person_from_role, get_person, get_org_name
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
+from flask import request, g, make_response, send_file, session
 
 
 def _del_blacklist(d, blacklist):
@@ -44,6 +45,109 @@ def _del_blacklist(d, blacklist):
                 d.pop(k, None)
         return d
     return d
+
+
+def _format_obsreg(observations):
+    import pandas as pd
+    OBSREG_TYPES = {
+        'sharing': 'Erfaringsdeling',
+        'unwanted_act': 'Uønsket',
+        'unsafe_act': 'Utrygg adferd',
+        'unsafe_condition': 'Utrygge forhold',
+        'near_miss': 'Næruhell',
+        'incident': 'Uhell',
+        'accident': 'Ulykke'
+    }
+
+    def causes(components):
+        attrs = []
+        rcause = None
+        incident = None
+        fcons = None
+
+        try:
+            rcause = components[0]['what']  # if components[0]['flags']['cause'] is True else None
+        except:
+            pass
+        try:
+            fcons = components[-1]['what']  # if components[-1]['flags']['consequence'] is True else None
+        except:
+            pass
+
+        try:
+            for c in components:
+                if incident is None and c.get('flags', {}).get('incident', False) is True:
+                    incident = c.get('what', '')
+
+                for key, value in c['attributes'].items():
+                    if value is True:
+                        attrs.append(key)
+        except:
+            pass
+
+        return rcause, incident, fcons, list(set(attrs))
+
+    def get_type(type_key):
+        return OBSREG_TYPES.get(type_key, 'Unknown')
+
+    def who_closed_it(ors):
+        try:
+            return get_name(ors['workflow']['audit'][0]['u'])
+        except:
+            pass
+
+        return 'Unknown or nobody'
+
+    def get_name(person_id):
+        status, person = get_person(person_id)
+
+        if status is True:
+            return person.get('full_name', 'Ukjent person eller anonymisert')
+
+        return 'Ukjent person eller anonymisert'
+
+    o = []
+    import traceback
+    for obsreg in observations:
+        try:
+            rcause, incident, conseq, attrs = causes(obsreg['components'])
+            o.append({'id': obsreg['id'],
+                      'title': ' '.join(obsreg['tags']),
+                      'type': get_type(obsreg.get('type', None)),
+                      'status': obsreg['workflow']['state'],
+                      'closed_by': who_closed_it(obsreg),
+                      'when': obsreg['when'],
+                      'where': obsreg.get('location', {}).get('name', 'Unknown'),
+                      'reporter': get_name(obsreg['reporter']),
+                      'club': obsreg['club'],
+                      'club_name': get_org_name(obsreg['club']),
+                      'involved': obsreg['involved'],
+                      'rating_actual': obsreg.get('rating', {}).get('actual', 'None'),
+                      'rating_potential': obsreg.get('rating', {}).get('potential', 'None'),
+                      'rating_calculated': obsreg.get('rating', {}).get('_rating', 'None'),
+                      'flags': obsreg.get('flags', []),
+                      'components': obsreg['components'],
+                      'root_cause': rcause,
+                      'incident': incident,
+                      'final_conseqence': conseq,
+                      'attributes': ','.join(attrs),  # mgm_attr(obsreg['components']),
+                      'weather': obsreg['weather'],
+                      'ask_attitude': obsreg.get('ask', {}).get('attitude', 0),
+                      'ask_skills': obsreg.get('ask', {}).get('skills', 0),
+                      'ask_knowledge': obsreg.get('ask', {}).get('knowledge', 0),
+                      'comment_reporter': obsreg.get('ask', {}).get('text', {}).get('draft', ''),
+                      'comment_hi': obsreg.get('ask', {}).get('text', {}).get('pending_review_hi', ''),
+                      'comment_fsj': obsreg.get('ask', {}).get('text', {}).get('pending_review_fs', ''),
+                      'comment_su': obsreg.get('ask', {}).get('text', {}).get('pending_review_su', ''),
+                      'actions_local': obsreg.get('actions', {}).get('local', 'None'),
+                      'actions_central': obsreg.get('actions', {}).get('central', 'None')
+                      })
+        except Exception as e:
+            print(obsreg['id'], e, traceback.format_exc())
+    print('DADA', o)
+    df = pd.DataFrame(o)
+
+    return df
 
 
 def ors_before_insert(items):
@@ -110,6 +214,13 @@ def ors_after_fetched_diffs(response):
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
         response['_items'][key] = _ors_after_fetched(item)
+    print('############################################')
+    print(request.args)
+    if 'download' in request.args:
+        print(_format_obsreg(response['_items']).to_csv(index=False, header=True, sep=";"))
+        tmp = _format_obsreg(response['_items'])
+        response['_file'] = tmp.to_csv(index=False, header=True, sep=",", quotechar='"')
+        #session["obsreg_filter_result_df"] = _format_obsreg(response['_items']).to_csv(index=False, header=True, sep=";")
 
 
 def ors_after_fetched(response):

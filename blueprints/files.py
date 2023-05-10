@@ -10,7 +10,6 @@
 """
 
 from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file, abort, make_response
-
 from PIL import Image
 import io
 import mimetypes
@@ -108,6 +107,25 @@ def process_image_request(file_id, size):
 @require_token()
 def get_file_mimetype(file_id):
     pass
+
+
+@Files.route("/session/<string:key>", methods=['GET'])
+def get_obsreg_search_result(key):
+    if has_permission():
+        csv = session[key] if key in session else ""
+
+        buf_str = io.StringIO(csv)
+
+        # Create a bytes buffer from the string buffer
+        buf_byt = io.BytesIO(buf_str.read().encode("utf-8"))
+
+        # Return the CSV data as an attachment
+        return send_file(buf_byt,
+                         mimetype="text/csv",
+                         as_attachment=True,
+                         attachment_filename="data.csv")
+
+    return eve_abort(404, 'File not found or errors processing')
 
 
 def has_permission():
