@@ -129,6 +129,7 @@ class ECCAIRS2:
                 f'{BASE_URL}{FILE_UPLOAD_RESULT_PATH}?format=json&idFile={eccairs2_id}&only-validation=false',
                 headers=self.HEADERS
             )
+            print(resp.json())
             if resp.status_code == 200 and resp.json()['e5zE5xId'] > 0:
                 print('SUCCESS!!')
                 print(resp.json())
