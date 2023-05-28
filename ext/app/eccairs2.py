@@ -152,7 +152,12 @@ class ECCAIRS2:
         if status is True:
             # Update obsreg?
             try:
-                col = app_copy.data.driver.db[f'{activity}_observations']
+                from settings import MONGO_DBNAME
+                from pymongo import MongoClient
+                client = MongoClient()
+                db = client[MONGO_DBNAME]
+                col = db[f'{activity}_observations']
+
                 obsreg = col.find_one({'id': obsreg_id})
                 elements = len(obsreg.get('e5x', {}).get('audit', []))
                 if elements > 0:
