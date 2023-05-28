@@ -10,7 +10,7 @@ import time
 from ext.app.responseless_decorators import _async
 import socketio
 from ext.scf import SOCKET_IO_TOKEN, SOCKET_IO_PORT, SOCKET_IO_HOST
-
+from settings import E5X_WORKING_DIR
 # To be able to use this standalone
 from flask import current_app as app, g
 
@@ -42,7 +42,6 @@ def authenticate(f):
 @_async
 def broadcast(title, message, style='success'):
     try:
-        sio = socketio.Client()
         sio = socketio.Client()
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/?token={SOCKET_IO_TOKEN}')
         room = str(g.get('user_id'))
@@ -91,7 +90,7 @@ class ECCAIRS2:
         """
         eccairs2_id = None
 
-        file_path = '{0}{1}/{2}/{3}/{4}'.format(app.config['E5X_WORKING_DIR'], activity, obsreg_id, version, file_name)
+        file_path = '{0}{1}/{2}/{3}/{4}'.format(E5X_WORKING_DIR, activity, obsreg_id, version, file_name)
         files = {
             'files': (file_name, open(file_path, 'rb')),
         }
