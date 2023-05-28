@@ -41,11 +41,11 @@ def authenticate(f):
 
 
 @_async
-def broadcast(title, message, style='success'):
+def broadcast(title, message, room, style='success'):
     try:
         sio = socketio.Client()
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/?token={SOCKET_IO_TOKEN}')
-        room = str(g.get('user_id'))
+        # room = str(g.get('user_id'))
         sio.emit('join_room', room)
         sio.emit('message_room',
                  {
@@ -107,7 +107,7 @@ class ECCAIRS2:
             if resp.status_code in [200, 201]:  # Note ECCAIRS uses 200 not 201!
                 try:
                     eccairs2_id = resp.json()['data']['files'][0]
-                    self.get_results(eccairs2_id)
+                    self.get_results(eccairs2_id, g.get('user_id', 0))
                 except:
                     pass
 
@@ -146,10 +146,10 @@ class ECCAIRS2:
                     return False, None, None, None
 
     @_async
-    def get_results(self, eccairs2_id):
+    def get_results(self, eccairs2_id, user_id):
 
         status, e2_id, e5zE5xId, result = self._get_results(eccairs2_id)
 
         if status is True:
             # Update obsreg?
-            broadcast(title='E5X fil konvertert', message=f'E5X filen med id {eccairs2_id} ble konvertert til ECCAIRS2 format')
+            broadcast(title='E5X fil konvertert', message=f'E5X filen med id {eccairs2_id} ble konvertert til ECCAIRS2 format', room=str(user_id))
