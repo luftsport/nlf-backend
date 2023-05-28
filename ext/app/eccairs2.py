@@ -107,6 +107,7 @@ class ECCAIRS2:
             if resp.status_code in [200, 201]:  # Note ECCAIRS uses 200 not 201!
                 try:
                     eccairs2_id = resp.json()['data']['files'][0]
+                    self.get_results(eccairs2_id)
                 except:
                     pass
 
