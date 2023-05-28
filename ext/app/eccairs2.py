@@ -130,7 +130,7 @@ class ECCAIRS2:
                 headers=self.HEADERS
             )
             print(resp.json())
-            if resp.status_code == 200 and resp.json()['e5zE5xId'] > 0:
+            if resp.status_code == 200 and resp.json().get('e5zE5xId', 0) > 0:
                 print('SUCCESS!!')
                 print(resp.json())
                 finished = True
