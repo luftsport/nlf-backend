@@ -28,7 +28,6 @@ FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
 SOCKET_MESSAGE_TEMPLATE = {'channel': '', }
 
 
-
 def authenticate(f):
     @wraps(f)
     def wrapper(self, *args, **kw):
@@ -107,7 +106,7 @@ class ECCAIRS2:
             if resp.status_code in [200, 201]:  # Note ECCAIRS uses 200 not 201!
                 try:
                     eccairs2_id = resp.json()['data']['files'][0]
-                    self.get_results(eccairs2_id, g.get('user_id', 0))
+                    self.get_results(eccairs2_id, g.get('user_id', 0), obsreg_id, activity)
                 except:
                     pass
 
@@ -146,10 +145,23 @@ class ECCAIRS2:
                     return False, None, None, None
 
     @_async
-    def get_results(self, eccairs2_id, user_id):
+    def get_results(self, eccairs2_id, user_id, obsreg_id, activity):
 
         status, e2_id, e5zE5xId, result = self._get_results(eccairs2_id)
 
         if status is True:
             # Update obsreg?
-            broadcast(title='E5X fil konvertert', message=f'E5X filen med id {eccairs2_id} ble konvertert til ECCAIRS2 format', room=str(user_id))
+            try:
+                col = app.data.driver.db[f'{activity}_observations']
+                obsreg = col.find_one({'id': obsreg_id})
+                elements = len(obsreg.get('e5x', {}).get('audit', []))
+                if elements > 0:
+                    last_element_index = elements - 1
+                    _update = col.update_one({'id': obsreg_id},
+                                             {'$set': {f'e5x.audit.{last_element_index}.result': result}})
+            except Exception as e:
+                print('ERR getting result {}'.format(e))
+
+            broadcast(title=f'E5X fil konvertert for #{obsreg_id}',
+                      message=f'E5X filen med id {obsreg_id} ble konvertert til ECCAIRS2 format med eccairs2 id {eccairs2_id}. Reload observasjonen for å se endringene i e5x',
+                      room=str(user_id))
