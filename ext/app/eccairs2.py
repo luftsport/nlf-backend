@@ -148,7 +148,7 @@ class ECCAIRS2:
     @_async
     def get_results(self, eccairs2_id):
 
-        status, e2_id, e5zE5xId = self._get_results(eccairs2_id)
+        status, e2_id, e5zE5xId, result = self._get_results(eccairs2_id)
 
         if status is True:
             # Update obsreg?
