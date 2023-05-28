@@ -28,6 +28,7 @@ FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
 SOCKET_MESSAGE_TEMPLATE = {'channel': '', }
 
 
+
 def authenticate(f):
     @wraps(f)
     def wrapper(self, *args, **kw):
@@ -90,7 +91,7 @@ class ECCAIRS2:
         """
         eccairs2_id = None
 
-        file_path = '{0}{1}/{2}/{3}/{4}'.format(E5X_WORKING_DIR, activity, obsreg_id, version, file_name)
+        file_path = '{0}/{1}/{2}/{3}/{4}'.format(E5X_WORKING_DIR, activity, obsreg_id, version, file_name)
         files = {
             'files': (file_name, open(file_path, 'rb')),
         }
