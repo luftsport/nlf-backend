@@ -461,7 +461,7 @@ def generate(activity, _id):
                         activity,
                         ors.get('id'),
                         ors.get('_version'),
-                        file_name
+                        '{}.e5x'.format(file_name)
                     )
 
                     # Some audit and bookkeeping
