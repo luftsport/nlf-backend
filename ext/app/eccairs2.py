@@ -46,7 +46,7 @@ def broadcast(title, message, room, activity, obsreg_id, style='success', ):
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/?token={SOCKET_IO_TOKEN}')
         # room = str(g.get('user_id'))
         # sio.emit('join_room', room) No need server user has access!
-        sio.emit('message_room',
+        sio.emit('action',
                  {
                      'title': title,
                      'message': message,
