@@ -40,20 +40,21 @@ def authenticate(f):
 
 
 @_async
-def broadcast(title, message, room, style='success'):
+def broadcast(title, message, room, activity, obsreg_id, style='success', ):
     try:
         sio = socketio.Client()
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/?token={SOCKET_IO_TOKEN}')
         # room = str(g.get('user_id'))
-        sio.emit('join_room', room)
+        # sio.emit('join_room', room) No need server user has access!
         sio.emit('message_room',
                  {
                      'title': title,
                      'message': message,
-                     'room': room,
                      'style': style,
-                     'action': 'obsreg_e5x_finished_processing'
-                 }
+                     'action': 'obsreg_e5x_finished_processing',
+                     'link': [activity, obsreg_id]
+                 },
+                 room=room
                  )
         time.sleep(0.1)
         sio.disconnect()
@@ -167,6 +168,10 @@ class ECCAIRS2:
             except Exception as e:
                 print('ERR getting result {}'.format(e))
 
-            broadcast(title=f'E5X fil konvertert for #{obsreg_id}',
-                      message=f'E5X filen med id {obsreg_id} ble konvertert til ECCAIRS2 format med eccairs2 id {eccairs2_id}. Reload observasjonen for å se endringene i e5x',
-                      room=str(user_id))
+            broadcast(
+                title=f'E5X fil konvertert for #{obsreg_id}',
+                message=f'E5X filen med id {obsreg_id} ble konvertert til ECCAIRS2 format med eccairs2 id {eccairs2_id}. Reload observasjonen for å se endringene i e5x',
+                activity=activity,
+                obsreg_id=obsreg_id,
+                room=str(user_id)
+            )
