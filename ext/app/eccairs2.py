@@ -53,7 +53,9 @@ def broadcast(title, message, room, activity, obsreg_id, style='success', ):
                      'style': style,
                      'action': 'obsreg_e5x_finished_processing',
                      'link': [activity, obsreg_id],
-                     'room': room
+                     'room': room,
+                     'autohide': False,
+                     'delay': 60000
                  }
                  )
         time.sleep(0.1)
@@ -170,7 +172,7 @@ class ECCAIRS2:
 
             broadcast(
                 title=f'E5X fil konvertert for #{obsreg_id}',
-                message=f'E5X filen med id {obsreg_id} ble konvertert til ECCAIRS2 format med eccairs2 id {eccairs2_id}. Reload observasjonen for å se endringene i e5x',
+                message=f'E5X filen for {activity} med id {obsreg_id} ble konvertert til ECCAIRS2 format med eccairs2 id {eccairs2_id}. Reload observasjonen for å se endringene i e5x',
                 activity=activity,
                 obsreg_id=obsreg_id,
                 room=str(user_id)
