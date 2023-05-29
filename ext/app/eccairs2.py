@@ -52,9 +52,9 @@ def broadcast(title, message, room, activity, obsreg_id, style='success', ):
                      'message': message,
                      'style': style,
                      'action': 'obsreg_e5x_finished_processing',
-                     'link': [activity, obsreg_id]
-                 },
-                 room=room
+                     'link': [activity, obsreg_id],
+                     'room': room
+                 }
                  )
         time.sleep(0.1)
         sio.disconnect()
