@@ -24,6 +24,9 @@ BASE_URL = 'https://api.sandbox.aviationreporting.eu'
 TOKEN_PATH = '/auth/api/token'
 FILE_UPLOAD_PATH = '/frontfile-api/files/migrate'
 FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
+OCCURRENCE_GET_PATH = '/occurrences/get/'
+OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
+ECCAIRS2_NLF_ID = 2169
 
 SOCKET_MESSAGE_TEMPLATE = {'channel': '', }
 
@@ -43,7 +46,7 @@ def authenticate(f):
 def broadcast(title, message, room, activity, obsreg_id, style='success', ):
     try:
         sio = socketio.Client()
-        sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/?token={SOCKET_IO_TOKEN}')
+        sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/', auth={'token': SOCKET_IO_TOKEN})
         # room = str(g.get('user_id'))
         # sio.emit('join_room', room) No need server user has access!
         sio.emit('action',
@@ -177,3 +180,17 @@ class ECCAIRS2:
                 obsreg_id=obsreg_id,
                 room=str(user_id)
             )
+
+    def get_OR(self, e2_id):
+        r = requests.get(f'{BASE_URL}{OCCURRENCE_GET_PATH}{e2_id}', headers=self.HEADERS)
+
+        if r.status_code == 200:
+            return True, r.json()['data']
+
+        return False, None
+
+    def get_OR_list(self):
+        OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
+        params = {'$skip': 0, '$top': 20, '$orderby': 'creationDate desc'}
+
+
