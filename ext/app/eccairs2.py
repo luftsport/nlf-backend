@@ -26,6 +26,13 @@ FILE_UPLOAD_PATH = '/frontfile-api/files/migrate'
 FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
 OCCURRENCE_GET_PATH = '/occurrences/get/'
 OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
+OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
+OCCURRENCE_READABLE_PATH = '/occurrences/readable'
+OCCURRENCE_READABLE_FIELD_PATH = '/occurrences/readable/fields''
+TAXONOMY_PATH = '/taxonomy-service/released-taxonomy'
+TAXANOMY_VALUE_PATH = '/taxonomy-service/listofvalue/valuelist'
+TAXANOMY_VALUE_LIST_PATH = '/taxonomy/valueLists/public/'
+
 ECCAIRS2_NLF_ID = 2169
 
 SOCKET_MESSAGE_TEMPLATE = {'channel': '', }
@@ -74,7 +81,7 @@ class ECCAIRS2:
     def __init__(self):
         pass
 
-    def _authenticate(self):
+    def _authenticate(self) -> None:
 
         if self.authenticated is False:
             auth_url = f'{BASE_URL}{TOKEN_PATH}?grant_type=password&password={ECCAIRS2_PASSWD}&username={ECCAIRS2_USER}'
@@ -85,7 +92,7 @@ class ECCAIRS2:
                 self.HEADERS = {'Authorization': f'Bearer {token}'}
 
     @authenticate
-    def e5x_file_upload(self, activity, obsreg_id, version, file_name):
+    def e5x_file_upload(self, activity, obsreg_id, version, file_name) -> (bool, int, dict):
         """
         Upload only supports one file at a time
         :param activity:
@@ -120,7 +127,7 @@ class ECCAIRS2:
 
         return False, eccairs2_id, None
 
-    def _get_results(self, eccairs2_id):
+    def _get_results(self, eccairs2_id) -> (bool, int, int, dict):
         finished = False
         max_retries = 10
         current_retries = 0
@@ -140,9 +147,9 @@ class ECCAIRS2:
                 print(resp.json())
                 finished = True
                 result = resp.json()
-                e2_id = result['reportInfoList'][0]['message'].replace('"', '')
+                eccairs2_id = result['reportInfoList'][0]['message'].replace('"', '')
                 e5zE5xId = result['e5zE5xId']
-                return True, e2_id, e5zE5xId, result
+                return True, eccairs2_id, e5zE5xId, result
             else:
                 current_retries += 1
                 time.sleep(delta + current_retries)
@@ -151,9 +158,9 @@ class ECCAIRS2:
                     return False, None, None, None
 
     @_async
-    def get_results(self, eccairs2_id, user_id, obsreg_id, activity, app_copy):
+    def get_results(self, eccairs2_id, user_id, obsreg_id, activity) -> None:
 
-        status, e2_id, e5zE5xId, result = self._get_results(eccairs2_id)
+        status, eccairs2_id, e5zE5xId, result = self._get_results(eccairs2_id)
 
         if status is True:
             # Update obsreg?
@@ -181,16 +188,94 @@ class ECCAIRS2:
                 room=str(user_id)
             )
 
-    def get_OR(self, e2_id):
-        r = requests.get(f'{BASE_URL}{OCCURRENCE_GET_PATH}{e2_id}', headers=self.HEADERS)
+    def get_OR(self, eccairs2_id) -> (bool, dict):
+        r = requests.get(f'{BASE_URL}{OCCURRENCE_GET_PATH}{eccairs2_id}', headers=self.HEADERS)
 
         if r.status_code == 200:
             return True, r.json()['data']
 
         return False, None
 
-    def get_OR_list(self):
-        OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
-        params = {'$skip': 0, '$top': 20, '$orderby': 'creationDate desc'}
+    def get_OR_list(self, max_results=1000, page=0) -> (bool, dict):
 
+        params = {'$skip': page * max_results, '$top': max_results, '$orderby': 'creationDate desc'}
+        json = {
+            "status": [
+                "SENT",
+                "PROCESSED",
+                "ARCHIVED",
+                "DELETED"
+            ]
+        }
+        r = requests.post(f'{BASE_URL}{OCCURRENCE_ORIGINAL_REPORT_PATH}', headers=self.HEADERS, params=params,
+                          json=json)
 
+        if r.status_code in [200, 201]:
+            # data.elements|total
+            # errorDetails': '',  'returnCode': 1
+            results = r.json()
+            return True, {'_items': results['data']['elements'],
+                          '_meta': {'page': page, 'max_results': max_results, 'total': results['data']['total']}
+                          }
+
+        return False, None
+
+    def get_taxonomy_version(self) -> (bool, dict):
+        """
+
+        :return: data (taxonomy)id|name|version
+        """
+
+        r = requests.get(f'{BASE_URL}{TAXONOMY_PATH}', headers=self.HEADERS)
+
+        if r.status_code == 200:
+            return True, r.json['data']
+
+        return False, None
+
+    def get_taxonomy_value_list(self, taxonomy_version=6) -> (bool, dict):
+
+        r = requests.get(f'{BASE_URL}{TAXANOMY_VALUE_LIST_PATH}{taxonomy_version}', headers=self.HEADERS)
+        if r.status_code == 200:
+            result = r.json()
+            return True, {
+                '_items': result['data']['responseData']['list'],
+                '_meta': {
+                    'page': result['data']['responseData']['page'],
+                    'max_results': result['data']['responseData']['pageSize'],
+                    'total': result['data']['responseData']['totalRows']
+                }
+            }
+
+        return False, None
+
+    def get_taxonomy_options(self, value_id, taxonomy_version) -> (bool, list):
+
+        r = requests.get(f'{BASE_URL}{TAXANOMY_VALUE_PATH}{value_id}/{taxonomy_version}', headers=self.HEADERS)
+
+        if r.status_code == 200:
+            result = r.json()
+            return True, {
+                '_items': result['data'],
+                '_meta': {'page': 0, 'max_results': len(result['data']), 'total': len(result['data'])}
+            }
+
+        return False, None
+
+    def get_readable_report(self, eccairs2_id) -> (bool, dict):
+
+        r = requests.get(f'{BASE_URL}{OCCURRENCE_READABLE_PATH}/{eccairs2_id}', headers=self.HEADERS)
+        if r.status_code == 200:
+            result = r.json()
+            return True, result['data']
+
+        return False, None
+
+    def get_readable_report_field(self, eccairs2_id, field_id) -> (bool, list):
+        json = [field_id]
+        r = requests.get(f'{BASE_URL}{OCCURRENCE_READABLE_FIELD_PATH}/{eccairs2_id}', json=json, headers=self.HEADERS)
+        if r.status_code == 200:
+            result = r.json()
+            return True, result['data']
+
+        return False, None
