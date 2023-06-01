@@ -2,7 +2,7 @@
 Lungo functions defined here
 """
 import requests
-from ext.scf import ECCAIRS2_USER, ECCAIRS2_PASSWD
+from ext.scf import ECCAIRS2_M2M
 from functools import wraps
 import inspect
 import os
@@ -11,6 +11,7 @@ from ext.app.responseless_decorators import _async
 import socketio
 from ext.scf import SOCKET_IO_TOKEN, SOCKET_IO_PORT, SOCKET_IO_HOST
 from settings import E5X_WORKING_DIR
+from instance import APP_INSTANCE
 # To be able to use this standalone
 from flask import current_app as app, g
 
@@ -20,7 +21,7 @@ try:
 except:
     app = {'config': {'REQUESTS_VERIFY': False}}
 
-BASE_URL = 'https://api.sandbox.aviationreporting.eu'
+BASE_URL = ECCAIRS2_M2M[APP_INSTANCE]['base_url']
 TOKEN_PATH = '/auth/api/token'
 FILE_UPLOAD_PATH = '/frontfile-api/files/migrate'
 FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
@@ -28,7 +29,7 @@ OCCURRENCE_GET_PATH = '/occurrences/get/'
 OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
 OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
 OCCURRENCE_READABLE_PATH = '/occurrences/readable'
-OCCURRENCE_READABLE_FIELD_PATH = '/occurrences/readable/fields''
+OCCURRENCE_READABLE_FIELD_PATH = '/occurrences/readable/fields'
 TAXONOMY_PATH = '/taxonomy-service/released-taxonomy'
 TAXANOMY_VALUE_PATH = '/taxonomy-service/listofvalue/valuelist'
 TAXANOMY_VALUE_LIST_PATH = '/taxonomy/valueLists/public/'
@@ -75,6 +76,15 @@ def broadcast(title, message, room, activity, obsreg_id, style='success', ):
 
 
 class ECCAIRS2:
+    """
+    All messages has
+    All the methods responses have the same format
+    {
+    data response data
+    errorDetails
+    returnCode 1: OK, 2: ERROR
+    }
+    """
     HEADERS = None
     authenticated = False
 
@@ -84,7 +94,7 @@ class ECCAIRS2:
     def _authenticate(self) -> None:
 
         if self.authenticated is False:
-            auth_url = f'{BASE_URL}{TOKEN_PATH}?grant_type=password&password={ECCAIRS2_PASSWD}&username={ECCAIRS2_USER}'
+            auth_url = f'{BASE_URL}{TOKEN_PATH}?grant_type=password&password={ECCAIRS2_M2M[APP_INSTANCE]["passwd"]}&username={ECCAIRS2_M2M[APP_INSTANCE]["user"]}'
             r = requests.post(auth_url)
             if r.status_code == 200:
                 result = r.json()
@@ -94,6 +104,13 @@ class ECCAIRS2:
     @authenticate
     def e5x_file_upload(self, activity, obsreg_id, version, file_name) -> (bool, int, dict):
         """
+        Response "data":
+        OCC_FBS_310: Your file has been successfully uploaded and is being processed.
+        System messages:
+        OCC_FBS_310: Your file has been successfully uploaded and is being processed.
+        OCC_FBW_309: Your request has been queued. It may take a while to be completed. It will
+        be automatically processed once the queue gets released.
+
         Upload only supports one file at a time
         :param activity:
         :param obsreg_id:
@@ -128,6 +145,16 @@ class ECCAIRS2:
         return False, eccairs2_id, None
 
     def _get_results(self, eccairs2_id) -> (bool, int, int, dict):
+        """
+
+        ERROR:
+        migrationStatus': 'Processed with Errors', 'message': '"Error Unzipping File"'
+        SUCCESS
+        'migrationStatus': 'Successfully migrated', 'message': '"success"'
+
+        :param eccairs2_id:
+        :return:
+        """
         finished = False
         max_retries = 10
         current_retries = 0
