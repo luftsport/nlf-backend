@@ -51,7 +51,7 @@ def authenticate(f):
 
 
 @_async
-def broadcast(title, message, room, activity, obsreg_id, style='success', ):
+def broadcast(title, message, room, activity, obsreg_id, style='success'):
     try:
         sio = socketio.Client()
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/', auth={'token': SOCKET_IO_TOKEN})
@@ -213,6 +213,16 @@ class ECCAIRS2:
                 activity=activity,
                 obsreg_id=obsreg_id,
                 room=str(user_id)
+            )
+
+        else:
+            broadcast(
+                title=f'E5X fil for #{obsreg_id} feilet konvertering',
+                message=f'E5X filen for {activity} med id {obsreg_id} feilet konvertering fra E5X fil til ECCAIRS2 format',
+                activity=activity,
+                obsreg_id=obsreg_id,
+                room=str(user_id),
+                style='danger'
             )
 
     def get_OR(self, eccairs2_id) -> (bool, dict):
