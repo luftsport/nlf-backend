@@ -21,13 +21,15 @@ BASE_URL = 'sportsfly/observations'
 
 ORS_MODEL_TYPE = 'sportsfly'
 # Changelog
+# 4
+# e5x.eccairs2
 # 3
 # 'workflow.settings' with properties 'do_not_process_club' and 'do_not_publish' for WF processing
 # 2
 # Occurrence
 # 1
 # Initial
-ORS_MODEL_VERSION = 3
+ORS_MODEL_VERSION = 4
 
 
 _schema = {'id': {'type': 'integer',

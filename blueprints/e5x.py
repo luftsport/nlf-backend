@@ -20,6 +20,7 @@ from ext.auth.tokenauth import TokenAuth
 from ext.auth.acl import parse_acl_flat
 from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
+from ext.app.eccairs2 import ECCAIRS2
 from ext.hooks.common import cast_choices
 
 import pysftp
@@ -113,7 +114,7 @@ def generate_structure(activity, ors_id, version):
     return False
 
 
-def transport_e5x(dir, file_name, sftp_settings):
+def transport_e5x_sftp(dir, file_name, sftp_settings):
     if not sftp_settings:
         return False, {}
 
@@ -437,7 +438,7 @@ def generate(activity, _id):
                     except Exception as e:
                         app.logger.exception('Error gettings status {}'.format(status))
                         status = 0
-
+                    """
                     # SFTP DELIVERY!
                     # Only dev and prod should be able to deliver to LT
                     if app.config.get('APP_INSTANCE', '') == 'dev-removeme-test':
@@ -452,7 +453,16 @@ def generate(activity, _id):
                     if E5X_SEND_TO_LT is False:
                         SFTP = False
 
-                    transport_status, transport = transport_e5x(FILE_WORKING_DIR, file_name, SFTP)
+                    transport_status, transport = transport_e5x_sftp(FILE_WORKING_DIR, file_name, SFTP)
+                    """
+                    eccairs_api = ECCAIRS2()
+
+                    transport_status, eccairs2_id, result = eccairs_api.e5x_file_upload(
+                        activity,
+                        ors.get('id'),
+                        ors.get('_version'),
+                        '{}.e5x'.format(file_name)
+                    )
 
                     # Some audit and bookkeeping
                     audit = ors.get('e5x', {}).get('audit', [])
@@ -461,11 +471,13 @@ def generate(activity, _id):
                         'date': datetime.datetime.now(),
                         'person_id': g.user_id,
                         'sent': transport_status,
-                        'status': status,
+                        'status': 'processing',
                         'version': ors.get('_version'),
                         'file': '{}.e5x'.format(file_name),
                         'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION),
-                        'e5y': transport
+                        # 'e5y': transport
+                        'eccairs2': {'id': eccairs2_id, 'data': result}
+
                     })
 
                     e5x = {'audit': audit,
@@ -473,6 +485,10 @@ def generate(activity, _id):
                            'latest_version': ors.get('_version')}
 
                     _update = col.update_one({'_id': ors.get('_id'), '_etag': ors.get('_etag')}, {'$set': {'e5x': e5x}})
+
+                    if ors.get('_model', {}).get('version', 0) < 4:
+                        _update = col.update_one({'_id': ors.get('_id'), '_etag': ors.get('_etag')},
+                                                 {'$set': {'_model.version': 4}})
 
                     if not _update:
                         app.logger.error('Error storing e5x delivery message in database')
@@ -488,7 +504,7 @@ def generate(activity, _id):
                                 ors_id=ors.get('id', None),
                                 ors_tags=ors.get('tags', []),
                                 file_name='{}.e5x'.format(file_name),
-                                transport='sftp',
+                                transport='eccairs2_api',
                                 context='sent'
                                 )
                         """
