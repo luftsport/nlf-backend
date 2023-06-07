@@ -51,7 +51,7 @@ def authenticate(f):
 
 
 @_async
-def broadcast(title, message, room, activity, obsreg_id, style='success'):
+def broadcast(title, message, room, activity, obsreg_id, style='success', action='obsreg_e5x_finished_processing'):
     try:
         sio = socketio.Client()
         sio.connect(f'http://{SOCKET_IO_HOST}:{SOCKET_IO_PORT}/socket.io/', auth={'token': SOCKET_IO_TOKEN})
@@ -62,7 +62,7 @@ def broadcast(title, message, room, activity, obsreg_id, style='success'):
                      'title': title,
                      'message': message,
                      'style': style,
-                     'action': 'obsreg_e5x_finished_processing',
+                     'action': action,
                      'link': [activity, obsreg_id],
                      'room': room,
                      'autohide': False,
@@ -161,17 +161,13 @@ class ECCAIRS2:
         delta = 5
 
         while finished is False:
-            print('Trying to get result', current_retries + 1)
             # Get results of file migration process:
 
             resp = requests.get(
                 f'{BASE_URL}{FILE_UPLOAD_RESULT_PATH}?format=json&idFile={eccairs2_id}&only-validation=false',
                 headers=self.HEADERS
             )
-            print(resp.json())
             if resp.status_code == 200 and resp.json().get('e5zE5xId', 0) > 0:
-                print('SUCCESS!!')
-                print(resp.json())
                 finished = True
                 result = resp.json()
                 eccairs2_id = result['reportInfoList'][0]['message'].replace('"', '')
@@ -205,7 +201,15 @@ class ECCAIRS2:
                     _update = col.update_one({'id': obsreg_id},
                                              {'$set': {f'e5x.audit.{last_element_index}.eccairs2.result': result}})
             except Exception as e:
-                print('ERR getting result {}'.format(e))
+                broadcast(
+                    title=f'Oppdatering feilet for #{obsreg_id}',
+                    message=f'Oppdatert informasjon for {activity} rapport med id {obsreg_id} fikk ikke oppdatert resultatet for e5x filen fra eccairs2 med id {eccairs2_id}.',
+                    activity=activity,
+                    obsreg_id=obsreg_id,
+                    room=str(user_id),
+                    action=None,
+                    style='danger'
+                )
 
             broadcast(
                 title=f'E5X fil konvertert for #{obsreg_id}',
