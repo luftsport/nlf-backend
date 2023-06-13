@@ -375,7 +375,7 @@ def generate(activity, _id):
                             else:
 
                                 stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
-                                file_list.append('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])))
+                                file_list.append('{}/{}-{}'.format(file_name, key, _format_file_name(file['name'])))
 
                                 with open('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])), 'wb') as f:
                                     f.write(stream.read())
