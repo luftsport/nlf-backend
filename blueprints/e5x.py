@@ -295,7 +295,7 @@ def convert_to_integer_ids(e5x_data):
 
 def _format_file_name(file_name):
 
-    if Path(file_name.suffix) in ECCAIRS_FILE_SUFFIX_WHITELIST:
+    if Path(file_name).suffix in ECCAIRS_FILE_SUFFIX_WHITELIST:
         return file_name
 
     try:
