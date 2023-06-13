@@ -375,10 +375,9 @@ def generate(activity, _id):
                             else:
 
                                 stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
+                                file_list.append('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])))
 
-                                file_list.append('{}/{}-{}'.format(_format_file_name(file_name), key, file['name']))
-
-                                with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
+                                with open('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])), 'wb') as f:
                                     f.write(stream.read())
 
                                 try:
@@ -386,7 +385,7 @@ def generate(activity, _id):
                                     #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                     # )
                                     data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                        {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                        {'fileName': '{}-{}'.format(key, _format_file_name(file['name'])), 'description': ''}
                                     )
                                 except Exception as e:
                                     app.logger.exception("[ERROR] Could not add file name to report")
