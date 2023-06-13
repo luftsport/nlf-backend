@@ -22,9 +22,11 @@ from ext.notifications.notifications import notify
 from ext.app.notifications import ors_e5x
 from ext.app.eccairs2 import ECCAIRS2
 from ext.hooks.common import cast_choices
-
+from ext.scf import ECCAIRS_FILE_SUFFIX_WHITELIST
 import pysftp
 import traceback
+from pathlib import Path
+
 
 from ext.scf import E5X_SEND_TO_LT
 
@@ -291,6 +293,19 @@ def convert_to_integer_ids(e5x_data):
 
     return e5x_data
 
+def _format_file_name(file_name):
+
+    if Path(file_name).suffix in ECCAIRS_FILE_SUFFIX_WHITELIST:
+        return file_name
+
+    try:
+        file_name = '{}.{}'.format(file_name.replace('.', '_'), 'txt')
+    except:
+        pass
+
+    return file_name
+
+
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
 @require_token()
@@ -360,10 +375,9 @@ def generate(activity, _id):
                             else:
 
                                 stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
+                                file_list.append('{}/{}-{}'.format(file_name, key, _format_file_name(file['name'])))
 
-                                file_list.append('{}/{}-{}'.format(file_name, key, file['name']))
-
-                                with open('{}/{}-{}'.format(files_working_path, key, file['name']), 'wb') as f:
+                                with open('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])), 'wb') as f:
                                     f.write(stream.read())
 
                                 try:
@@ -371,7 +385,7 @@ def generate(activity, _id):
                                     #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                     # )
                                     data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                        {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
+                                        {'fileName': '{}-{}'.format(key, _format_file_name(file['name'])), 'description': ''}
                                     )
                                 except Exception as e:
                                     app.logger.exception("[ERROR] Could not add file name to report")
@@ -430,10 +444,10 @@ def generate(activity, _id):
                     )
 
                     try:
-                        status = int(data.get('e5x').get('entities', {})
+                        status = int(float(data.get('e5x').get('entities', {})
                                      .get('reportingHistory', [])[0]
                                      .get('attributes', {})
-                                     .get('reportStatus', {}).get('value', 5))
+                                     .get('reportStatus', {}).get('value', 5)))
 
                     except Exception as e:
                         app.logger.exception('Error gettings status {}'.format(status))
