@@ -552,8 +552,7 @@ def generate(activity, _id):
 
                     return eve_response({
                         'e5x': {'audit': audit},
-                        'eccairs2_processing_code': eccairs2_processing_code,
-                        'err': traceback.format_exc()
+                        'eccairs2_processing_code': eccairs2_processing_code
                     }, 200)
 
                 else:
