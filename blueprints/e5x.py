@@ -490,7 +490,7 @@ def generate(activity, _id):
                         'file': '{}.e5x'.format(file_name),
                         'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION),
                         # 'e5y': transport
-                        'eccairs2': {'id': eccairs2_id, 'data': result}
+                        'eccairs2': {'id': eccairs2_id, 'eccairs2_processing_code': eccairs2_processing_code, 'data': result}
 
                     })
 
