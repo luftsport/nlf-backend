@@ -27,7 +27,6 @@ import pysftp
 import traceback
 from pathlib import Path
 
-
 from ext.scf import E5X_SEND_TO_LT
 
 E5X_RIT_DEFAULT_VERSION = '4.1.0.3'
@@ -293,18 +292,17 @@ def convert_to_integer_ids(e5x_data):
 
     return e5x_data
 
-def _format_file_name(file_name):
 
+def _format_file_name(file_name):
     if Path(file_name).suffix in ECCAIRS_FILE_SUFFIX_WHITELIST:
         return file_name
 
     try:
         file_name = '{}.{}'.format(file_name.replace('.', '_'), 'txt')
     except:
-        pass
+        file_name = '{}.txt'.format(file_name)
 
     return file_name
-
 
 
 @E5X.route("/generate/<string:activity>/<objectid:_id>", methods=['POST'])
@@ -377,7 +375,8 @@ def generate(activity, _id):
                                 stream = grid_fs.get(file['file'])  # get_last_version(_id=file['file'])
                                 file_list.append('{}/{}-{}'.format(file_name, key, _format_file_name(file['name'])))
 
-                                with open('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])), 'wb') as f:
+                                with open('{}/{}-{}'.format(files_working_path, key, _format_file_name(file['name'])),
+                                          'wb') as f:
                                     f.write(stream.read())
 
                                 try:
@@ -385,7 +384,8 @@ def generate(activity, _id):
                                     #    {'fileName': '{}-{}'.format(key, file['name']), 'description': ''}
                                     # )
                                     data['e5x']['entities']['reportingHistory'][0]['attributes']['report'].append(
-                                        {'fileName': '{}-{}'.format(key, _format_file_name(file['name'])), 'description': ''}
+                                        {'fileName': '{}-{}'.format(key, _format_file_name(file['name'])),
+                                         'description': ''}
                                     )
                                 except Exception as e:
                                     app.logger.exception("[ERROR] Could not add file name to report")
@@ -445,9 +445,9 @@ def generate(activity, _id):
 
                     try:
                         status = int(float(data.get('e5x').get('entities', {})
-                                     .get('reportingHistory', [])[0]
-                                     .get('attributes', {})
-                                     .get('reportStatus', {}).get('value', 5)))
+                                           .get('reportingHistory', [])[0]
+                                           .get('attributes', {})
+                                           .get('reportStatus', {}).get('value', 5)))
 
                     except Exception as e:
                         app.logger.exception('Error gettings status {}'.format(status))
@@ -471,7 +471,7 @@ def generate(activity, _id):
                     """
                     eccairs_api = ECCAIRS2()
 
-                    transport_status, eccairs2_id, result = eccairs_api.e5x_file_upload(
+                    transport_status, eccairs2_id, eccairs2_processing_code, result = eccairs_api.e5x_file_upload(
                         activity,
                         ors.get('id'),
                         ors.get('_version'),
@@ -485,12 +485,12 @@ def generate(activity, _id):
                         'date': datetime.datetime.now(),
                         'person_id': g.user_id,
                         'sent': transport_status,
-                        'status': 'processing',
+                        'status': 'processing' if transport_status is True else 'error',
                         'version': ors.get('_version'),
                         'file': '{}.e5x'.format(file_name),
                         'rit_version': data.get('rit_version', E5X_RIT_DEFAULT_VERSION),
                         # 'e5y': transport
-                        'eccairs2': {'id': eccairs2_id, 'data': result}
+                        'eccairs2': {'id': eccairs2_id, 'eccairs2_processing_code': eccairs2_processing_code, 'data': result}
 
                     })
 
@@ -550,7 +550,10 @@ def generate(activity, _id):
                     except Exception as e:
                         app.logger.exception('Error delivering e5x delivery notification')
 
-                    return eve_response({'e5x': {'audit': audit}, 'err': traceback.format_exc()}, 200)
+                    return eve_response({
+                        'e5x': {'audit': audit},
+                        'eccairs2_processing_code': eccairs2_processing_code
+                    }, 200)
 
                 else:
                     app.logger.error('STDERR: {}'.format(stderr))

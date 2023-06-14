@@ -116,9 +116,10 @@ class ECCAIRS2:
         :param obsreg_id:
         :param version:
         :param file_name:
-        :return: status, eccairs2_id
+        :return: status, eccairs2_id, eccairs2_processing_code, result
         """
         eccairs2_id = None
+        eccairs2_processing_code = None  # 310 already processing, 309 queued
 
         file_path = '{0}/{1}/{2}/{3}/{4}'.format(E5X_WORKING_DIR, activity, obsreg_id, version, file_name)
         files = {
@@ -133,18 +134,29 @@ class ECCAIRS2:
         if os.path.exists:
             resp = requests.post(f'{BASE_URL}{FILE_UPLOAD_PATH}', files=files, headers=self.HEADERS)
 
-            if resp.status_code in [200, 201]:  # Note ECCAIRS uses 200 not 201!
+            if resp.status_code in [200, 201]:  # Note ECCAIRS2 uses 200 not 201!
                 try:
-                    eccairs2_id = resp.json()['data']['files'][0]
-                    self.get_results(eccairs2_id, g.get('user_id', 0), obsreg_id, activity)
+                    result = resp.json()
+
+                    if len(result.get('data', {}).get('files', [])) == 1:
+                        eccairs2_id = result['data']['files'][0]
+                        eccairs2_processing_code = 310
+                    elif 'key' in result.get('data', {}).keys() and result.get('data', {}).get('key',
+                                                                                               None) == 'OCC_FBW_309':
+                        eccairs2_id = result['data']['value'][2]  # 0 contextid, 1 uuid, 2 e2id
+                        eccairs2_processing_code = 309
+                    else:
+                        raise Exception('Error, no eccairs2 id was found')
+
+                    self.get_results(eccairs2_id, eccairs2_processing_code, g.get('user_id', 0), obsreg_id, activity)
                 except:
-                    pass
+                    app.logger.exception(f'Error getting eccairs2 id')
 
-                return True if eccairs2_id is not None else False, eccairs2_id, resp.json()
+                return True if eccairs2_id is not None else False, eccairs2_id, eccairs2_processing_code, resp.json()
 
-        return False, eccairs2_id, None
+        return False, eccairs2_id, eccairs2_processing_code, None
 
-    def _get_results(self, eccairs2_id) -> (bool, int, int, dict):
+    def _get_results(self, eccairs2_id, eccairs2_processing_code) -> (bool, int, int, dict):
         """
 
         ERROR:
@@ -155,8 +167,9 @@ class ECCAIRS2:
         :param eccairs2_id:
         :return:
         """
+
         finished = False
-        max_retries = 10
+        max_retries = 100  # 5.8 days!
         current_retries = 0
         delta = 5
 
@@ -173,17 +186,29 @@ class ECCAIRS2:
                 eccairs2_id = result['reportInfoList'][0]['message'].replace('"', '')
                 e5zE5xId = result['e5zE5xId']
                 return True, eccairs2_id, e5zE5xId, result
-            else:
-                current_retries += 1
-                time.sleep(delta + current_retries)
-                if current_retries >= max_retries:
-                    finished = True
-                    return False, None, None, None
+
+            current_retries += 1
+            time.sleep(delta + current_retries)
+            if current_retries > max_retries:
+                finished = True
+                return False, None, None, None
+
+        return False, None, None, None
 
     @_async
-    def get_results(self, eccairs2_id, user_id, obsreg_id, activity) -> None:
+    def get_results(self, eccairs2_id, eccairs2_processing_code, user_id, obsreg_id, activity) -> None:
 
-        status, eccairs2_id, e5zE5xId, result = self._get_results(eccairs2_id)
+        if eccairs2_processing_code == 309:
+            broadcast(
+                title=f'E5X fil for #{obsreg_id} vil ta tid å prosessere',
+                message=f'E5X filen for {activity} med id {obsreg_id} er lastet opp og plassert i køen for prosessering. Dette kan ta en del tid. Vennligst ikke send inn på nytt før status er oppdatert',
+                activity=activity,
+                obsreg_id=obsreg_id,
+                room=str(user_id),
+                style='warning'
+            )
+
+        status, _, e5zE5xId, result = self._get_results(eccairs2_id, eccairs2_processing_code)
 
         if status is True:
             # Update obsreg?
