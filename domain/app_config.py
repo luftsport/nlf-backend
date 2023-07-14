@@ -24,6 +24,7 @@ _schema = {'environment': {'type': 'string',
            'ballong': {'type': 'dict'},
            'hps': {'type': 'dict'},
            'modellfly': {'type': 'dict'},
+           'client_version': {'type': 'string'}
            }
 
 definition = {
