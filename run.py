@@ -56,6 +56,7 @@ from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
+from blueprints.fallskjerm_tandem import FallskjermTandem
 
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
@@ -141,6 +142,9 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
+
+# Specific apps
+app.register_blueprint(FallskjermTandem, url_prefix="%s/fallskjerm/tandem" % app.globals.get('prefix'))
 
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
 
