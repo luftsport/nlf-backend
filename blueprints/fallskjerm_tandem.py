@@ -18,7 +18,6 @@ def search():
     status, result = nif._search(params.get('first_name', ''), params.get('last_name', ''))
     return eve_response(result.get('SearchResults', []), status)
 
-
 def _products(person_id):
     nif = tandem.Tandem(NIF_TOOLS_USER, NIF_TOOLS_PASSWD)
     status, result = nif.get_person_products(person_id)
@@ -37,3 +36,4 @@ def person_has_tandem(person_id, org_id):
                             return eve_response({'person_id': person_id, 'org_id': org_id, 'tandem': True}, status)
 
     return eve_response({'person_id': person_id, 'org_id': org_id, 'tandem': False}, status)
+
