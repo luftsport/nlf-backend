@@ -25,8 +25,8 @@ def track_time_spent(name='Unnamed test'):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            start = datetime.now()
-            delta = datetime.now() - start
+            start = datetime.utcnow()
+            delta = datetime.utcnow() - start
             return f(*args, **kwargs)
         return wrapped
     return decorator
