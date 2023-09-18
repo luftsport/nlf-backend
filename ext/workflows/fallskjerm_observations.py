@@ -780,9 +780,8 @@ class ObservationWorkflow(Machine):
             if self.initial_state == 'closed':
                 # Remove all members access
                 acl['read']['roles'] = [x for x in acl['read']['roles'] if x not in ACL_CLOSED_ALL_LIST]
-            else:
-                acl['read']['roles'] += ACL_FALLSKJERM_SU_GROUP_LIST
 
+            acl['read']['roles'] += [self.acl_hi, ACL_FALLSKJERM_FSJ] + ACL_FALLSKJERM_SU_GROUP_LIST
             acl['write']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
             acl['execute']['roles'] = ACL_FALLSKJERM_SU_GROUP_LIST
 
