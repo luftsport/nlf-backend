@@ -28,7 +28,7 @@ TAFMETAR_URL = '{}/tafmetar/1.0/'.format(MET_URL)
 Weather = Blueprint('Weather', __name__, )
 
 
-def get_taf_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+def get_taf_metar(icao, date=datetime.datetime.utcnow().strftime('%Y-%m-%d')):
 
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
@@ -88,13 +88,13 @@ def get_metar_as_dict(metar):
     return m
 
 
-def get_metar(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+def get_metar(icao, date=datetime.datetime.utcnow().strftime('%Y-%m-%d')):
     resp = requests.get('{}tafmetar.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
         return True, resp.text.strip().rstrip('=').split('=\n')
 
 
-def get_taf(icao, date=datetime.datetime.now().strftime('%Y-%m-%d')):
+def get_taf(icao, date=datetime.datetime.utcnow().strftime('%Y-%m-%d')):
     resp = requests.get('{}taf.txt?icao={}&date={}'.format(TAFMETAR_URL, icao, date))
     if resp.status_code == 200:
         return True, [t for t in resp.text.strip().replace('\n', '').split('=') if
