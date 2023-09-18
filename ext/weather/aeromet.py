@@ -77,7 +77,7 @@ class Aeromet():
 
         for line in urlopen(
                 'http://api.met.no/weatherapi/tafmetar/1.0/?icao=%s;content_type=text/plain;content=tafmetar;date=%s' % (
-                        self.icao, datetime.datetime.now().strftime('%Y-%m-%d'))):
+                        self.icao, datetime.datetime.utcnow().strftime('%Y-%m-%d'))):
             line = line.strip().decode('utf-8')
             if not finished_metar and len(line.strip()) != 0:
                 metar.append("%s" % line[:-1])

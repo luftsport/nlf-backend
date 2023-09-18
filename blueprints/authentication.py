@@ -112,7 +112,7 @@ def login():
 
         # utc.shift(seconds=+app.config['AUTH_SESSION_LENGHT'])
         # Pure datetime
-        # valid = datetime.now() + datetime.timedelta(seconds=60)
+        # valid = datetime.utcnow() + datetime.timedelta(seconds=60)
 
         try:
             acl_status, acl = lungo.get_person_acl(_user.person_id)

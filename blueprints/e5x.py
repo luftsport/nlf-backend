@@ -482,7 +482,7 @@ def generate(activity, _id):
                     audit = ors.get('e5x', {}).get('audit', [])
 
                     audit.append({
-                        'date': datetime.datetime.now(),
+                        'date': datetime.datetime.utcnow(),
                         'person_id': g.user_id,
                         'sent': transport_status,
                         'status': 'processing' if transport_status is True else 'error',
@@ -536,7 +536,7 @@ def generate(activity, _id):
                                   Levert via:\t{5}\n\
                                   Instans:\t{6}\n'.format(ors.get('id', ''),
                                                           ors.get('_version', ''),
-                                                          datetime.datetime.now(),
+                                                          datetime.datetime.utcnow(),
                                                           status,
                                                           '{}.e5x'.format(file_name),
                                                           'sftp',
