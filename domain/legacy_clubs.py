@@ -4,11 +4,11 @@ BASE_URL = 'legacy/clubs'
 _schema = {
     'id': {'type': 'integer',
            'required': True,
-           'readonly': True
+           #'readonly': True
            },
     'club': {'type': 'integer',
              'required': True,
-             'readonly': True
+             #'readonly': True
              },
     'name': {'type': 'string',
              },

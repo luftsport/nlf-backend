@@ -38,6 +38,7 @@ from blueprints.fallskjerm_observation_workflow import OrsWorkflow as Fallskjerm
 from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsWF
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
+from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
 
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
@@ -122,6 +123,7 @@ app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/w
 app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
@@ -185,6 +187,27 @@ app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fe
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 # AFTER update db layer
 app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
+
+# ################
+# MODELLFLY OBSREG
+#
+app.on_insert_modellfly_observations += hook.modellfly.ors_before_insert
+app.on_inserted_modellfly_observations += hook.modellfly.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_modellfly_observations += hook.modellfly.ors_before_get
+app.on_pre_GET_modellfly_observations_user += hook.modellfly.ors_before_get_user
+app.on_pre_GET_modellfly_observations_todo += hook.modellfly.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_resource_modellfly_observations += hook.modellfly.ors_after_fetched_list
+app.on_fetched_item_modellfly_observations += hook.modellfly.ors_after_fetched
+app.on_fetched_diffs_modellfly_observations += hook.modellfly.ors_after_fetched_diffs
+app.on_fetched_item_modellfly_observations_todo += hook.modellfly.ors_after_fetched
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
+# AFTER update db layer
+app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
+
+
 
 # ################
 # MOTOR OBSREG
