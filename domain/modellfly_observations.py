@@ -29,7 +29,7 @@ ORS_MODEL_TYPE = 'modellfly'
 # Occurrence
 # 1
 # Initial
-ORS_MODEL_VERSION = 4
+ORS_MODEL_VERSION = 1
 
 _schema = {'id': {'type': 'integer',
                   'readonly': True
