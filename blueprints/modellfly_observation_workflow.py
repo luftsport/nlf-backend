@@ -17,7 +17,7 @@ from ext.workflows.modellfly_observations import ModellflyObservationWorkflow
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 
-OrsWorkflow = Blueprint('modellfly Observation Workflow', __name__, )
+OrsWorkflow = Blueprint('Modellfly Observation Workflow', __name__, )
 
 RESOURCE_COLLECTION = 'modellfly_observations'
 
@@ -89,9 +89,7 @@ def get_observations():
     return eve_response(result, 200)
 
 
-@OrsWorkflow.route(
-    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs_aff|approve_fs_skjerm|approve_fs_tandem|approve_fs_materiell|approve_fs_leder)"):action>',
-    methods=['POST'])
+@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs|approve_fs_obsreg|approve_fs_klubbleder)"):action>', methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
