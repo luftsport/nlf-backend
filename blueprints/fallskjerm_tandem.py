@@ -6,10 +6,14 @@ from ext.app.decorators import require_token
 from nif_tools import tandem
 from ext.scf import NIF_TOOLS_USER, NIF_TOOLS_PASSWD
 
+import pandas as pd
+from io import StringIO
+
 FallskjermTandem = Blueprint('Fallskjerm - registrer tandemer fra csv fil', __name__, )
 
 
 @FallskjermTandem.route("/search", methods=['GET'])
+@require_token()
 def search():
     allowed = ['first_name', 'last_name', 'mobile', 'email']
     params = {key: value for (key, value) in request.args.items() if key in allowed}
@@ -24,6 +28,7 @@ def _products(person_id):
     return status, result #eve_response(result, status)
 
 @FallskjermTandem.route("/registered/<int:org_id>/<int:person_id>", methods=['GET'])
+@require_token()
 def person_has_tandem(person_id, org_id):
     status, products = _products(person_id)
 
@@ -37,3 +42,13 @@ def person_has_tandem(person_id, org_id):
 
     return eve_response({'person_id': person_id, 'org_id': org_id, 'tandem': False}, status)
 
+@FallskjermTandem.route("/upload/", methods=['POST'])
+@require_token()
+def handle_files():
+    data = request.get_json(force=True)
+    file = request.files['file']
+    print('[DATA]')
+    print(file)
+    # df = pd.read_xls(StringIO(_file))
+
+    return eve_response({'file': True}, 201)
