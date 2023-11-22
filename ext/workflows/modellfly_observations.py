@@ -72,7 +72,7 @@ WF_MODELLFLY_TRANSITIONS = [
     },
     # OBSREG
     {
-        'trigger': 'approve_fs_obsreg',
+        'trigger': 'send_to_obsreg',
         'source': 'pending_review_fs',
         'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
@@ -94,7 +94,7 @@ WF_MODELLFLY_TRANSITIONS = [
     },
     # Leder
     {
-        'trigger': 'approve_fs_klubbleder',
+        'trigger': 'send_to_klubbleder',
         'source': 'pending_review_fs',
         'dest': 'pending_review_klubbleder',
         'after': 'save_workflow',
@@ -168,14 +168,14 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av Fagsjef'
     },
-    'approve_fs_obsreg': {
+    'send_to_obsreg': {
         'title': 'Send til OBSREG Koordinator',
         'action': 'Send OBSREG',
         'resource': 'obsreg',
         'comment': True,
         'descr': 'Sendt til OBSREG Koordinator'
     },
-    'approve_fs_klubbleder': {
+    'send_to_klubbleder': {
         'title': 'Send til Klubbleder',
         'action': 'Send Klubbleder',
         'resource': 'klubbleder',
