@@ -484,6 +484,7 @@ def generate(activity, _id):
                     audit.append({
                         'date': datetime.datetime.utcnow(),
                         'person_id': g.user_id,
+                        'report_status': data['e5x']['entities']['reportingHistory'][0]['attributes']['reportStatus']['value'],
                         'sent': transport_status,
                         'status': 'processing' if transport_status is True else 'error',
                         'version': ors.get('_version'),
