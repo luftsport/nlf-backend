@@ -168,6 +168,20 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av Fagsjef'
     },
+    'approve_fs_obsreg': {
+        'title': 'Send til OBSREG Koordinator',
+        'action': 'Send OBSREG',
+        'resource': 'approve_fs_obsreg',
+        'comment': True,
+        'descr': 'Sendt til OBSREG Koordinator'
+    },
+    'approve_fs_klubbleder': {
+        'title': 'Send til Klubbleder',
+        'action': 'Send Klubbleder',
+        'resource': 'approve_fs_klubbleder',
+        'comment': True,
+        'descr': 'Sendt til Klubbleder'
+    },
     'approve_obsreg': {
         'title': 'Godkjenn observasjon',
         'action': 'Godkjenn',
