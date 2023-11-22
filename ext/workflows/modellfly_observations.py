@@ -291,18 +291,14 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
 
 
         elif self.state == 'pending_review_fs':
-            """ Owner, reporter read, fsj read, hi read, write, execute """
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
 
             if self.initial_state == 'closed':
                 acl['read']['roles'] = [ACL_MODELLFLY_FS]
             else:
                 acl['read']['roles'] += [ACL_MODELLFLY_FS]
-
-            acl['write']['users'] = []
-            acl['execute']['users'] = []
-
             acl['write']['roles'] = [ACL_MODELLFLY_FS]
-            acl['read']['roles'] += [ACL_MODELLFLY_FS]
             acl['execute']['roles'] = [ACL_MODELLFLY_FS]
 
         elif self.state == 'pending_review_obsreg':
@@ -311,8 +307,8 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['roles'] = [ACL_MODELLFLY_FS]
-            acl['read']['roles'] += [ACL_MODELLFLY_FS, ACL_MODELLFLY_OBSREG]
+            acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
+            acl['write']['roles'] = [ACL_MODELLFLY_OBSREG]
             acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
 
         elif self.state == 'pending_review_klubbleder':
@@ -320,11 +316,12 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
+
             klubbleder = ACL_KLUBBLEDER.copy()
             klubbleder['org'] = self.db_wf.get('club')
-            acl['write']['roles'] = [ACL_MODELLFLY_FS]
-            acl['read']['roles'] += [ACL_MODELLFLY_FS, ACL_MODELLFLY_OBSREG]
-            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
+            acl['read']['roles'] += [klubbleder]
+            acl['write']['roles'] = [klubbleder]
+            acl['execute']['roles'] = [klubbleder]
 
         elif self.state == 'closed':
             """ everybody read, su execute """
