@@ -330,7 +330,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
 
             acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
-            acl['execute']['roles'] = ACL_MODELLFLY_FS
+            acl['execute']['roles'] = [ACL_MODELLFLY_FS]
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))
