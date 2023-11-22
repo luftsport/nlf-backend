@@ -58,6 +58,7 @@ from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
 
+
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
@@ -286,6 +287,7 @@ app.on_pre_GET_notifications += hook.notifications.before_get
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
+
 
 # E5X delete
 app.on_pre_DELETE_e5x_attributes += hook.e5x.add_delete_filters

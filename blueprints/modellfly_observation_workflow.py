@@ -2,16 +2,16 @@
     Observation Workflow Controller
     ===============================
 
-    Model: ext.workflows.observation.ObservationWorkflow
+    Model: ext.workflows.observation.ModellflyObservationWorkflow
 
     @todo: Signals on change signal to communications to dispatch an update to the watchers
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
-from flask import g, Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
-from ext.workflows.modellfly_observations import ObservationWorkflow
+from ext.workflows.modellfly_observations import ModellflyObservationWorkflow
 
 # Need custom decorators
 from ext.app.decorators import *
@@ -29,7 +29,7 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_current_state(), 200)
 
@@ -39,7 +39,7 @@ def state(observation_id):
 def audit(observation_id):
     """ Get audit trail for observation
     """
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_audit(), 200)
 
@@ -112,12 +112,12 @@ def transition(observation_id, action):
         pass
 
     # Instantiate with observation_id and current user (user is from g.user_id
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id, comment=comment)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id, comment=comment)
 
     # Now just do a
 
     if wf.get_resource_mapping().get(action, False):
-        # result = wf.call(get_actions2().get(action)) #getattr(ObservationWorkflow, wf.get_actions2().get(action))()
+        # result = wf.call(get_actions2().get(action)) #getattr(ModellflyObservationWorkflow, wf.get_actions2().get(action))()
 
         # This is actually safe!
         result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
@@ -134,16 +134,16 @@ def transition(observation_id, action):
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
 @require_token()
 def graphit(observation_id, state):
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
-    from ext.workflows.modellfly_observations import WF_modellfly_STATES, WF_modellfly_TRANSITIONS
-    if state in WF_modellfly_STATES:
+    # wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    from ext.workflows.modellfly_observations import WF_MODELLFLY_STATES, WF_MODELLFLY_TRANSITIONS
+    if state in WF_MODELLFLY_STATES:
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
 
         machine = Machine(model=wf,
-                          states=WF_modellfly_STATES,
-                          transitions=WF_modellfly_TRANSITIONS,
+                          states=WF_MODELLFLY_STATES,
+                          transitions=WF_MODELLFLY_TRANSITIONS,
                           initial=state,
                           title='Workflow graph')
         stream = io.BytesIO()
@@ -164,7 +164,7 @@ def tasks(observation_id):
 
     Most likely this will make for another transition where state is 'waiting for tasks to complete'
     """
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    # wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     raise NotImplemented
 
