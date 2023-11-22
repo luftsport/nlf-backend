@@ -293,6 +293,11 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
         elif self.state == 'pending_review_fs':
             """ Owner, reporter read, fsj read, hi read, write, execute """
 
+            if self.initial_state == 'closed':
+                acl['read']['roles'] = [ACL_MODELLFLY_FS]
+            else:
+                acl['read']['roles'] += [ACL_MODELLFLY_FS]
+
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
