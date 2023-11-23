@@ -9,7 +9,7 @@ from ext.auth.acl import has_permission
 
 def before_get(request, lookup):
     """Make sure only recepient can read own messages"""
-    lookup['recepient'] = g.user_id
+    lookup['$or'] = [{'sender': g.user_id}, {'recepient': g.user_id}]
 
 
 def before_insert(items):
