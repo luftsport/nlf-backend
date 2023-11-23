@@ -67,7 +67,7 @@ def ors_before_insert_item(item):
             item['reporter'] = g.user_id
             item['owner'] = g.user_id
             item['watchers'] = [g.user_id]
-            item['workflow'] = get_wf_init(g.user_id)
+            item['workflow'] = get_wf_init(g.user_id, activity='modellfly')
 
             role_hi = ACL_FALLSKJERM_HI.copy()
             role_hi['org'] = item.get('discipline')
