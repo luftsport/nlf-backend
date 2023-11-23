@@ -28,7 +28,7 @@ from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
 from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
-from ext.workflows.modellfly_observations import ObservationWorkflow, get_acl_init
+from ext.workflows.modellfly_observations import ModellflyObservationWorkflow, get_acl_init
 from ext.workflows.observation_workflow import get_wf_init #,
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
@@ -86,7 +86,7 @@ def ors_after_inserted(items):
 
 
 def ors_after_inserted_item(item):
-    wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=g.user_id)
+    wf = ModellflyObservationWorkflow(object_id=item.get('_id', ''), user_id=g.user_id)
     if wf.get_current_state().get('state', '') == 'draft':
         wf.notify_created()
 
