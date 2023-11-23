@@ -250,9 +250,7 @@ app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
 # BEFORE update db layer
-app.on_updated_seilfly_observations += hook.seilfly.ors_before_update
-# BEFORE update db layer
-app.on_update_motorfly_observations += hook.motorfly.ors_before_update
+app.on_update_seilfly_observations += hook.seilfly.ors_before_update
 # AFTER update db layer
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
