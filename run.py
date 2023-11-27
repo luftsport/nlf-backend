@@ -205,6 +205,8 @@ app.on_fetched_diffs_modellfly_observations += hook.modellfly.ors_after_fetched_
 app.on_fetched_item_modellfly_observations_todo += hook.modellfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
+# BEFORE update db layer
+app.on_update_modellfly_observations += hook.modellfly.ors_before_update
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
 
