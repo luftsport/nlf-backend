@@ -27,7 +27,7 @@ from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permiss
 from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
+from ext.scf import ACL_MODELLFLY_FSJ, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
 from ext.workflows.modellfly_observations import ModellflyObservationWorkflow, get_acl_init
 from ext.workflows.observation_workflow import get_wf_init #,
 from ext.app.seq import increment
