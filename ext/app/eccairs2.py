@@ -141,8 +141,10 @@ class ECCAIRS2:
                     if len(result.get('data', {}).get('files', [])) == 1:
                         eccairs2_id = result['data']['files'][0]
                         eccairs2_processing_code = 310
-                    elif 'key' in result.get('data', {}).keys() and result.get('data', {}).get('key',
-                                                                                               None) == 'OCC_FBW_309':
+                    elif len(result.get('data', {}).get('value', [])) == 1:
+                        eccairs2_id = result['data']['value'][0]
+                        eccairs2_processing_code = 310
+                    elif 'key' in result.get('data', {}).keys() and result.get('data', {}).get('key', None) == 'OCC_FBW_309':
                         eccairs2_id = result['data']['value'][2]  # 0 contextid, 1 uuid, 2 e2id
                         eccairs2_processing_code = 309
                     else:
