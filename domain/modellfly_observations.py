@@ -245,7 +245,7 @@ aggregate_types = {
 
 aggregate_types_discipline = {
     'item_title': 'Observation Aggregations by discipline and types',
-    'url': '{}/aggregate/discipline'.format(BASE_URL),
+    'url': '{}/aggregate/types/discipline'.format(BASE_URL),
     'datasource': {
         'source': RESOURCE_COLLECTION,
         'aggregation': {
@@ -271,6 +271,36 @@ aggregate_states_discipline = {
                 {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "discipline": "$discipline"}},
                 {"$group": {"_id": "$workflow.state", "count": {"$sum": 1}}},
                 {"$sort": SON([("count", -1)])}
+            ]
+        }
+    }
+}
+
+aggregate_avg_rating_discipline = {
+    'item_title': 'Observations aggregate average ratings by discipline and date range',
+    'url': '{}/aggregate/ratings/discipline'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"workflow.state": "closed", "when": {"$gte": "$from", "$lte": "$to"},
+                            "discipline": "$discipline"}},
+                {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}, "sum": {"$sum": 1}}},
+            ]
+        }
+    }
+}
+
+aggregate_avg_rating = {
+    'item_title': 'Observations aggregate average ratings by discipline and date range',
+    'url': '{}/aggregate/ratings'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "workflow.state": "closed"}},
+                {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}}},
+                {"$sort": SON([("avg", -1)])}
             ]
         }
     }

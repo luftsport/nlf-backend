@@ -111,6 +111,9 @@ DOMAIN = {
     "modellfly_observations_aggregate_types": modellfly_observations.aggregate_types,
     "modellfly_observations_aggregate_types_discipline": modellfly_observations.aggregate_types_discipline,
     "modellfly_observations_aggregate_states_discipline": modellfly_observations.aggregate_states_discipline,
+    "modellfly_observations_aggregate_avg_ratings_discipline": modellfly_observations.aggregate_avg_rating_discipline,
+    "modellfly_observations_aggregate_avg_ratings": modellfly_observations.aggregate_avg_rating,
+
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
