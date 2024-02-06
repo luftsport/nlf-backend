@@ -85,9 +85,9 @@ class TokenAuth(TokenAuth):
         return self.person_id
 
     def _set_globals(self, id, _id):
-        g.id = id #app.globals.update({'id': id})
-        g.user_id = id #app.globals.update({'user_id': id})
-        g._id = _id #app.globals.update({'_id': "%s" % _id})
+        g.id = id  # app.globals.update({'id': id})
+        g.user_id = id  # app.globals.update({'user_id': id})
+        g._id = _id  # app.globals.update({'_id': "%s" % _id})
 
     def authenticate(self):
         """ Overridden by NOT returning a WWW-Authenticate header
@@ -108,11 +108,6 @@ class TokenAuth(TokenAuth):
         g.acl = {
             'roles': [{'activity': v['activity'], 'org': v['org'], 'role': v['role']} for v in u['acl']]}
 
-
-
-
     def _set_acl(self, acl, _person_id, person_id):
 
         raise NotImplemented
-
-

@@ -103,8 +103,9 @@ _schema = {'id': {'type': 'integer',
                           'default': []
 
                           },
-           'description': { 'type': 'dict'},
-           'reporter_role': { 'type': 'string'},
+           'description': {'type': 'dict'},
+           'reporter_role': {'type': 'string'},
+           'rpas_type': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
                                 'schema': {'f': {'type': 'string'},

@@ -12,13 +12,13 @@ WF_MODELLFLY_ATTR = {
         'title': 'Utkast',
         'description': 'Utkast'
     },
-    'pending_review_fs': {
-        'title': 'Avventer Fagsjef',
-        'description': 'Avventer vurdering Fagsjef'
-    },
     'pending_review_obsreg': {
         'title': 'Avventer OBSREG',
         'description': 'Avventer vurdering OBSREG koordinator'
+    },
+    'pending_review_fs': {
+        'title': 'Avventer Fagsjef',
+        'description': 'Avventer vurdering Fagsjef'
     },
     'pending_review_klubbleder': {
         'title': 'Avventer Klubbleder',
@@ -35,9 +35,9 @@ WF_MODELLFLY_ATTR = {
 }
 WF_MODELLFLY_TRANSITIONS = [
     {
-        'trigger': 'send_to_fs',
+        'trigger': 'send_to_obsreg',
         'source': 'draft',
-        'dest': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission'],
     },
@@ -57,45 +57,45 @@ WF_MODELLFLY_TRANSITIONS = [
     },
 
     {
-        'trigger': 'reject_fs',
-        'source': 'pending_review_fs',
+        'trigger': 'reject_obsreg',
+        'source': 'pending_review_obsreg',
         'dest': 'draft',
-        'after': 'save_workflow',
-        'conditions': ['has_permission']
-    },
-    {
-        'trigger': 'approve_fs',
-        'source': 'pending_review_fs',
-        'dest': 'closed',
-        'after': 'save_workflow',
-        'conditions': ['has_permission']
-    },
-    # OBSREG
-    {
-        'trigger': 'send_to_obsreg',
-        'source': 'pending_review_fs',
-        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
     {
         'trigger': 'approve_obsreg',
         'source': 'pending_review_obsreg',
+        'dest': 'closed',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    # Fagsjef
+    {
+        'trigger': 'send_to_fs',
+        'source': 'pending_review_obsreg',
         'dest': 'pending_review_fs',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
     {
-        'trigger': 'reject_obsreg',
-        'source': 'pending_review_obsreg',
-        'dest': 'pending_review_fs',
+        'trigger': 'approve_fs',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'reject_fs',
+        'source': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
     # Leder
     {
         'trigger': 'send_to_klubbleder',
-        'source': 'pending_review_fs',
+        'source': 'pending_review_obsreg',
         'dest': 'pending_review_klubbleder',
         'after': 'save_workflow',
         'conditions': ['has_permission']
@@ -104,21 +104,21 @@ WF_MODELLFLY_TRANSITIONS = [
     {
         'trigger': 'reject_klubbleder',
         'source': 'pending_review_klubbleder',
-        'dest': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
     {
         'trigger': 'approve_klubbleder',
         'source': 'pending_review_klubbleder',
-        'dest': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
     {
-        'trigger': 'reopen_fs',
+        'trigger': 'reopen_obsreg',
         'source': 'closed',
-        'dest': 'pending_review_fs',
+        'dest': 'pending_review_obsreg',
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
@@ -147,7 +147,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Gjenåpnet'
     },
-    'reopen_fs': {
+    'reopen_obsreg': {
         'title': 'Gjenåpne observasjon',
         'action': 'Gjenåpne',
         'resource': 'reopen',
@@ -156,7 +156,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
     },
     'approve_fs': {
         'title': 'Godkjenn observasjon',
-        'action': 'Lukk',
+        'action': 'Godkjenn',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av Fagsjef'
@@ -184,7 +184,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
     },
     'approve_obsreg': {
         'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn',
+        'action': 'Lukk',
         'resource': 'approve',
         'comment': True,
         'descr': 'Godkjent av OBSREG koordinator'
@@ -213,7 +213,13 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
 
 }
 from ext.workflows.observation_workflow import ObservationWorkflow
-from ext.scf import ACL_CLOSED_ALL_LIST
+from ext.scf import (
+    ACL_CLOSED_ALL_LIST,
+    ACL_MODELLFLY_KLUBB_LEDER,
+    ACL_MODELLFLY_ORS,
+    ACL_MODELLFLY_FSJ,
+    ACL_MODELLFLY_CLOSED
+)
 
 
 ACL_MODELLFLY_OBSREG_ROLE = 202656
@@ -221,13 +227,15 @@ ACL_FSJ_ROLE = 202659
 ACL_KLUBBLEDER_ROLE = 1
 ACL_MODELLFLY_OBSREG = {'activity': 236, 'org': 203027, 'role': ACL_MODELLFLY_OBSREG_ROLE}
 ACL_KLUBBLEDER = {'activity': 236, 'org': -1, 'role': ACL_KLUBBLEDER_ROLE}
-ACL_MODELLFLY_FS = {'activity': 236, 'org': 203027, 'role': ACL_FSJ_ROLE}
+ACL_MODELLFLY_OBSREG = {'activity': 236, 'org': 203027, 'role': ACL_FSJ_ROLE}
+
+
 
 def get_acl_init(person_id, discipline_id):
     acl = {
         'read': {
             'users': [person_id],
-            'roles': [ACL_MODELLFLY_FS]
+            'roles': [ACL_MODELLFLY_OBSREG]
         },
         'execute': {
             'users': [person_id],
@@ -273,7 +281,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['write']['users'] = [reporter]
             acl['execute']['users'] = [reporter]
 
-            acl['read']['roles'] += [ACL_MODELLFLY_FS]
+            acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
             acl['write']['roles'] = []
             acl['execute']['roles'] = []
 
@@ -289,26 +297,26 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['execute']['roles'] = []
 
 
-        elif self.state == 'pending_review_fs':
+        elif self.state == 'pending_review_obsreg':
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
             if self.initial_state == 'closed':
-                acl['read']['roles'] = [ACL_MODELLFLY_FS]
+                acl['read']['roles'] = [ACL_MODELLFLY_OBSREG]
             else:
-                acl['read']['roles'] += [ACL_MODELLFLY_FS]
-            acl['write']['roles'] = [ACL_MODELLFLY_FS]
-            acl['execute']['roles'] = [ACL_MODELLFLY_FS]
+                acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
+            acl['write']['roles'] = [ACL_MODELLFLY_OBSREG]
+            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
 
-        elif self.state == 'pending_review_obsreg':
+        elif self.state == 'pending_review_fs':
             """ Owner, reporter, hi read, fsj read, write, execute """
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
-            acl['write']['roles'] = [ACL_MODELLFLY_OBSREG]
-            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
+            acl['read']['roles'] += [ACL_MODELLFLY_FSJ]
+            acl['write']['roles'] = [ACL_MODELLFLY_FSJ]
+            acl['execute']['roles'] = [ACL_MODELLFLY_FSJ]
 
         elif self.state == 'pending_review_klubbleder':
             """ Owner, reporter, hi read, fsj read, write, execute """
@@ -316,7 +324,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            klubbleder = ACL_KLUBBLEDER.copy()
+            klubbleder = ACL_MODELLFLY_KLUBB_LEDER.copy()
             klubbleder['org'] = self.db_wf.get('club')
             acl['read']['roles'] += [klubbleder]
             acl['write']['roles'] = [klubbleder]
@@ -331,7 +339,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
 
             acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_MODELLFLY_FS]
+            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))

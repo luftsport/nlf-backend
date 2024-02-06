@@ -27,7 +27,8 @@ from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permiss
 from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
-from ext.scf import ACL_MODELLFLY_FSJ, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
+from ext.scf import ACL_MODELLFLY_FSJ, ACL_MODELLFLY_KLUBB_LEDER, ACL_MODELLFLY_ORS
+
 from ext.workflows.modellfly_observations import ModellflyObservationWorkflow, get_acl_init
 from ext.workflows.observation_workflow import get_wf_init #,
 from ext.app.seq import increment
@@ -69,10 +70,20 @@ def ors_before_insert_item(item):
             item['watchers'] = [g.user_id]
             item['workflow'] = get_wf_init(g.user_id, activity='modellfly')
 
-            role_hi = ACL_FALLSKJERM_HI.copy()
-            role_hi['org'] = item.get('discipline')
-            _, hi = get_person_from_role(role_hi)
-            item['organization'] = {'hi': hi}
+            # Organization:
+            item['organization'] = {}
+            role_leder = ACL_MODELLFLY_KLUBB_LEDER.copy()
+            role_leder['org'] = item.get('club')
+            _, leder = get_person_from_role(role_leder)
+            item['organization']['club_president'] = leder
+
+            role_ors = ACL_MODELLFLY_ORS.copy()
+            _, coordinator = get_person_from_role(role_ors)
+            item['organization']['ors'] = coordinator
+
+            role_fsj = ACL_MODELLFLY_FSJ.copy()
+            _, fsj = get_person_from_role(role_fsj)
+            item['organization']['fsj'] = fsj
 
             item['acl'] = get_acl_init(g.user_id, item['discipline'])
 
