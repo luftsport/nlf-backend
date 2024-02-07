@@ -197,7 +197,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
     'send_to_fs': {
         'title': 'Send til Fagsjef',
         'action': 'Send til Fagsjef',
-        'resource': 'approve',
+        'resource': 'fagsjef',
         'comment': True,
         'descr': 'Sendt til Fagsjef'
     },
@@ -218,7 +218,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
     'send_to_fagutvalg': {
         'title': 'Send til Fagutvalg',
         'action': 'Send Fagutvalg',
-        'resource': 'obsreg',
+        'resource': 'fagutvalg',
         'comment': True,
         'descr': 'Sendt til Fagutvalg'
     },
