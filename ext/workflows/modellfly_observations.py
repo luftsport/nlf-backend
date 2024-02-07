@@ -20,6 +20,10 @@ WF_MODELLFLY_ATTR = {
         'title': 'Avventer Fagsjef',
         'description': 'Avventer vurdering Fagsjef'
     },
+    'pending_review_fagutvalg': {
+        'title': 'Avventer Fagutvalg',
+        'description': 'Avventer vurdering Fagutvalg'
+    },
     'pending_review_klubbleder': {
         'title': 'Avventer Klubbleder',
         'description': 'Avventer vurdering Klubbleder'
@@ -92,6 +96,28 @@ WF_MODELLFLY_TRANSITIONS = [
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
+    # Fagutvalg
+    {
+        'trigger': 'send_to_fagutvalg',
+        'source': 'pending_review_obsreg',
+        'dest': 'pending_review_fagutvalg',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'approve_fagutvalg',
+        'source': 'pending_review_fagutvalg',
+        'dest': 'pending_review_obsreg',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
+    {
+        'trigger': 'reject_fagutvalg',
+        'source': 'pending_review_fagutvalg',
+        'dest': 'pending_review_obsreg',
+        'after': 'save_workflow',
+        'conditions': ['has_permission']
+    },
     # Leder
     {
         'trigger': 'send_to_klubbleder',
@@ -100,7 +126,6 @@ WF_MODELLFLY_TRANSITIONS = [
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
-
     {
         'trigger': 'reject_klubbleder',
         'source': 'pending_review_klubbleder',
@@ -168,6 +193,20 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av Fagsjef'
     },
+    'approve_fagutvalg': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Godkjenn',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Godkjent av Fagutvalg'
+    },
+    'reject_fagutvalg': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av Fagutvalg'
+    },
     'send_to_obsreg': {
         'title': 'Send til OBSREG Koordinator',
         'action': 'Send OBSREG',
@@ -218,7 +257,9 @@ from ext.scf import (
     ACL_MODELLFLY_KLUBB_LEDER,
     ACL_MODELLFLY_ORS,
     ACL_MODELLFLY_FSJ,
-    ACL_MODELLFLY_CLOSED
+    ACL_MODELLFLY_CLOSED,
+    ACL_FALLSKJERM_SU_LEDER_ROLE,
+    ACL_FALLSKJERM_SU_MEDLEM_ROLE
 )
 
 
@@ -228,7 +269,7 @@ ACL_KLUBBLEDER_ROLE = 1
 ACL_MODELLFLY_OBSREG = {'activity': 236, 'org': 203027, 'role': ACL_MODELLFLY_OBSREG_ROLE}
 ACL_KLUBBLEDER = {'activity': 236, 'org': -1, 'role': ACL_KLUBBLEDER_ROLE}
 ACL_MODELLFLY_OBSREG = {'activity': 236, 'org': 203027, 'role': ACL_FSJ_ROLE}
-
+ACL_MODELLFLY_FAGUTVALG = {'activity': 236, 'org': 203027, 'role': ACL_FALLSKJERM_SU_MEDLEM_ROLE}
 
 
 def get_acl_init(person_id, discipline_id):
@@ -317,6 +358,15 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['read']['roles'] += [ACL_MODELLFLY_FSJ]
             acl['write']['roles'] = [ACL_MODELLFLY_FSJ]
             acl['execute']['roles'] = [ACL_MODELLFLY_FSJ]
+
+        elif self.state == 'pending_review_fagutvalg':
+
+            acl['write']['users'] = []
+            acl['execute']['users'] = []
+
+            acl['read']['roles'] += [ACL_MODELLFLY_FAGUTVALG]
+            acl['write']['roles'] = [ACL_MODELLFLY_FAGUTVALG]
+            acl['execute']['roles'] = [ACL_MODELLFLY_FAGUTVALG]
 
         elif self.state == 'pending_review_klubbleder':
             """ Owner, reporter, hi read, fsj read, write, execute """
