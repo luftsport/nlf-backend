@@ -192,7 +192,7 @@ class ObservationWorkflow(Machine):
             try:
                 tmp['permission'] = self.has_permission()
             except Exception as e:
-                app.logger.exception('Error in wf_fallskjerm.get_resources')
+                app.logger.exception('Error in get_resources')
 
             resources.append(tmp)
 

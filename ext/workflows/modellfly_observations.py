@@ -3,6 +3,7 @@ WF_MODELLFLY_STATES = [
     'pending_review_fs',
     'pending_review_obsreg',
     'pending_review_klubbleder',
+    'pending_review_fagutvalg',
     'closed',
     'withdrawn'
 ]
@@ -151,12 +152,26 @@ WF_MODELLFLY_TRANSITIONS = [
 ]
 
 WF_MODELLFLY_TRANSITIONS_ATTR = {
-    'send_to_fs': {
-        'title': 'Send til Fagsjef',
-        'action': 'Send til Fagsjef',
+    'send_to_obsreg': {
+        'title': 'Send til OBSREG Koordinator',
+        'action': 'Send OBSREG',
+        'resource': 'obsreg',
+        'comment': True,
+        'descr': 'Sendt til OBSREG Koordinator'
+    },
+    'approve_obsreg': {
+        'title': 'Godkjenn observasjon',
+        'action': 'Lukk',
         'resource': 'approve',
         'comment': True,
-        'descr': 'Sendt til Fagsjef'
+        'descr': 'Godkjent av OBSREG koordinator'
+    },
+    'reject_obsreg': {
+        'title': 'Send observasjon tilbake',
+        'action': 'Avslå',
+        'resource': 'reject',
+        'comment': True,
+        'descr': 'Sendt tilbake av OBSREG koordinator'
     },
     'withdraw': {
         'title': 'Trekk tilbake observasjon',
@@ -179,6 +194,13 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Gjenåpnet'
     },
+    'send_to_fs': {
+        'title': 'Send til Fagsjef',
+        'action': 'Send til Fagsjef',
+        'resource': 'approve',
+        'comment': True,
+        'descr': 'Sendt til Fagsjef'
+    },
     'approve_fs': {
         'title': 'Godkjenn observasjon',
         'action': 'Godkjenn',
@@ -192,6 +214,13 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'resource': 'reject',
         'comment': True,
         'descr': 'Sendt tilbake av Fagsjef'
+    },
+    'send_to_fagutvalg': {
+        'title': 'Send til Fagutvalg',
+        'action': 'Send Fagutvalg',
+        'resource': 'obsreg',
+        'comment': True,
+        'descr': 'Sendt til Fagutvalg'
     },
     'approve_fagutvalg': {
         'title': 'Godkjenn observasjon',
@@ -207,13 +236,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt tilbake av Fagutvalg'
     },
-    'send_to_obsreg': {
-        'title': 'Send til OBSREG Koordinator',
-        'action': 'Send OBSREG',
-        'resource': 'obsreg',
-        'comment': True,
-        'descr': 'Sendt til OBSREG Koordinator'
-    },
+
     'send_to_klubbleder': {
         'title': 'Send til Klubbleder',
         'action': 'Send Klubbleder',
@@ -221,20 +244,7 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'comment': True,
         'descr': 'Sendt til Klubbleder'
     },
-    'approve_obsreg': {
-        'title': 'Godkjenn observasjon',
-        'action': 'Lukk',
-        'resource': 'approve',
-        'comment': True,
-        'descr': 'Godkjent av OBSREG koordinator'
-    },
-    'reject_obsreg': {
-        'title': 'Send observasjon tilbake',
-        'action': 'Avslå',
-        'resource': 'reject',
-        'comment': True,
-        'descr': 'Sendt tilbake av OBSREG koordinator'
-    },
+
     'approve_klubbleder': {
         'title': 'Godkjenn observasjon',
         'action': 'Godkjenn',
@@ -261,7 +271,6 @@ from ext.scf import (
     ACL_FALLSKJERM_SU_LEDER_ROLE,
     ACL_FALLSKJERM_SU_MEDLEM_ROLE
 )
-
 
 ACL_MODELLFLY_OBSREG_ROLE = 202656
 ACL_FSJ_ROLE = 202659
@@ -293,20 +302,21 @@ def get_acl_init(person_id, discipline_id):
     }
     return acl
 
+
 class ModellflyObservationWorkflow(ObservationWorkflow):
 
     def __init__(self, object_id, user_id, activity='modellfly', initial_state=None, comment=None):
 
         super().__init__(
-                         object_id=object_id,
-                         user_id=user_id,
-                         activity=activity,
-                         states=WF_MODELLFLY_STATES,
-                         state_attrs=WF_MODELLFLY_ATTR,
-                         transitions=WF_MODELLFLY_TRANSITIONS,
-                         transitions_attrs=WF_MODELLFLY_TRANSITIONS_ATTR,
-                         initial_state=None,
-                         comment=None)
+            object_id=object_id,
+            user_id=user_id,
+            activity=activity,
+            states=WF_MODELLFLY_STATES,
+            state_attrs=WF_MODELLFLY_ATTR,
+            transitions=WF_MODELLFLY_TRANSITIONS,
+            transitions_attrs=WF_MODELLFLY_TRANSITIONS_ATTR,
+            initial_state=None,
+            comment=None)
 
     def set_acl(self):
 
