@@ -75,7 +75,8 @@ _schema = {'id': {'type': 'integer',
            'when': {'type': 'datetime', 'default': datetime.utcnow()},
            # E5X
            'aircrafts': {'type': 'list', 'default': []},
-           'occurrence': {'type': 'dict', 'default': {}},
+
+           'eccairs2': {'type': 'dict', 'default': {}},
 
            'involved': {'type': 'list',
                         'default': []
@@ -159,16 +160,6 @@ definition = {
         'flags',
         'rating',
         'type',
-        # Anon no callsign 'aircrafts.aircraft',
-        'aircrafts.aircraft.model',
-        'aircrafts.aircraft.manufacturer',
-        'aircrafts.aircraft.type',
-        'aircrafts.parts',
-        'aircrafts.flight',
-        'aircrafts.airspace',
-        'aircrafts.aerodrome',
-        'aircrafts.occurence',
-        'aircrafts.wx',
         '_updated',
         '_created'
     ],
