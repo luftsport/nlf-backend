@@ -60,10 +60,6 @@ class TokenAuth(TokenAuth):
                 # Set acl - use id to make sure
                 self.set_acl(u)
 
-                # Make me obsreg!!
-                if u['id'] == 301041:
-                    from ext.workflows.modellfly_observations import ACL_MODELLFLY_OBSREG
-                    g.acl.append(ACL_MODELLFLY_OBSREG)
                 # See if needed for the resource
                 # Contains per method (ie read or write or all verbs)
                 self.is_auth = True
