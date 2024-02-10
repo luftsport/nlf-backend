@@ -15,6 +15,9 @@ import acl_groups, acl_roles, users_acl
 import fallskjerm_observations
 import fallskjerm_quarter_report
 
+# Modellfly
+import modellfly_observations
+
 # MOTORFLY
 import motorfly_observations
 
@@ -99,6 +102,18 @@ DOMAIN = {
     # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
     "fallskjerm_quarter_report_aggregate_year": fallskjerm_quarter_report.aggregate_year,
+    
+    # Modell
+    "modellfly_observations": modellfly_observations.definition,
+    "modellfly_observations_user": modellfly_observations.user,
+    "modellfly_observations_todo": modellfly_observations.workflow_todo,
+    # Modell aggregations
+    "modellfly_observations_aggregate_types": modellfly_observations.aggregate_types,
+    "modellfly_observations_aggregate_types_discipline": modellfly_observations.aggregate_types_discipline,
+    "modellfly_observations_aggregate_states_discipline": modellfly_observations.aggregate_states_discipline,
+    "modellfly_observations_aggregate_avg_ratings_discipline": modellfly_observations.aggregate_avg_rating_discipline,
+    "modellfly_observations_aggregate_avg_ratings": modellfly_observations.aggregate_avg_rating,
+
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
