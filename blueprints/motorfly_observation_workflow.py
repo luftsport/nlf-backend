@@ -184,11 +184,11 @@ def tasks(observation_id):
 def get_mapping(observation_id):
     wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
-    data = (wf._trigger_attrs
-            .update({'init': {'title': 'opprettet observasjonen'}})
-            .update({'withdraw': {'title': 'trakk tilbake observasjonen'}})
-            .update({'close': {'title': 'lukket observasjonen'}})
-            )
+    data = wf._trigger_attrs
+    data.update({'init': {'title': 'opprettet observasjonen'}})
+    data.update({'withdraw': {'title': 'trakk tilbake observasjonen'}})
+    data.update({'close': {'title': 'lukket observasjonen'}})
+
     return eve_response(data)
 
 
