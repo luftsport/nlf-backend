@@ -21,6 +21,7 @@ OrsWorkflow = Blueprint('Fallskjerm Observation Workflow', __name__, )
 
 RESOURCE_COLLECTION = 'fallskjerm_observations'
 
+
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
 @OrsWorkflow.route("/<objectid:observation_id>/state", methods=['GET'])
 @require_token()
@@ -88,7 +89,9 @@ def get_observations():
     return eve_response(result, 200)
 
 
-@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs_aff|approve_fs_skjerm|approve_fs_tandem|approve_fs_materiell|approve_fs_leder)"):action>', methods=['POST'])
+@OrsWorkflow.route(
+    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|approve_fs_aff|approve_fs_skjerm|approve_fs_tandem|approve_fs_materiell|approve_fs_leder)"):action>',
+    methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
@@ -164,6 +167,19 @@ def tasks(observation_id):
     # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     raise NotImplemented
+
+
+@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
+@require_token()
+def get_mapping(observation_id):
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+
+    data = (wf._trigger_attrs |
+            {'init': {'title': 'opprettet observasjonen'}} |
+            {'withdraw': {'title': 'trakk tilbake observasjonen'}} |
+            {'close': {'title': 'lukket observasjonen'}}
+            )
+    return eve_response(data)
 
 
 class Dummy(object):

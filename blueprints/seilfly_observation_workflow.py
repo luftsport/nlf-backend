@@ -129,7 +129,8 @@ def transition(observation_id, action):
 
         return eve_response(wf.state, 200)
 
-    return eve_abort(500, 'Error in transitioning observation in workflow for observation id {} and action {}'.format(observation_id, action))
+    return eve_abort(500, 'Error in transitioning observation in workflow for observation id {} and action {}'.format(
+        observation_id, action))
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
@@ -168,6 +169,19 @@ def tasks(observation_id):
     # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     raise NotImplemented
+
+
+@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
+@require_token()
+def get_mapping(observation_id):
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+
+    data = (wf._trigger_attrs |
+            {'init': {'title': 'opprettet observasjonen'}} |
+            {'withdraw': {'title': 'trakk tilbake observasjonen'}} |
+            {'close': {'title': 'lukket observasjonen'}}
+            )
+    return eve_response(data)
 
 
 class Dummy(object):

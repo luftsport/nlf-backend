@@ -179,5 +179,18 @@ def tasks(observation_id):
     raise NotImplemented
 
 
+@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
+@require_token()
+def get_mapping(observation_id):
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+
+    data = (wf._trigger_attrs |
+            {'init': {'title': 'opprettet observasjonen'}} |
+            {'withdraw': {'title': 'trakk tilbake observasjonen'}} |
+            {'close': {'title': 'lukket observasjonen'}}
+            )
+    return eve_response(data)
+
+
 class Dummy(object):
     pass
