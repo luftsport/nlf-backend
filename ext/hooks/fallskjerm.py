@@ -24,15 +24,17 @@
 """
 import ext.auth.anonymizer as anon
 from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permission
-from ext.app.eve_helper import eve_abort
+from ext.app.eve_helper import eve_abort, eve_response
 from ext.app.decorators import *
 
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
 from ext.workflows.fallskjerm_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
+from flask import request, g, abort
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ
+import json
 
 
 def _del_blacklist(d, blacklist):
@@ -229,3 +231,38 @@ def ors_after_update(updates, original):
 def ors_before_post_comments(resource, items):
     if resource == 'fallskjerm/observation/comments':
         items[0].update({'user': int(g.user_id)})
+
+
+# AGGREGATIONS
+def on_aggregate(endpoint, pipeline):
+    # pipeline.append({"$unwind": "$tags"})
+    if endpoint == 'fallskjerm_observations_aggregate_users_foreign':
+
+        aggregate = json.loads(request.args.to_dict()['aggregate'])
+        print(aggregate['$discipline'])
+        print(
+            [x for x in g.acl['roles'] if x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE])
+        if len([x for x in g.acl['roles'] if
+                x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE]) > 0:
+            print('HI')
+        else:
+            pass  # abort(403)
+
+    # Others report
+    elif endpoint == 'fallskjerm_observations_aggregate_user_reports':
+        print(pipeline)
+        hi = [x for x in g.acl['roles'] if x['role'] == ACL_FALLSKJERM_HI_ROLE]
+        su_fsj = [x for x in g.acl['roles'] if x['role'] in [ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ]]
+        if len(su_fsj) > 0:
+            pipeline = []
+        elif len(hi) > 0:
+            disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
+            print(disciplines)
+            #pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
+        else:
+            pipeline[0] = {"$match": {"involved.id": g.user_id}},
+        print(pipeline)
+
+def on_aggregate_endpoint(endpoint, pipeline):
+    # pipeline.append({"$unwind": "$tags"})
+    print(pipeline)

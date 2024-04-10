@@ -177,7 +177,9 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+# Get own
 app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
+# Get others
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
@@ -188,7 +190,8 @@ app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fe
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 # AFTER update db layer
 app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
-
+# Aggregations
+app.before_aggregation += hook.fallskjerm.on_aggregate
 # ################
 # MODELLFLY OBSREG
 #

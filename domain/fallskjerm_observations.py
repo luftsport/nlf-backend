@@ -287,3 +287,125 @@ aggregate_avg_rating = {
         }
     }
 }
+
+# Medlemmer i en klubb med rapporter i andre klubber
+aggregate_user_other_discipline = {
+    'item_title': 'Observations aggregate own members reported in other clubs',
+    'url': '{}/aggregate/users/foreign'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {'$match':
+                    {
+                        '$and': [
+                            {'involved.data.memberships.discipline': '$discipline'},
+                            {'discipline': {'$ne': '$discipline'}}
+                        ]
+                    }
+                },
+                {
+                    '$unwind': {
+                        'path': '$involved',
+                    },
+                },
+                {
+                    '$match': {
+                        'involved.data.memberships.discipline': '$discipline',
+                    },
+                },
+                {
+                    '$project': {
+                        'id': 1,
+                        'tags': 1,
+                        'title': 1,
+                        'club': 1,
+                        'discipline': 1,
+                        'when': 1,
+                        'location': 1,
+                        'involved.id': 1,
+                        'rating': 1,
+                        '_id': 0,
+                    },
+                },
+            ]
+        }
+    }
+}
+
+# Rapporter der observatøren selv har rapportert
+aggregate_users_count_created_reports = {
+    'item_title': 'Observations aggregate count number of created reports per user',
+    'url': '{}/aggregate/users/reports/created/count'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"discipline": "$discipline"}},  # {"discipline": "$discipline"}},
+                {
+                    "$group": {
+                        "_id": "$reporter",
+                        "total": {"$sum": 1}
+                    },
+                },
+                {'$sort': {
+                    'total': -1
+                }}
+            ]
+        }
+    }
+}
+
+# Antall rapporter som involvert
+aggregate_users_count = {
+    'item_title': 'Observations aggregate count number of reports per involved',
+    'url': '{}/aggregate/users/reports/count'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"involved.data.memberships.discipline": "$discipline"}},
+                # {"discipline": "$discipline"}},
+                {"$unwind": "$involved"},
+                {
+                    "$group": {
+                        "_id": "$involved.id",
+                        "total": {"$sum": 1}
+                    },
+                },
+                {'$sort': {
+                    'total': -1
+                }}]
+        }
+    }
+}
+# Returnerer alle observasjoner på en bruker
+aggregate_user_reports = {
+    'item_title': 'Observations (aggregate) get reports as involved',
+    'url': '{}/aggregate/user/reports'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"involved.id": "$person_id"}},
+                {
+                    '$project': {
+                        'id': 1,
+                        'tags': 1,
+                        'title': 1,
+                        'type': 1,
+                        'club': 1,
+                        'discipline': 1,
+                        'when': 1,
+                        'location': 1,
+                        'involved.id': 1,
+                        'reporter': 1,
+                        '_id': 0,
+                        'rating': 1
+                    },
+                },
+                {"$sort": {"when": -1}}
+            ]
+        }
+    }
+}
