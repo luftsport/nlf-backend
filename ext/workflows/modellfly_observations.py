@@ -316,8 +316,8 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             state_attrs=WF_MODELLFLY_ATTR,
             transitions=WF_MODELLFLY_TRANSITIONS,
             transitions_attrs=WF_MODELLFLY_TRANSITIONS_ATTR,
-            initial_state=None,
-            comment=None)
+            initial_state=initial_state,
+            comment=comment)
 
     def set_acl(self):
 
