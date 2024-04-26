@@ -99,7 +99,7 @@ _schema = {'id': {'type': 'integer',
            'related': {'type': 'list',
                        'default': []
                        },
-           'actions': {'type': 'dict'},
+           'actions': {'type': 'dict', '_asswipe': True},
            'comments': comments_schema,
            'workflow': workflow_schema,
            'watchers': watchers_schema,
@@ -129,20 +129,74 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
     'allowed_filters': [
-        'workflow.state',
+
+        # Forløpet
         'components.attributes',
         'components.flags',
+        'components.where.at',
+        'components.where.altitude',
+        'components.what',
+        # Involverte
+        'involved.data.age',
+        'involved.data.competences._code',
+        'involved.data.competences.type_id',
+        'involved.data.gear.harness',
+        'involved.data.gear.harness_experience',
+        'involved.data.gear.main_canopy',
+        'involved.data.gear.main_canopy_experience',
+        'involved.data.gear.main_canopy_size',
+        'involved.data.gear.reserve_canopy',
+        'involved.data.gear.reserve_canopy_size',
+        'involved.data.gear.aad',
+        'involved.fu',
+        'involved.ph',
+
+        # Ratings
+        'rating.potential',
+        'rating.actual',
+        'rating._rating',
+
+        # Flags
+        'flag.insurance',
+        'flag.aviation',
+
+        # WX
+        'weather.manual.clouds.base',
+        'weather.manual.clouds.fog',
+        'weather.manual.clouds.hail',
+        'weather.manual.clouds.rain',
+        'weather.manual.clouds.snow',
+        'weather.manual.clouds.thunder',
+        'weather.manual.temp.altitude',
+        'weather.manual.temp.ground',
+        'weather.manual.wind.avg',
+        'weather.manual.wind.dir',
+        'weather.manual.wind.max',
+        'weather.manual.wind.min',
+        'weather.manual.wind.turbulence',
+        'weather.manual.wind.gusting',
+
+        # Workflow
+        'workflow.state',
+        # Flags
+        'flags',
+        # Rating
+        'rating',
+        # Location
+        'location',
+        # Været,
+        'weather',
+        # Tiltak
+        'actions.local',
+        'actions.central',
+        # Root
         'id',
         '_id',
         'when',
         'club',
         'discipline',
         'tags',
-        'actions',
-        'flags',
-        'rating',
         'type',
-        'location',
         '_updated',
         '_created'
     ],

@@ -11,6 +11,7 @@ import app_config
 import users, users_auth
 import acl_groups, acl_roles, users_acl
 
+import search
 # FALLSKJERM
 import fallskjerm_observations
 import fallskjerm_quarter_report
@@ -87,6 +88,9 @@ DOMAIN = {
 
     # Housekeeping logs
     "housekeeping": housekeeping.definition,
+
+    # Search
+    #"search": search.definition,
 
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,

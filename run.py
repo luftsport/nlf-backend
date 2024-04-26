@@ -39,7 +39,6 @@ from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsW
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
 from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
-
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -57,6 +56,8 @@ from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
+from blueprints.distinct import Distinct
+from blueprints.search import Search
 
 
 # Custom url mappings (for flask)
@@ -152,6 +153,11 @@ app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('p
 
 # Housekeeping
 app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
+
+# Distinct fields
+app.register_blueprint(Distinct, url_prefix="%s/distinct" % app.globals.get('prefix'))
+# Query builder resources
+app.register_blueprint(Search, url_prefix="%s/search" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
