@@ -99,7 +99,7 @@ _schema = {'id': {'type': 'integer',
            'related': {'type': 'list',
                        'default': []
                        },
-           'actions': {'type': 'dict', '_asswipe': True},
+           'actions': {'type': 'dict'},
            'comments': comments_schema,
            'workflow': workflow_schema,
            'watchers': watchers_schema,
