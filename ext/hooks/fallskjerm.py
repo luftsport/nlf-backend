@@ -33,7 +33,7 @@ from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
 from flask import request, g, abort
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
 import json
 
 
@@ -250,18 +250,22 @@ def on_aggregate(endpoint, pipeline):
 
     # Others report
     elif endpoint == 'fallskjerm_observations_aggregate_user_reports':
-        print(pipeline)
-        hi = [x for x in g.acl['roles'] if x['role'] == ACL_FALLSKJERM_HI_ROLE]
-        su_fsj = [x for x in g.acl['roles'] if x['role'] in [ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ]]
-        if len(su_fsj) > 0:
-            pipeline = []
-        elif len(hi) > 0:
-            disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
-            print(disciplines)
-            #pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
-        else:
-            pipeline[0] = {"$match": {"involved.id": g.user_id}},
-        print(pipeline)
+        try:
+            print(pipeline)
+            hi = [x for x in g.acl['roles'] if x['role'] == ACL_FALLSKJERM_HI_ROLE]
+            su_fsj = [x for x in g.acl['roles'] if x['role'] in [ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE]]
+            if len(su_fsj) > 0:
+                pipeline = []
+            elif len(hi) > 0:
+                disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
+                print(disciplines)
+                # Skal se alle??
+                #pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
+            else:
+                pipeline[0] = {"$match": {"involved.id": g.user_id}}
+            print(pipeline)
+        except:
+            pipeline[0] = {"$match": {"involved.id": g.user_id}}
 
 def on_aggregate_endpoint(endpoint, pipeline):
     # pipeline.append({"$unwind": "$tags"})
