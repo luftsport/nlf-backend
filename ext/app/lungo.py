@@ -131,14 +131,14 @@ def get_person_from_role(role) -> (bool, [int]):
 
 
 def get_person_email(person_id) -> (bool, dict):
-    resp = requests.get('{}/persons/{}?projection={{"full_name": 1, "address.email": 1}}'.format(LUNGO_URL, person_id),
+    resp = requests.get('{}/persons/{}?projection={{"full_name": 1, "primary_email": 1}}'.format(LUNGO_URL, person_id),
                         headers=LUNGO_HEADERS,
                         verify=app['config'].get('REQUESTS_VERIFY', True))
 
     if resp.status_code == 200:
         try:
             r = resp.json()
-            email = r.get('address', {}).get('email', [])[0]
+            email = r['primary_email']
             name = r.get('full_name', '')
             return True, {'full_name': name, 'email': email}
         except Exception as e:
