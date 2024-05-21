@@ -32,7 +32,7 @@ from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
-from flask import request, g, abort
+from flask import request, g, abort, current_app as app
 from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
 import json
 from ext.app.obsreg_formatter import format_ors
@@ -265,8 +265,8 @@ def on_aggregate(endpoint, pipeline):
             aggregate = json.loads(request.args.to_dict()['aggregate'])
             # print(aggregate['$discipline'])
 
-            if len([x for x in g.acl['roles'] if x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE]) > 0:
-                #print('HI')
+            if len([x for x in g.acl['roles'] if (x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE) or x['role'] in [ACL_FSJ_ROLE, ACL_FALLSKJERM_SU_MEDLEM_ROLE]]) > 0:
+                # whitelisted
                 pass
             else:
                 abort(403)
@@ -283,7 +283,7 @@ def on_aggregate(endpoint, pipeline):
                     disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
                     #print(disciplines)
                     # Skal se alle??
-                    #pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
+                    # pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
                 else:
                     pipeline[0] = {"$match": {"involved.id": g.user_id}}
             except:
