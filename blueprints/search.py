@@ -46,18 +46,18 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
                 # FLAGS
                 'flags.insurance': {
                     'name': 'Forsikring flagget',
-                    '_default': False,
+                    '_default': True,
                     'type': 'boolean'
                 },
                 'flags.aviation': {
                     'name': 'Fly involvert',
-                    '_default': False,
+                    '_default': True,
                     'type': 'boolean'
                 },
             }
         },
-        'components': {
-            'label': 'Forløpet',
+        'attributes': {
+            'label': 'Attributter',
             'fields': {
                 'components.attributes.reserve_ride': {
                     'name': 'Reservetrekk',
@@ -119,6 +119,12 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
                     '_default': True,
                     'type': 'boolean'
                 },
+            },
+        },
+        'components': {
+            'label': 'Forløpet',
+            'fields': {
+
                 'components.what': {
                     'name': 'Hva skjedde',
                     'type': 'category',
@@ -152,6 +158,62 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
                     '_default': True,
                     'options': []
                 },
+                'involved.data.years_of_experience': {
+                    'name': 'Erfaring i år',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_jumps': {
+                    'name': 'Totalt antall hopp',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.fu': {
+                    'name': 'Farlig ukontrollert',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'involved.ph': {
+                    'name': 'Permanent hoppforbud',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        },
+        'jump': {
+            'label': 'Hoppet',
+            'fields': {
+                'involved.data.jump_type': {
+                    'name': 'Hopptype',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'involved.data.activity': {
+                    'name': 'Aktivitet',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'involved.data.altitude': {
+                    'name': 'Utsprangshøyde',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.aircraft': {
+                    'name': 'Fly',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+            }
+        },
+        'equipment': {
+            'label': 'Utstyr',
+            'fields': {
                 'involved.data.gear.harness': {
                     'name': 'Seletøy',
                     'type': 'category',
@@ -184,32 +246,29 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
                     'name': 'Reserve',
                     'type': 'category',
                     '_resolve_name': {'type': 'value'},
-                    '_default': False,
+                    '_default': True,
                     'options': []
                 },
                 'involved.data.gear.reserve_canopy_size': {
                     'name': 'Reserve størrelse',
                     'type': 'number',
-                    '_default': False
+                    '_default': True
                 },
                 'involved.data.gear.aad': {
                     'name': 'Nødåpner',
                     'type': 'category',
                     '_resolve_name': {'type': 'value'},
-                    '_default': False,
+                    '_default': True,
                     'options': []
                 },
-                'involved.fu': {
-                    'name': 'Farlig ukontrollert',
+                'involved.data.gear.other': {
+                    'name': 'Annet',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
                     '_default': True,
-                    'type': 'boolean'
+                    'options': []
                 },
-                'involved.ph': {
-                    'name': 'Permanent hoppforbud',
-                    '_default': True,
-                    'type': 'boolean'
-                },
-            }
+            },
         },
         'rating': {
             'label': 'Alvorlighetsgrad',

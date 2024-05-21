@@ -90,7 +90,7 @@ DOMAIN = {
     "housekeeping": housekeeping.definition,
 
     # Search
-    #"search": search.definition,
+    "search": search.definition,
 
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,

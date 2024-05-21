@@ -183,6 +183,7 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_post_GET_fallskjerm_observations += hook.fallskjerm.ors_after_GET
 # Get own
 app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
 # Get others
@@ -331,6 +332,12 @@ app.on_insert_help += hook.help.before_insert
 app.on_replace_help += hook.help.on_before_replace
 app.on_update_help += hook.help.on_before_update
 
+#############
+# SEARCH
+app.on_insert_search += hook.search.before_insert
+app.on_pre_DELETE_search += hook.search.before_remove
+app.on_pre_GET_search += hook.search.before_get
+app.on_pre_PATCH_search += hook.search.before_patch
 
 # TEST
 def _aggregation(endpoint, pipeline):

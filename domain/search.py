@@ -20,13 +20,16 @@ RESOURCE_COLLECTION = 'search'
 BASE_URL = 'search'
 
 _schema = {
-           'title': {'type': 'string'},
-           'query': {'type': any}, #where sort page
-           'meta': {'type': any},
-           'owner': {'type': 'int'},
-           'acl': acl_item_schema,
+    'title': {'type': 'string'},
+    'rules': {'type': 'dict'},  # where sort page
+    'text': {'type': 'string'},
+    'options': {'type': 'dict'},
+    'notifications': {'type': 'boolean'},
+    'meta': {'type': 'dict'},
+    'owner': {'type': 'integer'},
+    'acl': acl_item_schema,
 
-           }
+}
 # 'schema': components_schema
 definition = {
     'item_title': 'Lagrede søk',
@@ -45,9 +48,9 @@ definition = {
     ],
     'versioning': True,
     'resource_methods': ['GET', 'POST'],
-    'item_methods': ['GET', 'PATCH', 'PUT'],
+    'item_methods': ['GET', 'PATCH', 'DELETE'],
     'mongo_indexes': {
-        #'id': ([('id', 1)], {'background': True}),
+        # 'id': ([('id', 1)], {'background': True}),
         'title': (
             [('title', 'text')],
             {
@@ -61,5 +64,3 @@ definition = {
     'schema': _schema
 
 }
-
-

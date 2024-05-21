@@ -22,7 +22,7 @@ Distinct = Blueprint('List distinct field values from collection', __name__, )
 
 
 def _get_field_contents(collection, field):
-    print('Get field contents distinct', collection, field)
+    # print('Get field contents distinct', collection, field)
     try:
         if collection in COLLECTIONS_WHITELIST:
 
@@ -38,10 +38,14 @@ def _get_field_contents(collection, field):
                 if len(values) > 0 and isinstance(values[0], dict):
                     values = [list(x.keys()) for x in values]
                     values = list(set(sum(values, [])))
+                elif len(values) > 0 and isinstance(values[0], list):
+                    # print('VALUES LIST', values)
+                    values = list(set([x for l in values for x in l]))
 
                 return 200, values
     except Exception as e:
-        print('Error field', field, e)
+        #print('Error field', field, e)
+        pass
 
     return 403, None
 

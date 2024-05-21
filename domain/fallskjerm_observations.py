@@ -137,6 +137,12 @@ definition = {
         'components.where.altitude',
         'components.what',
         # Involverte
+        'involved.data.jump_type',
+        'involved.data.activity',
+        'involved.data.years_of_experience',
+        'involved.data.total_jumps',
+        'involved.data.altitude',
+        'involved.data.aircraft',
         'involved.data.age',
         'involved.data.competences._code',
         'involved.data.competences.type_id',
@@ -148,6 +154,7 @@ definition = {
         'involved.data.gear.reserve_canopy',
         'involved.data.gear.reserve_canopy_size',
         'involved.data.gear.aad',
+        'involved.data.gear.other',
         'involved.fu',
         'involved.ph',
 
