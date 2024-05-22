@@ -24,6 +24,7 @@ _schema = {
     'rules': {'type': 'dict'},  # where sort page
     'text': {'type': 'string'},
     'options': {'type': 'dict'},
+    'collection': {'type': 'string'},
     'notifications': {'type': 'boolean'},
     'meta': {'type': 'dict'},
     'owner': {'type': 'integer'},
@@ -43,6 +44,7 @@ definition = {
     'allowed_filters': [
         'title',
         'query',
+        'collection',
         '_updated',
         '_created'
     ],
