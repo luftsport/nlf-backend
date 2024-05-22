@@ -140,9 +140,9 @@ def _format_components(components):
                           component['attributes'][key] is True])
             )
         except Exception as e:
-            print('[ERR] error', e)
-            print('Component:')
-            print(component)
+            #print('[ERR] error', e)
+            #print('Component:')
+            #print(component)
             response += '{}. Hvem: {} Hva: {} Hvordan: {}'.format(
                 n,
                 ' '.join([get_name(x['id']) for x in component['involved']]) or '',
