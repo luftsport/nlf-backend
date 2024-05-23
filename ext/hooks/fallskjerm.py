@@ -24,17 +24,19 @@
 """
 import ext.auth.anonymizer as anon
 from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permission
-from ext.app.eve_helper import eve_abort
+from ext.app.eve_helper import eve_abort, eve_response
 from ext.app.decorators import *
 
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_SU_GROUP_LIST, ACL_FALLSKJERM_FSJ
 from ext.workflows.fallskjerm_observations import ObservationWorkflow, get_wf_init, get_acl_init
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
-
-
+from flask import request, g, abort, current_app as app
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
+import json
+from ext.app.obsreg_formatter import format_ors
+from ext.app.eve_jsonencoder import EveJSONEncoder
 def _del_blacklist(d, blacklist):
     """Deletes all keys not in whitelist, not recursive"""
     if isinstance(d, dict):
@@ -110,6 +112,15 @@ def ors_after_fetched_diffs(response):
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
         response['_items'][key] = _ors_after_fetched(item)
+
+def ors_after_GET(request, payload):
+    params = request.args.to_dict()
+    if 'export' in params:
+        d = payload.get_json()
+        if '_items' in d:
+            d['_export'] = format_ors(d['_items'], params['export'])
+            d['_items'] = []
+            payload.set_data(json.dumps(d, cls=EveJSONEncoder))
 
 
 def ors_after_fetched(response):
@@ -229,3 +240,57 @@ def ors_after_update(updates, original):
 def ors_before_post_comments(resource, items):
     if resource == 'fallskjerm/observation/comments':
         items[0].update({'user': int(g.user_id)})
+
+
+# AGGREGATIONS
+def on_aggregate(endpoint, pipeline):
+    # pipeline.append({"$unwind": "$tags"})
+    """
+        "fallskjerm_observations_aggregate_users_foreign": fallskjerm_observations.aggregate_user_other_discipline,
+    "fallskjerm_observations_aggregate_users_count": fallskjerm_observations.aggregate_users_count,
+    "fallskjerm_observations_aggregate_user_reports": fallskjerm_observations.aggregate_user_reports,
+    "fallskjerm_observations_aggregate_users_count_created_reports
+
+    :param endpoint:
+    :param pipeline:
+    :return:
+    """
+    try:
+        if endpoint in [
+            'fallskjerm_observations_aggregate_users_foreign',
+            'fallskjerm_observations_aggregate_users_count',
+            'fallskjerm_observations_aggregate_users_count_created_reports'
+        ]:
+
+            aggregate = json.loads(request.args.to_dict()['aggregate'])
+            # print(aggregate['$discipline'])
+
+            if len([x for x in g.acl['roles'] if (x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE) or x['role'] in [ACL_FSJ_ROLE, ACL_FALLSKJERM_SU_MEDLEM_ROLE]]) > 0:
+                # whitelisted
+                pass
+            else:
+                abort(403)
+
+        # Others report
+        elif endpoint == 'fallskjerm_observations_aggregate_user_reports':
+            try:
+                #print(pipeline)
+                hi = [x for x in g.acl['roles'] if x['role'] == ACL_FALLSKJERM_HI_ROLE]
+                su_fsj = [x for x in g.acl['roles'] if x['role'] in [ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE]]
+                if len(su_fsj) > 0:
+                    pipeline = []
+                elif len(hi) > 0:
+                    disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
+                    #print(disciplines)
+                    # Skal se alle??
+                    # pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
+                else:
+                    pipeline[0] = {"$match": {"involved.id": g.user_id}}
+            except:
+                pipeline[0] = {"$match": {"involved.id": g.user_id}}
+    except:
+        abort(403)
+def on_aggregate_endpoint(endpoint, pipeline):
+    # pipeline.append({"$unwind": "$tags"})
+    # print(pipeline)
+    pass
