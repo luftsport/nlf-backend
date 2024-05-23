@@ -39,7 +39,6 @@ from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsW
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
 from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
-
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -57,6 +56,8 @@ from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
+from blueprints.distinct import Distinct
+from blueprints.search import Search
 
 
 # Custom url mappings (for flask)
@@ -152,6 +153,11 @@ app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('p
 
 # Housekeeping
 app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
+
+# Distinct fields
+app.register_blueprint(Distinct, url_prefix="%s/distinct" % app.globals.get('prefix'))
+# Query builder resources
+app.register_blueprint(Search, url_prefix="%s/search" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
@@ -177,7 +183,10 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_post_GET_fallskjerm_observations += hook.fallskjerm.ors_after_GET
+# Get own
 app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
+# Get others
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
@@ -188,7 +197,8 @@ app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fe
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 # AFTER update db layer
 app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
-
+# Aggregations
+app.before_aggregation += hook.fallskjerm.on_aggregate
 # ################
 # MODELLFLY OBSREG
 #
@@ -322,6 +332,12 @@ app.on_insert_help += hook.help.before_insert
 app.on_replace_help += hook.help.on_before_replace
 app.on_update_help += hook.help.on_before_update
 
+#############
+# SEARCH
+app.on_insert_search += hook.search.before_insert
+app.on_pre_DELETE_search += hook.search.before_remove
+app.on_pre_GET_search += hook.search.before_get
+app.on_pre_PATCH_search += hook.search.before_patch
 
 # TEST
 def _aggregation(endpoint, pipeline):

@@ -11,6 +11,7 @@ import app_config
 import users, users_auth
 import acl_groups, acl_roles, users_acl
 
+import search
 # FALLSKJERM
 import fallskjerm_observations
 import fallskjerm_quarter_report
@@ -88,6 +89,9 @@ DOMAIN = {
     # Housekeeping logs
     "housekeeping": housekeeping.definition,
 
+    # Search
+    "search": search.definition,
+
     # Fallskjerm
     "fallskjerm_observations": fallskjerm_observations.definition,
     "fallskjerm_observations_user": fallskjerm_observations.user,
@@ -98,11 +102,15 @@ DOMAIN = {
     "fallskjerm_observations_aggregate_states_discipline": fallskjerm_observations.aggregate_states_discipline,
     "fallskjerm_observations_aggregate_avg_ratings_discipline": fallskjerm_observations.aggregate_avg_rating_discipline,
     "fallskjerm_observations_aggregate_avg_ratings": fallskjerm_observations.aggregate_avg_rating,
+    "fallskjerm_observations_aggregate_users_foreign": fallskjerm_observations.aggregate_user_other_discipline,
+    "fallskjerm_observations_aggregate_users_count": fallskjerm_observations.aggregate_users_count,
+    "fallskjerm_observations_aggregate_user_reports": fallskjerm_observations.aggregate_user_reports,
+    "fallskjerm_observations_aggregate_users_count_created_reports": fallskjerm_observations.aggregate_users_count_created_reports,
 
     # Fallskjerm kvartallstall
     "fallskjerm_quarter_report": fallskjerm_quarter_report.definition,
     "fallskjerm_quarter_report_aggregate_year": fallskjerm_quarter_report.aggregate_year,
-    
+
     # Modell
     "modellfly_observations": modellfly_observations.definition,
     "modellfly_observations_user": modellfly_observations.user,
@@ -113,7 +121,6 @@ DOMAIN = {
     "modellfly_observations_aggregate_states_discipline": modellfly_observations.aggregate_states_discipline,
     "modellfly_observations_aggregate_avg_ratings_discipline": modellfly_observations.aggregate_avg_rating_discipline,
     "modellfly_observations_aggregate_avg_ratings": modellfly_observations.aggregate_avg_rating,
-
 
     # Motor
     "motorfly_observations": motorfly_observations.definition,
@@ -141,7 +148,7 @@ DOMAIN = {
     "sportsfly_observations_aggregate_types": sportsfly_observations.aggregate_types,
     "sportsfly_observations_aggregate_types_discipline": sportsfly_observations.aggregate_types_discipline,
     "sportsfly_observations_aggregate_states_discipline": sportsfly_observations.aggregate_states_discipline,
-    
+
     # Fallskjerm legacy
     "legacy_licenses": legacy_licenses.definition,
     "legacy_clubs": legacy_clubs.definition,

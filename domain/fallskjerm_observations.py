@@ -129,20 +129,81 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
     'allowed_filters': [
-        'workflow.state',
+
+        # Forløpet
         'components.attributes',
         'components.flags',
+        'components.where.at',
+        'components.where.altitude',
+        'components.what',
+        # Involverte
+        'involved.data.jump_type',
+        'involved.data.activity',
+        'involved.data.years_of_experience',
+        'involved.data.total_jumps',
+        'involved.data.altitude',
+        'involved.data.aircraft',
+        'involved.data.age',
+        'involved.data.competences._code',
+        'involved.data.competences.type_id',
+        'involved.data.gear.harness',
+        'involved.data.gear.harness_experience',
+        'involved.data.gear.main_canopy',
+        'involved.data.gear.main_canopy_experience',
+        'involved.data.gear.main_canopy_size',
+        'involved.data.gear.reserve_canopy',
+        'involved.data.gear.reserve_canopy_size',
+        'involved.data.gear.aad',
+        'involved.data.gear.other',
+        'involved.fu',
+        'involved.ph',
+
+        # Ratings
+        'rating.potential',
+        'rating.actual',
+        'rating._rating',
+
+        # Flags
+        'flag.insurance',
+        'flag.aviation',
+
+        # WX
+        'weather.manual.clouds.base',
+        'weather.manual.clouds.fog',
+        'weather.manual.clouds.hail',
+        'weather.manual.clouds.rain',
+        'weather.manual.clouds.snow',
+        'weather.manual.clouds.thunder',
+        'weather.manual.temp.altitude',
+        'weather.manual.temp.ground',
+        'weather.manual.wind.avg',
+        'weather.manual.wind.dir',
+        'weather.manual.wind.max',
+        'weather.manual.wind.min',
+        'weather.manual.wind.turbulence',
+        'weather.manual.wind.gusting',
+
+        # Workflow
+        'workflow.state',
+        # Flags
+        'flags',
+        # Rating
+        'rating',
+        # Location
+        'location',
+        # Været,
+        'weather',
+        # Tiltak
+        'actions.local',
+        'actions.central',
+        # Root
         'id',
         '_id',
         'when',
         'club',
         'discipline',
         'tags',
-        'actions',
-        'flags',
-        'rating',
         'type',
-        'location',
         '_updated',
         '_created'
     ],
@@ -283,6 +344,128 @@ aggregate_avg_rating = {
                 {"$match": {"when": {"$gte": "$from", "$lte": "$to"}, "workflow.state": "closed"}},
                 {"$group": {"_id": "$discipline", "avg": {"$avg": "$rating._rating"}}},
                 {"$sort": SON([("avg", -1)])}
+            ]
+        }
+    }
+}
+
+# Medlemmer i en klubb med rapporter i andre klubber
+aggregate_user_other_discipline = {
+    'item_title': 'Observations aggregate own members reported in other clubs',
+    'url': '{}/aggregate/users/foreign'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {'$match':
+                    {
+                        '$and': [
+                            {'involved.data.memberships.discipline': '$discipline'},
+                            {'discipline': {'$ne': '$discipline'}}
+                        ]
+                    }
+                },
+                {
+                    '$unwind': {
+                        'path': '$involved',
+                    },
+                },
+                {
+                    '$match': {
+                        'involved.data.memberships.discipline': '$discipline',
+                    },
+                },
+                {
+                    '$project': {
+                        'id': 1,
+                        'tags': 1,
+                        'title': 1,
+                        'club': 1,
+                        'discipline': 1,
+                        'when': 1,
+                        'location': 1,
+                        'involved.id': 1,
+                        'rating': 1,
+                        '_id': 0,
+                    },
+                },
+            ]
+        }
+    }
+}
+
+# Rapporter der observatøren selv har rapportert
+aggregate_users_count_created_reports = {
+    'item_title': 'Observations aggregate count number of created reports per user',
+    'url': '{}/aggregate/users/reports/created/count'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"discipline": "$discipline"}},  # {"discipline": "$discipline"}},
+                {
+                    "$group": {
+                        "_id": "$reporter",
+                        "total": {"$sum": 1}
+                    },
+                },
+                {'$sort': {
+                    'total': -1
+                }}
+            ]
+        }
+    }
+}
+
+# Antall rapporter som involvert
+aggregate_users_count = {
+    'item_title': 'Observations aggregate count number of reports per involved',
+    'url': '{}/aggregate/users/reports/count'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"involved.data.memberships.discipline": "$discipline"}},
+                # {"discipline": "$discipline"}},
+                {"$unwind": "$involved"},
+                {
+                    "$group": {
+                        "_id": "$involved.id",
+                        "total": {"$sum": 1}
+                    },
+                },
+                {'$sort': {
+                    'total': -1
+                }}]
+        }
+    }
+}
+# Returnerer alle observasjoner på en bruker
+aggregate_user_reports = {
+    'item_title': 'Observations (aggregate) get reports as involved',
+    'url': '{}/aggregate/user/reports'.format(BASE_URL),
+    'datasource': {
+        'source': RESOURCE_COLLECTION,
+        'aggregation': {
+            'pipeline': [
+                {"$match": {"involved.id": "$person_id"}},
+                {
+                    '$project': {
+                        'id': 1,
+                        'tags': 1,
+                        'title': 1,
+                        'type': 1,
+                        'club': 1,
+                        'discipline': 1,
+                        'when': 1,
+                        'location': 1,
+                        'involved.id': 1,
+                        'reporter': 1,
+                        '_id': 0,
+                        'rating': 1
+                    },
+                },
+                {"$sort": {"when": -1}}
             ]
         }
     }

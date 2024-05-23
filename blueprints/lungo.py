@@ -14,6 +14,7 @@ import requests
 
 # Supress insecre warning
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 Lungo = Blueprint('Lungo passthrough', __name__, )
@@ -33,9 +34,20 @@ def syncdaemon_workers_start():
 @Lungo.route("/syncdaemon/worker/reboot/<int:index>", methods=["POST"])
 @require_token()
 def lungo_worker_reboot(index):
-
     resp = requests.post('{}/syncdaemon/worker/reboot/{}'.format(LUNGO_URL, index),
                          data=None,
+                         headers=LUNGO_HEADERS,
+                         verify=app.config.get('REQUESTS_VERIFY', True))
+
+    return eve_response(resp.json(), resp.status_code)
+
+
+@Lungo.route("/nif/change/", methods=["POST"])
+@require_token()
+def lungo_change_message():
+    data = request.get_json()
+    resp = requests.post('{}/nif/change/'.format(LUNGO_URL),
+                         json=data,
                          headers=LUNGO_HEADERS,
                          verify=app.config.get('REQUESTS_VERIFY', True))
 
@@ -47,7 +59,6 @@ def lungo_worker_reboot(index):
 @Lungo.route("/<path:path>", methods=['GET'])
 @require_token()
 def lungo(path):
-
     resp = requests.get('{}/{}'.format(LUNGO_URL, path),
                         params=request.args.to_dict(),
                         headers=LUNGO_HEADERS,
