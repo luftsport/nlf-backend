@@ -35,6 +35,14 @@ def state(observation_id):
 
     return eve_response(wf.get_current_state(), 200)
 
+@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
+@require_token()
+def mapping(observation_id):
+    """ Get mapping for observation workflow
+    """
+    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+
+    return eve_response(wf.get_trigger_attrs(), 200)
 
 @OrsWorkflow.route("/<objectid:observation_id>/audit", methods=['GET'])
 @require_token()

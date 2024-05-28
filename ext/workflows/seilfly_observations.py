@@ -203,7 +203,6 @@ WF_SEILFLY_TRANSITIONS = [
      'conditions': ['has_permission']
      },
 
-
     # OPERATIVT
     {'trigger': 'send_to_operativ',
      'source': 'pending_review_ors',
@@ -416,7 +415,6 @@ WF_SEILFLY_TRANSITIONS_ATTR = {
         'descr': 'Sendt til Operativ Leder'
     }
 
-
 }
 
 
@@ -512,6 +510,9 @@ class ObservationWorkflow(Machine):
                          transitions=self._transitions,
                          initial=self.initial_state)
 
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
+
     def get_actions(self):
 
         events = []
@@ -539,7 +540,7 @@ class ObservationWorkflow(Machine):
 
         for event in self.get_actions():
             tmp = self._trigger_attrs.get(event)
-            if self.initial_state == 'pending_review_ors' and event=='send_to_ftl':
+            if self.initial_state == 'pending_review_ors' and event == 'send_to_ftl':
                 tmp['permission'] = self.has_permission(None) and self.can_process_in_club(None)
             else:
                 tmp['permission'] = self.has_permission(None)
