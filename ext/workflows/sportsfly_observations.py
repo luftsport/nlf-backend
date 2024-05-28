@@ -175,7 +175,7 @@ WF_SPORTSFLY_TRANSITIONS = [
      'after': 'save_workflow',
      'conditions': ['has_permission']
      },
-# Send to fagsjef
+    # Send to fagsjef
     {'trigger': 'send_to_fsj',
      'source': 'pending_review_ftu',
      'dest': 'pending_review_fsj',
@@ -498,6 +498,9 @@ class ObservationWorkflow(Machine):
                          transitions=self._transitions,
                          initial=self.initial_state)
 
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
+
     def get_actions(self):
 
         events = []
@@ -659,7 +662,7 @@ class ObservationWorkflow(Machine):
                     acl['read']['roles'] += [self.acl_ORS, self.acl_FTU]
 
             acl['execute']['roles'] = [self.acl_FTU]
-        
+
         elif self.state == 'pending_review_fsj':
 
             acl['write']['users'] = []

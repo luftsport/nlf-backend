@@ -620,6 +620,9 @@ class ObservationWorkflow(Machine):
         app.logger.info('Initial state: {}'.format(self.initial_state))
         app.logger.info('Self state: {}'.format(self.state))
 
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
+
     def get_actions(self):
 
         app.logger.info('WF: Self state is: {}'.format(self.state))

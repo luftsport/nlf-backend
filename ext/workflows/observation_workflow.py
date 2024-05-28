@@ -141,8 +141,8 @@ class ObservationWorkflow(Machine):
         self.club = self.db_wf.get('club', None)
         self.discipline = self.db_wf.get('discipline', None)
 
-        #self.acl_hi = ACL_FALLSKJERM_HI.copy()
-        #self.acl_hi['org'] = self.discipline
+        # self.acl_hi = ACL_FALLSKJERM_HI.copy()
+        # self.acl_hi['org'] = self.discipline
 
         self.initial_acl = self.db_wf.get('acl', {}).copy()
 
@@ -156,6 +156,9 @@ class ObservationWorkflow(Machine):
 
         app.logger.info('Initial state: {}'.format(self.initial_state))
         app.logger.info('Self state: {}'.format(self.state))
+
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
 
     def get_actions(self):
 

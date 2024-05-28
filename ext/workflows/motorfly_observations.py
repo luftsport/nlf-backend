@@ -644,6 +644,9 @@ class ObservationWorkflow(Machine):
                          transitions=self._transitions,
                          initial=self.initial_state)
 
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
+
     def get_actions(self):
 
         events = []
