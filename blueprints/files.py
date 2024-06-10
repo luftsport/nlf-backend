@@ -12,6 +12,7 @@
 from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file, abort, make_response
 
 from PIL import Image
+from pillow_heif import register_heif_opener
 import io
 import mimetypes
 from gridfs import GridFS
@@ -60,46 +61,44 @@ def process_request(file_id):
 def process_image_request(file_id, size):
     """ Resizes images to size and returns a base64 encoded string representing
     the image """
-    try:
-        sizes = {'small': (140, 100),
-                 'medium': (400, 300),
-                 'large': (1200, 1000)
-                 }
+    sizes = {'small': (140, 100),
+             'medium': (400, 300),
+             'large': (1200, 1000)
+             }
 
-        col = app.data.driver.db['files']
-        image = col.find_one({'_id': ObjectId(file_id)})
+    col = app.data.driver.db['files']
+    image = col.find_one({'_id': ObjectId(file_id)})
 
-        grid_fs = GridFS(app.data.driver.db)
+    grid_fs = GridFS(app.data.driver.db)
 
-        if not grid_fs.exists(_id=image['file']):
-            return eve_abort(500, 'No file system found')
+    if not grid_fs.exists(_id=image['file']):
+        return eve_abort(500, 'No file system found')
 
-        im_stream = grid_fs.get_last_version(_id=image['file'])
+    im_stream = grid_fs.get_last_version(_id=image['file'])
 
-        im = Image.open(im_stream)
+    register_heif_opener()
+    im = Image.open(im_stream)
 
-        if size != 'original':
-            im.thumbnail(sizes[size], Image.ANTIALIAS)
+    if size != 'original':
+        im.thumbnail(sizes[size], Image.LANCZOS)
 
-        img_io = io.BytesIO()
+    img_io = io.BytesIO()
 
-        im.save(img_io, 'PNG', quality=100)
-        img_io.seek(0)
+    im.save(img_io, 'PNG', quality=100)
+    img_io.seek(0)
 
-        encoded_img = base64.b64encode(img_io.read())
+    encoded_img = base64.b64encode(img_io.read())
 
-        dict = {'mimetype': 'image/png',
-                'encoding': 'base64',
-                'src': encoded_img
-                }
+    dict = {'mimetype': 'image/png',
+            'encoding': 'base64',
+            'src': encoded_img
+            }
 
-        # Jsonify the dictionary and return it
-        return jsonify(**dict)
+    # Jsonify the dictionary and return it
+    return jsonify(**dict)
 
-        # Sends an image
-        # return send_file(img_io, mimetype='image/png')
-    except Exception as e:
-        pass
+    # Sends an image
+    # return send_file(img_io, mimetype='image/png')
 
     return eve_abort(404, 'Image not found or errors processing')
 
@@ -117,13 +116,13 @@ def has_permission():
         token = base64.b64decode(b64token)[:-1]
         auth = TokenAuth()
 
-        if not auth.check_auth(token=token.decode("utf-8"),
+        if auth.check_auth(token=token.decode("utf-8"),
                                method=request.method,
                                resource=request.path[len(app.globals.get('prefix')):],
-                               allowed_roles=None):
-            return eve_abort(404, 'Please provide proper credentials')
+                               allowed_roles=None) is True:
+            return True
 
     except:
-        return eve_abort(404, 'Please provide proper credentials')
+        pass
 
-    return True
+    return eve_abort(404, 'Please provide proper credentials')
