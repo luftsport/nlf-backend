@@ -92,6 +92,11 @@ _schema = {
         'required': True,
         'default': 0
     },
+    'tandem_tren': {
+        'type': 'integer',
+        'required': False,
+        'default': 0
+    },
     'trening': {
         'type': 'integer',
         'required': True,
