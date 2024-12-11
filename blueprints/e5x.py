@@ -517,6 +517,7 @@ def generate(activity, _id):
                                 source=ors.get('_version', ''),
                                 status=status,
                                 ors_id=ors.get('id', None),
+                                org_id=ors.get('discipline', 376),
                                 ors_tags=ors.get('tags', []),
                                 file_name='{}.e5x'.format(file_name),
                                 transport='eccairs2_api',
