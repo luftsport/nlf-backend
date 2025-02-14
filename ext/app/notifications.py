@@ -201,7 +201,7 @@ def _strip_tags(string, allowed_tags=''):
         allowed_pattern = ''
         for s in allowed_tags_list:
             if s == '':
-                continue;
+                continue
             # Add all possible patterns for this tag to the regex.
             if allowed_pattern != '':
                 allowed_pattern += '|'
