@@ -2,19 +2,19 @@
 
     Event hooks:
     ============
-    
+
     Using Eve defined events
 
     From 0.7 - needs request token?
-    
+
     Mixed with signals to ext.hooks for flask and direct database access compatibility
-    
+
     Eve specific hooks are defined according to
-    
+
     def <resource>_<when>_<method>():
-    
+
     When attaching to app, remember to use post and pre for request hooks
-           
+
     @note: all requests are supported: GET, POST, PATCH, PUT, DELETE
     @note: POST (resource, request, payload)
     @note: POST_resource (request, payload)
@@ -24,19 +24,19 @@
 """
 import ext.auth.anonymizer as anon
 from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permission
-from ext.app.eve_helper import eve_abort, eve_response
+from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
-from ext.workflows.fallskjerm_observations import ObservationWorkflow, get_wf_init, get_acl_init
+from ext.scf import ACL_HPS_FSJ, ACL_HPS_ORS
+
+from ext.workflows.hps_observations import HpsObservationWorkflow, get_acl_init
+from ext.workflows.observation_workflow import get_wf_init  # ,
 from ext.app.seq import increment
 from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
-from flask import request, g, abort, current_app as app
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
-import json
-from ext.app.obsreg_formatter import format_ors
-from ext.app.eve_jsonencoder import EveJSONEncoder
+
+
 def _del_blacklist(d, blacklist):
     """Deletes all keys not in whitelist, not recursive"""
     if isinstance(d, dict):
@@ -57,7 +57,7 @@ def ors_before_insert_item(item):
     try:
         if 'discipline' in item and item.get('discipline', 0) > 0:
 
-            ors_id = increment('ors_fallskjerm')
+            ors_id = increment('ors_hps')
 
             if ors_id:
                 item['id'] = ors_id
@@ -68,12 +68,22 @@ def ors_before_insert_item(item):
             item['reporter'] = g.user_id
             item['owner'] = g.user_id
             item['watchers'] = [g.user_id]
-            item['workflow'] = get_wf_init(g.user_id)
+            item['workflow'] = get_wf_init(g.user_id, activity='hps')
 
-            role_hi = ACL_FALLSKJERM_HI.copy()
-            role_hi['org'] = item.get('discipline')
-            _, hi = get_person_from_role(role_hi)
-            item['organization'] = {'hi': hi}
+            # Organization:
+            item['organization'] = {}
+            # role_leder = ACL_MODELLFLY_KLUBB_LEDER.copy()
+            # role_leder['org'] = item.get('club')
+            # _, leder = get_person_from_role(role_leder)
+            # item['organization']['club_president'] = leder
+
+            role_ors = ACL_HPS_ORS.copy()
+            _, coordinator = get_person_from_role(role_ors)
+            item['organization']['ors'] = coordinator
+
+            role_fsj = ACL_HPS_FSJ.copy()
+            _, fsj = get_person_from_role(role_fsj)
+            item['organization']['fsj'] = fsj
 
             item['acl'] = get_acl_init(g.user_id, item['discipline'])
 
@@ -87,7 +97,7 @@ def ors_after_inserted(items):
 
 
 def ors_after_inserted_item(item):
-    wf = ObservationWorkflow(object_id=item.get('_id', ''), user_id=g.user_id)
+    wf = HpsObservationWorkflow(object_id=item.get('_id', ''), user_id=g.user_id)
     if wf.get_current_state().get('state', '') == 'draft':
         wf.notify_created()
 
@@ -100,7 +110,7 @@ def ors_after_fetched_diffs(response):
                     resource_acl=response[0].get('acl', []),
                     perm='execute',
                     state='closed',
-                    model='fallskjerm',
+                    model='hps',
                     org=response[0].get('discipline', 0)
             ) is False:
                 for index, val in enumerate(response):
@@ -112,15 +122,6 @@ def ors_after_fetched_diffs(response):
 def ors_after_fetched_list(response):
     for key, item in enumerate(response.get('_items', [])):
         response['_items'][key] = _ors_after_fetched(item)
-
-def ors_after_GET(request, payload):
-    params = request.args.to_dict()
-    if 'export' in params:
-        d = payload.get_json()
-        if '_items' in d:
-            d['_export'] = format_ors(d['_items'], params['export'])
-            d['_items'] = []
-            payload.set_data(json.dumps(d, cls=EveJSONEncoder))
 
 
 def ors_after_fetched(response):
@@ -151,7 +152,7 @@ def _ors_after_fetched(_response):
                             resource_acl=_response[key].get('acl', []),
                             perm='execute',
                             state='closed',
-                            model='fallskjerm',
+                            model='hps',
                             org=_response[key].get('discipline', 0)
                     ) is False:
                         # _response[key]['acl_user'] = user_persmissions(_response[key]['acl'], 'closed')
@@ -173,7 +174,7 @@ def _ors_after_fetched(_response):
                             resource_acl=_response.get('acl', []),
                             perm='execute',
                             state='closed',
-                            model='fallskjerm',
+                            model='hps',
                             org=_response.get('discipline', 0)
                     ) is False:
                         _response = anon.anonymize_ors(_response)
@@ -182,12 +183,10 @@ def _ors_after_fetched(_response):
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
-        return eve_abort(500,
-                         'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
+        return eve_abort(500,'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        return eve_abort(500,
-                         'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+        return eve_abort(500,'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
 
     return _response
 
@@ -228,7 +227,7 @@ def ors_after_update(updates, original):
         if original.get('workflow', {}).get('state', 'original') not in ['closed', 'withdrawn']:
             ors_save(
                 recepients=parse_acl_flat(original.get('acl', {}), exclude_current_user=False),
-                event_from='fallskjerm_observations',
+                event_from='hps_observations',
                 event_from_id=original.get('_id', None),
                 source=original.get('_version', 1),
                 destination=original.get('_version', 2) + 1,
@@ -238,59 +237,5 @@ def ors_after_update(updates, original):
 
 @require_token()
 def ors_before_post_comments(resource, items):
-    if resource == 'fallskjerm/observation/comments':
+    if resource == 'hps/observation/comments':
         items[0].update({'user': int(g.user_id)})
-
-
-# AGGREGATIONS
-def on_aggregate(endpoint, pipeline):
-    # pipeline.append({"$unwind": "$tags"})
-    """
-        "fallskjerm_observations_aggregate_users_foreign": fallskjerm_observations.aggregate_user_other_discipline,
-    "fallskjerm_observations_aggregate_users_count": fallskjerm_observations.aggregate_users_count,
-    "fallskjerm_observations_aggregate_user_reports": fallskjerm_observations.aggregate_user_reports,
-    "fallskjerm_observations_aggregate_users_count_created_reports
-
-    :param endpoint:
-    :param pipeline:
-    :return:
-    """
-    try:
-        if endpoint in [
-            'fallskjerm_observations_aggregate_users_foreign',
-            'fallskjerm_observations_aggregate_users_count',
-            'fallskjerm_observations_aggregate_users_count_created_reports'
-        ]:
-
-            aggregate = json.loads(request.args.to_dict()['aggregate'])
-            # print(aggregate['$discipline'])
-
-            if len([x for x in g.acl['roles'] if (x['org'] == aggregate['$discipline'] and x['role'] == ACL_FALLSKJERM_HI_ROLE) or x['role'] in [ACL_FSJ_ROLE, ACL_SU_MEDLEM_ROLE]]) > 0:
-                # whitelisted
-                pass
-            else:
-                abort(403)
-
-        # Others report
-        elif endpoint == 'fallskjerm_observations_aggregate_user_reports':
-            try:
-                #print(pipeline)
-                hi = [x for x in g.acl['roles'] if x['role'] == ACL_FALLSKJERM_HI_ROLE]
-                su_fsj = [x for x in g.acl['roles'] if x['role'] in [ACL_SU_MEDLEM_ROLE, ACL_FSJ_ROLE]]
-                if len(su_fsj) > 0:
-                    pipeline = []
-                elif len(hi) > 0:
-                    disciplines = [x['org'] for x in hi if x['org']>0] + [812296]
-                    #print(disciplines)
-                    # Skal se alle??
-                    # pipeline.insert(1, {'$match': {'involved.data.memberships.discipline': {'$in': disciplines}}})
-                else:
-                    pipeline[0] = {"$match": {"involved.id": g.user_id}}
-            except:
-                pipeline[0] = {"$match": {"involved.id": g.user_id}}
-    except:
-        abort(403)
-def on_aggregate_endpoint(endpoint, pipeline):
-    # pipeline.append({"$unwind": "$tags"})
-    # print(pipeline)
-    pass

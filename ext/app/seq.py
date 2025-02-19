@@ -4,6 +4,11 @@ from flask import current_app as app
 def increment(counter):
     seq = app.data.driver.db['seq']
 
+    # Verify!
+    counter_exists = seq.find_one({'c': counter})
+    if counter_exists is None:
+        seq.insert_one({'c': counter, 'i': 0})
+
     try:
         result = seq.update_one({'c': counter}, {'$inc': {'i': int(1)}}, True)
 

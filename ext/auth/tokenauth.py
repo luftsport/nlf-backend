@@ -41,7 +41,7 @@ class TokenAuth(TokenAuth):
             self.person_id = u['id']
 
             utc = arrow.utcnow()
-            if utc.timestamp < arrow.get(u['auth']['valid']).timestamp:
+            if utc.timestamp() < arrow.get(u['auth']['valid']).timestamp():
 
                 valid = datetime.utcnow() + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
 
