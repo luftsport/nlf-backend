@@ -27,7 +27,7 @@ from ext.auth.acl import get_user_acl_mapping, parse_acl_flat, has_nanon_permiss
 from ext.app.eve_helper import eve_abort
 from ext.app.decorators import *
 
-from ext.scf import ACL_HPS_FSJ, ACL_HPS_ORS
+from ext.scf import ACL_HPS_FSJ, ACL_HPS_ORS, ACL_HPS_FL, ACL_HPS_OL
 
 from ext.workflows.hps_observations import HpsObservationWorkflow, get_acl_init
 from ext.workflows.observation_workflow import get_wf_init  # ,
@@ -76,6 +76,14 @@ def ors_before_insert_item(item):
             # role_leder['org'] = item.get('club')
             # _, leder = get_person_from_role(role_leder)
             # item['organization']['club_president'] = leder
+
+            role_fl = ACL_HPS_FL.copy()
+            _, fl = get_person_from_role(role_fl)
+            item['organization']['fl'] = fl
+
+            role_ol = ACL_HPS_OL.copy()
+            _, ol = get_person_from_role(role_ol)
+            item['organization']['ol'] = ol
 
             role_ors = ACL_HPS_ORS.copy()
             _, coordinator = get_person_from_role(role_ors)
