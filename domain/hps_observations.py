@@ -39,7 +39,7 @@ _schema = {'id': {'type': 'integer',
                                  'insurance': False}
                      },
            'ask': ask_schema,
-
+           'title': {'type': 'string'},
            'tags': {'type': 'list',
                     'default': []
                     },
@@ -84,7 +84,7 @@ _schema = {'id': {'type': 'integer',
                           'default': []
 
                           },
-
+           'description': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
                                 'schema': {'f': {'type': 'string'},
@@ -201,6 +201,7 @@ definition = {
         'club',
         'discipline',
         'tags',
+        'title',
         'type',
         '_updated',
         '_created'
@@ -217,10 +218,10 @@ definition = {
         'type': ([('type', 1)], {'background': True}),
         'rating': ([('rating', 1)], {'background': True}),
         'title': (
-            [('title', 'text'), ('tags', 'text'), ('ask', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
+            [('title', 'text'),('description', 'text'), ('tags', 'text'), ('ask', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
             {'background': True,
              'default_language': 'norwegian',
-             'weights': {'title': 10, 'tags': 5, 'ask': 2}}
+             'weights': {'title': 10,'description': 8, 'tags': 5, 'ask': 2}}
         )
     },
     'schema': _schema
