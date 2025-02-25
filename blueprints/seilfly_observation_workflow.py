@@ -160,7 +160,7 @@ def graphit(observation_id, state):
         # response = make_response(stream.getvalue())
         # response.mimetype = 'image/png'
         # return response
-        return eve_response({'graph': base64.b64encode(stream.getvalue())}, 200)
+        return eve_response({'graph': base64.b64encode(stream.getvalue()).decode('utf-8')}, 200)
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/tasks", methods=['GET'])
