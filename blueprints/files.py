@@ -87,7 +87,7 @@ def process_image_request(file_id, size):
         im.save(img_io, 'PNG', quality=100)
         img_io.seek(0)
 
-        encoded_img = base64.b64encode(img_io.read())
+        encoded_img = base64.b64encode(img_io.read()).decode('utf-8')
 
         dict = {'mimetype': 'image/png',
                 'encoding': 'base64',
@@ -96,8 +96,8 @@ def process_image_request(file_id, size):
 
         # Jsonify the dictionary and return it
         return jsonify(**dict)
-    except:
-        pass
+    except Exception as e:
+        print('That fucking exception ', e)
 
     # Sends an image, flask
     # return send_file(img_io, mimetype='image/png')

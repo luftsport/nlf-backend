@@ -39,7 +39,7 @@ definition = {
         # 'projection': {'file': 1}
     },
     'resource_methods': ['GET', 'POST'],
-    'item_methods': ['GET', 'PATCH'],
+    'item_methods': ['GET', 'PATCH', 'DELETE'],
     'versioning': False,
     'mongo_indexes': {'name': ([('slug', 1)], {'background': True}),
                       'tags': ([('tags', 1)], {'background': True}),
