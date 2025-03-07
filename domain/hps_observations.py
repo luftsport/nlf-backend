@@ -84,6 +84,7 @@ _schema = {'id': {'type': 'integer',
                           'default': []
 
                           },
+           'reporter_role': {'type': 'string'},
            'description': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
@@ -218,10 +219,10 @@ definition = {
         'type': ([('type', 1)], {'background': True}),
         'rating': ([('rating', 1)], {'background': True}),
         'title': (
-            [('title', 'text'),('description', 'text'), ('tags', 'text'), ('ask', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
+            [('title', 'text'), ('description', 'text'), ('tags', 'text'), ('ask', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
             {'background': True,
              'default_language': 'norwegian',
-             'weights': {'title': 10,'description': 8, 'tags': 5, 'ask': 2}}
+             'weights': {'title': 10, 'description': 8, 'tags': 5, 'ask': 2}}
         )
     },
     'schema': _schema

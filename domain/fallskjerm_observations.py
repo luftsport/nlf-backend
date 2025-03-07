@@ -84,7 +84,7 @@ _schema = {'id': {'type': 'integer',
                           'default': []
 
                           },
-
+           'reporter_role': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
                                 'schema': {'f': {'type': 'string'},

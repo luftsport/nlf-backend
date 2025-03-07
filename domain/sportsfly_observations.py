@@ -31,7 +31,6 @@ ORS_MODEL_TYPE = 'sportsfly'
 # Initial
 ORS_MODEL_VERSION = 4
 
-
 _schema = {'id': {'type': 'integer',
                   'readonly': True
                   },
@@ -101,7 +100,7 @@ _schema = {'id': {'type': 'integer',
                           'default': []
 
                           },
-
+           'reporter_role': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
                                 'schema': {'f': {'type': 'string'},
