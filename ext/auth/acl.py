@@ -47,10 +47,9 @@ def get_acl(collection, _id, projection={'acl': 1}, right='read'):
 
 
 def modify_user_acl(collection, _id, person_id, right, operation):
+
     if right not in ['read', 'write'] or int(person_id) != person_id or operation not in ['add', 'delete', 'remove']:
         return False
-
-    col = app.data.driver.db[collection]
 
     try:
         oid = ObjectId(_id)
@@ -60,13 +59,13 @@ def modify_user_acl(collection, _id, person_id, right, operation):
             match = {'id': _id}
 
         if operation == 'add':
-            res = col.update(match, {'$addToSet': {'acl.{}.users'.format(right): int(person_id)}})
+            res = app.data.driver.db[collection].update_one(match, {'$addToSet': {'acl.{}.users'.format(right): int(person_id)}})
         elif operation in ['delete', 'remove']:
-            res = col.update(match, {'$pull': {'acl.{}.users'.format(right): {'$in': [person_id]}}})
+            res = app.data.driver.db[collection].update_one(match, {'$pull': {'acl.{}.users'.format(right): {'$in': [person_id]}}})
 
         return True
     except Exception as e:
-        pass
+        app.logger.exception(e)
     return False
 
 

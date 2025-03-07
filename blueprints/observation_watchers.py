@@ -100,7 +100,7 @@ def update_watchers(observation_id, watchers):
     
     col = app.data.driver.db['fallskjerm_observations']
 
-    r = col.update({'_id': ObjectId(observation_id)}, {"$set": {"watchers": watchers}})
+    r = col.update_one({'_id': ObjectId(observation_id)}, {"$set": {"watchers": watchers}})
     
     if r:
         return True
