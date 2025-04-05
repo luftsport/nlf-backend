@@ -26,7 +26,10 @@ from eve import Eve
 from flask import jsonify, request, abort, Response
 
 # Swagger docs
-from eve_swagger import get_swagger_blueprint
+try:
+    from eve_swagger import get_swagger_blueprint
+except:
+    from eve_swagger import swagger_blueprint
 
 # from ext.app.eve_helper import eve_error_response
 
