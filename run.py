@@ -59,6 +59,8 @@ from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
 from blueprints.distinct import Distinct
 from blueprints.search import Search
+from blueprints.flightlog import Flightlog
+
 
 
 # Custom url mappings (for flask)
@@ -151,9 +153,10 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
-
+# E5X
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
-
+# Flightlog
+app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 
