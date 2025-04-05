@@ -253,6 +253,16 @@ def anonymize_ors(item):
             pass
 
         try:
+            if 'e5x' in item['aircrafts'][key]['aircraft']:
+                item['aircrafts'][key]['aircraft']['e5x']['attributes']['callsign'] = anon_aircraft.assign(item['aircrafts'][key]['aircraft']['e5x']['attributes']['callsign'])
+                item['aircrafts'][key]['aircraft']['e5x']['attributes']['aircraftRegistration']['value'] = anon_aircraft.assign(item['aircrafts'][key]['aircraft']['e5x']['attributes']['aircraftRegistration']['value'])
+                item['aircrafts'][key]['aircraft']['e5x']['attributes']['serialNumber']['value'] = 'serial-anon'
+        except Exception as e:
+            item['aircrafts'][key]['aircraft']['e5x']['attributes'].pop('callsign', None)
+            item['aircrafts'][key]['aircraft']['e5x']['attributes'].pop('aircraftRegistration', None)
+            item['aircrafts'][key]['aircraft']['e5x']['attributes'].pop('serialNumber', None)
+
+        try:
             for k, crew in enumerate(aircraft.get('crew', [])):
                 item['aircrafts'][key]['crew'][k]['person'] = anon.assign_pair(
                     item['aircrafts'][key]['crew'][k].get('person', {}))
