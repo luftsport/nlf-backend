@@ -64,6 +64,7 @@ from blueprints.housekeeping import Housekeeping
 from blueprints.distinct import Distinct
 from blueprints.search import Search
 from blueprints.flightlog import Flightlog
+from blueprints.fallskjerm_tandem import FallskjermTandem
 
 
 
@@ -167,6 +168,10 @@ app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.
 app.register_blueprint(Distinct, url_prefix="%s/distinct" % app.globals.get('prefix'))
 # Query builder resources
 app.register_blueprint(Search, url_prefix="%s/search" % app.globals.get('prefix'))
+
+# Fallskjerm Tandem
+app.register_blueprint(FallskjermTandem, url_prefix="%s/fallskjerm/tandem" % app.globals.get('prefix'))
+
 """
     Eve hooks
     ~~~~~~~~~
