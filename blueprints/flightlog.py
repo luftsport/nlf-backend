@@ -120,15 +120,19 @@ def _get_and_parse_flight_stats_regex(url) -> dict:
         }
         for line in lines:
             line = line.strip()
-            if match := re.match(patterns["date"], line):
-                stats["date"] = match.group(1)
-            elif match := re.match(patterns["start_finish"], line):
-                stats["start_time"] = match.group(1)
-                stats["finish_time"] = match.group(2)
-            elif match := re.match(patterns["duration"], line):
-                stats["duration"] = match.group(1).replace(" : ", ":")
-            elif match := re.match(patterns["pair"], line):
-                label, pair_type, val1, val2, unit = match.groups()
+            match1 = re.match(patterns["date"], line)
+            match2 = re.match(patterns["start_finish"], line)
+            match3 = re.match(patterns["duration"], line)
+            match4 = re.match(patterns["pair"], line)
+            if match1:
+                stats["date"] = match1.group(1)
+            elif match2:
+                stats["start_time"] = match2.group(1)
+                stats["finish_time"] = match2.group(2)
+            elif match3:
+                stats["duration"] = match3.group(1).replace(" : ", ":")
+            elif match4:
+                label, pair_type, val1, val2, unit = match4.groups()
                 key = label.lower().replace(" ", "_").replace(".", "")
                 if pair_type == "max/min":
                     stats[key] = {"max": float(val1), "min": float(val2), "unit": unit}
