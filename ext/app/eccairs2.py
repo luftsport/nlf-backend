@@ -138,13 +138,16 @@ class ECCAIRS2:
                 try:
                     result = resp.json()
 
-                    if len(result.get('data', {}).get('files', [])) == 1:
+                    if 'key' not in result.get('data', {}).keys() and len(result.get('data', {}).get('files', [])) == 1:
                         eccairs2_id = result['data']['files'][0]
+                        eccairs2_processing_code = result['errorDetails'][8:11]  # digits of OCC_FBS_310 or OCC_FBW_309
+                    elif 'key' in result.get('data', {}).keys():
+                        if 'value' in result['data'] and len(result['data']['value']) > 0:
+                            eccairs2_id = result['data']['value'][len(result['data']['value']) - 1]  # Last element
+                            eccairs2_processing_code = result['data']['key'][8:11]  # digits of OCC_FBS_310 or OCC_FBW_309
+                    elif len(result.get('data', {}).get('value', [])) == 3:
+                        eccairs2_id = result['data']['value'][2]
                         eccairs2_processing_code = 310
-                    elif 'key' in result.get('data', {}).keys() and result.get('data', {}).get('key',
-                                                                                               None) == 'OCC_FBW_309':
-                        eccairs2_id = result['data']['value'][2]  # 0 contextid, 1 uuid, 2 e2id
-                        eccairs2_processing_code = 309
                     else:
                         raise Exception('Error, no eccairs2 id was found')
 

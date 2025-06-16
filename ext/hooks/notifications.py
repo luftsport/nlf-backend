@@ -9,7 +9,7 @@ from ext.auth.acl import has_permission
 
 def before_get(request, lookup):
     """Make sure only recepient can read own messages"""
-    lookup['recepient'] = g.user_id
+    lookup['$or'] = [{'sender': g.user_id}, {'recepient': g.user_id}]
 
 
 def before_insert(items):
@@ -34,15 +34,14 @@ def before_aggregation(endpoint, pipeline):
     # @TODO make whitelist not blacklist
     if endpoint == 'notifications_events':
         # Only allow own notifications
-        pipeline[0]['$match']['recepient'] = g.user_id  # Make sure to update when typo is fixed
-        # pipeline[0]['$match']['sender'] = g.user_id
+        pipeline[0]['$match']['$or'] = [{'recepient': g.user_id}, {'sender': g.user_id}]  # Make sure to update when typo is fixed
 
         _id = pipeline[0].get('$match', {}).get('event_from_id')
 
         resource = pipeline[0].get('$match', {}).get('event_from')
 
         if resource in ['fallskjerm_observations', 'seilfly_observations', 'sportsfly_observations',
-                        'motorfly_observations']:
+                        'motorfly_observations', 'modellfly_observations']:
             # Get observation - if user has access!
             item, _date, etag, status = getitem_internal(resource, **{'_id': _id})
 

@@ -38,7 +38,7 @@ from blueprints.fallskjerm_observation_workflow import OrsWorkflow as Fallskjerm
 from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsWF
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
-
+from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -57,7 +57,8 @@ from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
 from blueprints.fallskjerm_tandem import FallskjermTandem
-
+from blueprints.distinct import Distinct
+from blueprints.search import Search
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
@@ -123,6 +124,7 @@ app.register_blueprint(FallskjermOrsWF, url_prefix="%s/fallskjerm/observations/w
 app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
@@ -153,6 +155,11 @@ app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('p
 
 # Housekeeping
 app.register_blueprint(Housekeeping, url_prefix="%s/housekeeping" % app.globals.get('prefix'))
+
+# Distinct fields
+app.register_blueprint(Distinct, url_prefix="%s/distinct" % app.globals.get('prefix'))
+# Query builder resources
+app.register_blueprint(Search, url_prefix="%s/search" % app.globals.get('prefix'))
 """
     Eve hooks
     ~~~~~~~~~
@@ -178,7 +185,10 @@ app.on_insert_fallskjerm_observations += hook.fallskjerm.ors_before_insert
 app.on_inserted_fallskjerm_observations += hook.fallskjerm.ors_after_inserted
 # BEFORE GET
 app.on_pre_GET_fallskjerm_observations += hook.fallskjerm.ors_before_get
+app.on_post_GET_fallskjerm_observations += hook.fallskjerm.ors_after_GET
+# Get own
 app.on_pre_GET_fallskjerm_observations_user += hook.fallskjerm.ors_before_get_user
+# Get others
 app.on_pre_GET_fallskjerm_observations_todo += hook.fallskjerm.ors_before_get_todo
 # AFTER FETCHED (GET)
 app.on_fetched_resource_fallskjerm_observations += hook.fallskjerm.ors_after_fetched_list
@@ -189,6 +199,30 @@ app.on_fetched_item_fallskjerm_observations_todo += hook.fallskjerm.ors_after_fe
 app.on_pre_PATCH_fallskjerm_observations += hook.fallskjerm.ors_before_patch
 # AFTER update db layer
 app.on_updated_fallskjerm_observations += hook.fallskjerm.ors_after_update
+# Aggregations
+app.before_aggregation += hook.fallskjerm.on_aggregate
+# ################
+# MODELLFLY OBSREG
+#
+app.on_insert_modellfly_observations += hook.modellfly.ors_before_insert
+app.on_inserted_modellfly_observations += hook.modellfly.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_modellfly_observations += hook.modellfly.ors_before_get
+app.on_pre_GET_modellfly_observations_user += hook.modellfly.ors_before_get_user
+app.on_pre_GET_modellfly_observations_todo += hook.modellfly.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_resource_modellfly_observations += hook.modellfly.ors_after_fetched_list
+app.on_fetched_item_modellfly_observations += hook.modellfly.ors_after_fetched
+app.on_fetched_diffs_modellfly_observations += hook.modellfly.ors_after_fetched_diffs
+app.on_fetched_item_modellfly_observations_todo += hook.modellfly.ors_after_fetched
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
+# BEFORE update db layer
+# app.on_update_modellfly_observations += hook.modellfly.ors_before_update
+# AFTER update db layer
+app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
+
+
 
 # ################
 # MOTOR OBSREG
@@ -230,9 +264,7 @@ app.on_fetched_item_seilfly_observations_todo += hook.seilfly.ors_after_fetched
 # BEFORE PATCH/PUT
 app.on_pre_PATCH_seilfly_observations += hook.seilfly.ors_before_patch
 # BEFORE update db layer
-app.on_updated_seilfly_observations += hook.seilfly.ors_before_update
-# BEFORE update db layer
-app.on_update_motorfly_observations += hook.motorfly.ors_before_update
+app.on_update_seilfly_observations += hook.seilfly.ors_before_update
 # AFTER update db layer
 app.on_updated_seilfly_observations += hook.seilfly.ors_after_update
 
@@ -301,6 +333,12 @@ app.on_insert_help += hook.help.before_insert
 app.on_replace_help += hook.help.on_before_replace
 app.on_update_help += hook.help.on_before_update
 
+#############
+# SEARCH
+app.on_insert_search += hook.search.before_insert
+app.on_pre_DELETE_search += hook.search.before_remove
+app.on_pre_GET_search += hook.search.before_get
+app.on_pre_PATCH_search += hook.search.before_patch
 
 # TEST
 def _aggregation(endpoint, pipeline):

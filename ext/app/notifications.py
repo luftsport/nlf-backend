@@ -172,13 +172,14 @@ def ors_save(recepients, event_from, event_from_id, source, destination, context
     n.notify_all(recepients=recepients, data=data)
 
 
-def ors_e5x(recepients, event_from, event_from_id, source, ors_id, ors_tags, status, file_name, transport='sftp',
+def ors_e5x(recepients, event_from, event_from_id, source, ors_id, org_id,  ors_tags, status, file_name, transport='sftp',
             context='send'):
     n = Notification(event_from=event_from, event_from_id=event_from_id, event_type='ors_e5x',
                      dismissable=True, acl={})
 
     data = {
         'id': ors_id,
+        'org_id': org_id,
         'tags': ors_tags,
         'action': 'save',
         'source': source,
@@ -201,7 +202,7 @@ def _strip_tags(string, allowed_tags=''):
         allowed_pattern = ''
         for s in allowed_tags_list:
             if s == '':
-                continue;
+                continue
             # Add all possible patterns for this tag to the regex.
             if allowed_pattern != '':
                 allowed_pattern += '|'

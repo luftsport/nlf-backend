@@ -18,6 +18,7 @@ from ext.scf import \
     ACL_MOTORFLY_FLYTJENESTEADM, \
     ACL_MOTORFLY_CLUB_FTL, \
     ACL_MOTORFLY_CLUB_SKOLESJEF, \
+    ACL_MOTORFLY_CLUB_ASS_SKOLESJEF, \
     ACL_MOTORFLY_CLUB_DTO, \
     ACL_MOTORFLY_CLUB_FLYTJENESTEN, \
     ACL_CLOSED_ALL_LIST
@@ -618,6 +619,8 @@ class ObservationWorkflow(Machine):
         self.acl_FLYTJENESTEADM = ACL_MOTORFLY_FLYTJENESTEADM.copy()
         self.acl_SKOLE = ACL_MOTORFLY_CLUB_SKOLESJEF.copy()
         self.acl_SKOLE['org'] = self.discipline
+        self.acl_SKOLE_ASS = ACL_MOTORFLY_CLUB_ASS_SKOLESJEF.copy()
+        self.acl_SKOLE_ASS['org'] = self.discipline
 
         self.acl_DTO = ACL_MOTORFLY_CLUB_DTO.copy()
         self.acl_DTO['org'] = self.discipline
@@ -643,6 +646,9 @@ class ObservationWorkflow(Machine):
                          send_event=True,
                          transitions=self._transitions,
                          initial=self.initial_state)
+
+    def get_trigger_attrs(self):
+        return self._trigger_attrs
 
     def get_actions(self):
 
@@ -827,7 +833,7 @@ class ObservationWorkflow(Machine):
             acl['execute']['users'] = []
 
             acl['write']['roles'] = [self.acl_DTO]
-            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE, self.acl_SKOLE_ASS]
             acl['execute']['roles'] = [self.acl_DTO]
 
         elif self.state == 'pending_review_skole':
@@ -835,9 +841,9 @@ class ObservationWorkflow(Machine):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['write']['roles'] = [self.acl_SKOLE]
-            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE]
-            acl['execute']['roles'] = [self.acl_SKOLE]
+            acl['write']['roles'] = [self.acl_SKOLE, self.acl_SKOLE_ASS]
+            acl['read']['roles'] += [self.acl_ORS, self.acl_FTL, self.acl_DTO, self.acl_SKOLE, self.acl_SKOLE_ASS]
+            acl['execute']['roles'] = [self.acl_SKOLE, self.acl_SKOLE_ASS]
 
         elif self.state == 'pending_review_teknisk':
 

@@ -7,7 +7,7 @@ from eve.methods.get import get_internal
 UserORS = Blueprint('Users ORSes', __name__, )
 
 
-@UserORS.route("/<regex('(fallskjerm|motorfly|sportsfly|seilfly)'):collection>", methods=['GET'])
+@UserORS.route("/<regex('(fallskjerm|motorfly|sportsfly|seilfly|modellfly)'):collection>", methods=['GET'])
 @require_token()
 def my_orses(collection):
     data = []

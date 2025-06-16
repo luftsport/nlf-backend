@@ -1,26 +1,25 @@
 """
     Observation Workflow Controller
     ===============================
-    
-    Model: ext.workflows.observation.ObservationWorkflow
-    
+
+    Model: ext.workflows.observation.ModellflyObservationWorkflow
+
     @todo: Signals on change signal to communications to dispatch an update to the watchers
            http://stackoverflow.com/questions/16163139/catch-signals-in-flask-blueprint
 
 """
-
-from flask import g, Blueprint  # , current_app as app, request, Response, abort, jsonify, make_response
+from flask import g, Blueprint, current_app as app, request, Response, abort, jsonify, make_response
 import base64
 
-from ext.workflows.seilfly_observations import ObservationWorkflow
+from ext.workflows.modellfly_observations import ModellflyObservationWorkflow
 
 # Need custom decorators
 from ext.app.decorators import *
 from ext.app.eve_helper import eve_response
 
-OrsWorkflow = Blueprint('Seilfly Observation Workflow', __name__, )
+OrsWorkflow = Blueprint('Modellfly Observation Workflow', __name__, )
 
-RESOURCE_COLLECTION = 'seilfly_observations'
+RESOURCE_COLLECTION = 'modellfly_observations'
 
 
 @OrsWorkflow.route("/<objectid:observation_id>", methods=['GET'])
@@ -30,30 +29,28 @@ def state(observation_id):
     """ Get current state, actions, transitions and permissions
     """
     # No need for user_id, ObservatoinWorkflow already has that!
-
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_current_state(), 200)
 
-@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
-@require_token()
-def mapping(observation_id):
-    """ Get mapping for observation workflow
-    """
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
-
-    return eve_response(wf.get_trigger_attrs(), 200)
 
 @OrsWorkflow.route("/<objectid:observation_id>/audit", methods=['GET'])
 @require_token()
 def audit(observation_id):
     """ Get audit trail for observation
     """
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     return eve_response(wf.get_audit(), 200)
 
+@OrsWorkflow.route("/<objectid:observation_id>/mapping", methods=['GET'])
+@require_token()
+def mapping(observation_id):
+    """ Get mapping for observation workflow
+    """
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
+    return eve_response(wf.get_trigger_attrs(), 200)
 @OrsWorkflow.route("/legacy/todo", methods=['GET'])
 @require_token()
 def get_observations():
@@ -85,15 +82,21 @@ def get_observations():
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
     _items = list(cursor.sort('id', 1).skip(max_results * (page - 1)).limit(max_results))
 
+    """
+    #hateos
+    _links = {"self": {"title": "observations/todo", "href": "observations/todo?max_results=%i&page=%i" % (max_results, page), 
+                       "next": {},
+                       "previous": {},
+                       "last": {},
+                       "first": {},
+                       "parent": {}}}
+    """
     _meta = {'page': page, 'max_results': max_results, 'total': total_items}
     result = {'_items': _items, '_meta': _meta}
-    # return Response(json.dumps(result, default=json_util.default), mimetype='application/json')
     return eve_response(result, 200)
 
 
-@OrsWorkflow.route(
-    '/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|ors|su|dto|skole|teknisk|operativ)"):action>',
-    methods=['POST'])
+@OrsWorkflow.route('/<objectid:observation_id>/<regex("(approve|reject|withdraw|reopen|obsreg|klubbleder|fagsjef|fagutvalg)"):action>', methods=['POST'])
 @require_token()
 def transition(observation_id, action):
     """
@@ -105,54 +108,47 @@ def transition(observation_id, action):
     @todo: check permissions here??
     """
 
-    comment = None
+    comment = ''
     try:
         args = request.get_json()  # use force=True to do anyway!
         comment = args.get('comment', '')
-    except:
+    except Exception as e:
         # Could try form etc
         pass
 
     # Instantiate with observation_id and current user (user is from g.user_id
-    wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id, comment=comment)
-
-    # Let draft descide to not process in club
-    if wf.initial_state == 'draft' and action == 'approve':
-        wf.wf_settings['do_not_process_in_club'] = args.get('do_not_process_in_club', False)
-
-    # Let OBSREG descide if not public on close
-    if wf.initial_state == 'pending_review_ors':
-        wf.wf_settings['do_not_publish'] = args.get('do_not_publish', False)
+    wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id, comment=comment)
 
     # Now just do a
 
     if wf.get_resource_mapping().get(action, False):
-        # result = wf.call(get_actions2().get(action)) #getattr(ObservationWorkflow, wf.get_actions2().get(action))()
+        # result = wf.call(get_actions2().get(action)) #getattr(ModellflyObservationWorkflow, wf.get_actions2().get(action))()
 
         # This is actually safe!
         result = eval('wf.' + wf.get_resource_mapping().get(action) + '()')
 
+        # ors_workflow(recepients, activity, _id, action, source, destination, what, comment, context='transition'
         # Change owner signal
         # signal_change_owner.send(app,response=response)
 
         return eve_response(wf.state, 200)
 
-    return eve_abort(500, 'Error in transitioning observation in workflow for observation id {} and action {}'.format(observation_id, action))
+    return eve_abort(500, 'Error in transitioning observation in workflow')
 
 
 @OrsWorkflow.route("/<objectid:observation_id>/graph/<string:state>", methods=['GET'])
 @require_token()
 def graphit(observation_id, state):
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
-    from ext.workflows.seilfly_observations import WF_SEILFLY_STATES, WF_SEILFLY_TRANSITIONS
-    if state in WF_SEILFLY_STATES:
+    # wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    from ext.workflows.modellfly_observations import WF_MODELLFLY_STATES, WF_MODELLFLY_TRANSITIONS
+    if state in WF_MODELLFLY_STATES:
         wf = Dummy()
         import io
         from transitions.extensions import GraphMachine as Machine
 
         machine = Machine(model=wf,
-                          states=WF_SEILFLY_STATES,
-                          transitions=WF_SEILFLY_TRANSITIONS,
+                          states=WF_MODELLFLY_STATES,
+                          transitions=WF_MODELLFLY_TRANSITIONS,
                           initial=state,
                           title='Workflow graph')
         stream = io.BytesIO()
@@ -168,12 +164,12 @@ def graphit(observation_id, state):
 def tasks(observation_id):
     """
     Get tasks for observation
-    
+
     Not implemented yet, should either be integrated in workflow or as a seperate blueprint?
-    
+
     Most likely this will make for another transition where state is 'waiting for tasks to complete'
     """
-    # wf = ObservationWorkflow(object_id=observation_id, user_id=g.user_id)
+    # wf = ModellflyObservationWorkflow(object_id=observation_id, user_id=g.user_id)
 
     raise NotImplemented
 
