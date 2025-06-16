@@ -26,7 +26,10 @@ from eve import Eve
 from flask import jsonify, request, abort, Response
 
 # Swagger docs
-from eve_swagger import swagger
+try:
+    from eve_swagger import get_swagger_blueprint
+except:
+    from eve_swagger import swagger_blueprint
 
 # from ext.app.eve_helper import eve_error_response
 
@@ -39,6 +42,7 @@ from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsW
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
 from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
+from blueprints.hps_observation_workflow import OrsWorkflow as HpsOrsWF
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -56,9 +60,12 @@ from blueprints.e5x import E5X
 from blueprints.heartbeat import Heartbeat
 from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
-from blueprints.fallskjerm_tandem import FallskjermTandem
 from blueprints.distinct import Distinct
 from blueprints.search import Search
+from blueprints.flightlog import Flightlog
+
+
+
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
@@ -111,6 +118,7 @@ app.url_map.converters['regex'] = RegexConverter
 
 # Register eve-docs blueprint 
 # app.register_blueprint(eve_docs,        url_prefix="%s/docs" % app.globals.get('prefix'))
+swagger = get_swagger_blueprint()
 app.register_blueprint(swagger)
 # You might want to simply update the eve settings module instead.
 
@@ -125,6 +133,7 @@ app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workf
 app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
+app.register_blueprint(HpsOrsWF, url_prefix="%s/hps/observations/workflow" % app.globals.get('prefix'))
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
@@ -144,12 +153,10 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
-
-# Specific apps
-app.register_blueprint(FallskjermTandem, url_prefix="%s/fallskjerm/tandem" % app.globals.get('prefix'))
-
+# E5X
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
-
+# Flightlog
+app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 
@@ -222,7 +229,26 @@ app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
 
-
+# ################
+# HPS OBSREG
+#
+app.on_insert_hps_observations += hook.hps.ors_before_insert
+app.on_inserted_hps_observations += hook.hps.ors_after_inserted
+# BEFORE GET
+app.on_pre_GET_hps_observations += hook.hps.ors_before_get
+app.on_pre_GET_hps_observations_user += hook.hps.ors_before_get_user
+app.on_pre_GET_hps_observations_todo += hook.hps.ors_before_get_todo
+# AFTER FETCHED (GET)
+app.on_fetched_resource_hps_observations += hook.hps.ors_after_fetched_list
+app.on_fetched_item_hps_observations += hook.hps.ors_after_fetched
+app.on_fetched_diffs_hps_observations += hook.hps.ors_after_fetched_diffs
+app.on_fetched_item_hps_observations_todo += hook.hps.ors_after_fetched
+# BEFORE PATCH/PUT
+app.on_pre_PATCH_hps_observations += hook.hps.ors_before_patch
+# BEFORE update db layer
+# app.on_update_hps_observations += hook.hps.ors_before_update
+# AFTER update db layer
+app.on_updated_hps_observations += hook.hps.ors_after_update
 
 # ################
 # MOTOR OBSREG
@@ -299,6 +325,7 @@ app.on_pre_GET_notifications += hook.notifications.before_get
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
+
 
 # E5X delete
 app.on_pre_DELETE_e5x_attributes += hook.e5x.add_delete_filters

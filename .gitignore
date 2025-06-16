@@ -11,6 +11,11 @@ resume.token
 .*.md.html
 scf.py
 *nlf-admin@fnlf
+*.orig
+*.json
+man*
+pydevd*
+tmp*
 #Python virtualenv
 bin/
 include/

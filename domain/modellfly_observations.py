@@ -175,8 +175,7 @@ definition = {
                       'rating': ([('rating', 1)], {'background': True}),
                       'title': ([('title', 'text'), ('tags', 'text'), ('ask', 'text')],
                                 {'background': True, 'default_language': 'norwegian',
-                                 'weights': {'tags': 10, 'ask': 2}})
-
+                                 'weights': {'title': 10, 'tags': 5, 'ask': 2}})
                       },
     'schema': _schema
 }

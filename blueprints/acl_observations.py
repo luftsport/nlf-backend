@@ -25,11 +25,11 @@ ACLObservations = Blueprint('Acl for observations', __name__, )
 @ACLObservations.route("/<string:activity>/<objectid:_id>/<string:right>/<int:person_id>", methods=['DELETE', 'POST'])
 @require_token()
 def acl_toggle(activity, _id, right, person_id ):
-
+    raise Exception
     if person_id != g.user_id:
         # projection={'acl': 1}, right='read'
         status, acl, _ = get_acl('{}_observations'.format(activity), _id, projection={'acl': 1, 'reporter': 1}, right='execute')
-
+        print(status, acl)
         if status is True:
 
             if request.method == 'POST':

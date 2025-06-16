@@ -52,7 +52,7 @@ definition = {
     'resource_methods': ['GET', 'POST'],
     'item_methods': ['GET', 'PATCH', 'DELETE'],
     'mongo_indexes': {
-        # 'id': ([('id', 1)], {'background': True}),
+        'activity': ([('activity', 1)], {'background': True}),
         'title': (
             [('title', 'text')],
             {

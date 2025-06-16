@@ -2,25 +2,25 @@
 
     Observations
     ============
-    
+
     @note: workflow kan feks være readonly, så kan dette rutes via en egen (flask) ressurs for å sette den!
 
-    @todo: Observations need an initializing pre_insert/POST to init workflows! 
+    @todo: Observations need an initializing pre_insert/POST to init workflows!
            Or rather a after with partc_internal since it's a readonly field
     @todo: Add autogenerating id for observation in pre hook
     @todo: Add workflow by default in pre hook
     @todo: add schema for organisation or club + location
 """
 from _base import workflow_schema, comments_schema, watchers_schema, acl_item_schema, ask_schema
-# from fallskjerm_observation_components import components_schema
+# from hps_observation_components import components_schema
 from datetime import datetime
 from bson import SON
 
-RESOURCE_COLLECTION = 'fallskjerm_observations'
-BASE_URL = 'fallskjerm/observations'
+RESOURCE_COLLECTION = 'hps_observations'
+BASE_URL = 'hps/observations'
 
-ORS_MODEL_TYPE = 'fallskjerm'
-ORS_MODEL_VERSION = 3
+ORS_MODEL_TYPE = 'hps'
+ORS_MODEL_VERSION = 1
 
 _schema = {'id': {'type': 'integer',
                   'readonly': True
@@ -39,7 +39,7 @@ _schema = {'id': {'type': 'integer',
                                  'insurance': False}
                      },
            'ask': ask_schema,
-
+           'title': {'type': 'string'},
            'tags': {'type': 'list',
                     'default': []
                     },
@@ -85,6 +85,7 @@ _schema = {'id': {'type': 'integer',
 
                           },
            'reporter_role': {'type': 'string'},
+           'description': {'type': 'string'},
            'files': {'type': 'list',
                      'schema': {'type': 'dict',
                                 'schema': {'f': {'type': 'string'},
@@ -115,7 +116,7 @@ _schema = {'id': {'type': 'integer',
            }
 # 'schema': components_schema
 definition = {
-    'item_title': 'Fallskjerm Observations',
+    'item_title': 'Hps Observations',
     'url': BASE_URL,
     'datasource': {'source': RESOURCE_COLLECTION,
                    # 'projection': {'acl': 0}  # 'files': 0,
@@ -137,10 +138,8 @@ definition = {
         'components.where.altitude',
         'components.what',
         # Involverte
-        'involved.data.jump_type',
         'involved.data.activity',
         'involved.data.years_of_experience',
-        'involved.data.total_jumps',
         'involved.data.altitude',
         'involved.data.aircraft',
         'involved.data.age',
@@ -203,6 +202,7 @@ definition = {
         'club',
         'discipline',
         'tags',
+        'title',
         'type',
         '_updated',
         '_created'
@@ -219,14 +219,11 @@ definition = {
         'type': ([('type', 1)], {'background': True}),
         'rating': ([('rating', 1)], {'background': True}),
         'title': (
-            [('tags', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
-            {
-                'background': True,
-                'default_language': 'norwegian',
-                'weights': {'tags': 10, 'ask': 2, 'components.what': 5, 'components.how': 1}
-            }
+            [('title', 'text'), ('description', 'text'), ('tags', 'text'), ('ask', 'text'), ('ask', 'text'), ('components.what', 'text'), ('components.how', 'text')],
+            {'background': True,
+             'default_language': 'norwegian',
+             'weights': {'title': 10, 'description': 8, 'tags': 5, 'ask': 2}}
         )
-
     },
     'schema': _schema
 
@@ -234,7 +231,7 @@ definition = {
 
 # Hook setting only execute
 workflow_todo = {
-    'item_title': 'Fallskjerm Observations Todo',
+    'item_title': 'Hps Observations Todo',
     'url': '{}/workflow/todo'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
                    'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1, '_model': 1}
@@ -254,7 +251,7 @@ workflow_todo = {
 
 # My own, hook sets lookup to user
 user = {
-    'item_title': 'Fallskjerm Observations Self',
+    'item_title': 'Hps Observations Self',
     'url': '{}/user'.format(BASE_URL),
     'datasource': {'source': RESOURCE_COLLECTION,
                    # 'projection': {'acl': 1, 'id': 1, 'when': 1, 'tags': 1, 'workflow': 1, 'type': 1}  # 'files': 0,

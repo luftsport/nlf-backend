@@ -1,14 +1,13 @@
-WF_MODELLFLY_STATES = [
+WF_HPS_STATES = [
     'draft',
     'pending_review_fs',
     'pending_review_obsreg',
-    'pending_review_klubbleder',
     'pending_review_fagutvalg',
     'closed',
     'withdrawn'
 ]
 
-WF_MODELLFLY_ATTR = {
+WF_HPS_ATTR = {
     'draft': {
         'title': 'Utkast',
         'description': 'Utkast'
@@ -25,10 +24,6 @@ WF_MODELLFLY_ATTR = {
         'title': 'Avventer Fagutvalg',
         'description': 'Avventer vurdering Fagutvalg'
     },
-    'pending_review_klubbleder': {
-        'title': 'Avventer Klubbleder',
-        'description': 'Avventer vurdering Klubbleder'
-    },
     'closed': {
         'title': 'Lukket',
         'description': 'Observasjonen er lukket'
@@ -38,7 +33,7 @@ WF_MODELLFLY_ATTR = {
         'description': 'Observasjonen er trukket tilbake'
     }
 }
-WF_MODELLFLY_TRANSITIONS = [
+WF_HPS_TRANSITIONS = [
     {
         'trigger': 'send_to_obsreg',
         'source': 'draft',
@@ -60,7 +55,7 @@ WF_MODELLFLY_TRANSITIONS = [
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
-
+    # Obsreg
     {
         'trigger': 'reject_obsreg',
         'source': 'pending_review_obsreg',
@@ -119,28 +114,6 @@ WF_MODELLFLY_TRANSITIONS = [
         'after': 'save_workflow',
         'conditions': ['has_permission']
     },
-    # Leder
-    {
-        'trigger': 'send_to_klubbleder',
-        'source': 'pending_review_obsreg',
-        'dest': 'pending_review_klubbleder',
-        'after': 'save_workflow',
-        'conditions': ['has_permission']
-    },
-    {
-        'trigger': 'reject_klubbleder',
-        'source': 'pending_review_klubbleder',
-        'dest': 'pending_review_obsreg',
-        'after': 'save_workflow',
-        'conditions': ['has_permission']
-    },
-    {
-        'trigger': 'approve_klubbleder',
-        'source': 'pending_review_klubbleder',
-        'dest': 'pending_review_obsreg',
-        'after': 'save_workflow',
-        'conditions': ['has_permission']
-    },
     {
         'trigger': 'reopen_obsreg',
         'source': 'closed',
@@ -151,7 +124,7 @@ WF_MODELLFLY_TRANSITIONS = [
 
 ]
 
-WF_MODELLFLY_TRANSITIONS_ATTR = {
+WF_HPS_TRANSITIONS_ATTR = {
     'send_to_obsreg': {
         'title': 'Send til OBSREG Koordinator',
         'action': 'Send OBSREG',
@@ -237,56 +210,23 @@ WF_MODELLFLY_TRANSITIONS_ATTR = {
         'descr': 'Sendt tilbake av Fagutvalg'
     },
 
-    'send_to_klubbleder': {
-        'title': 'Send til Klubbleder',
-        'action': 'Send Klubbleder',
-        'resource': 'klubbleder',
-        'comment': True,
-        'descr': 'Sendt til Klubbleder'
-    },
-
-    'approve_klubbleder': {
-        'title': 'Godkjenn observasjon',
-        'action': 'Godkjenn',
-        'resource': 'approve',
-        'comment': True,
-        'descr': 'Godkjent av Klubbleder'
-    },
-    'reject_klubbleder': {
-        'title': 'Send observasjon tilbake',
-        'action': 'Avslå',
-        'resource': 'reject',
-        'comment': True,
-        'descr': 'Sendt tilbake av Klubbleder'
-    }
-
 }
 from ext.workflows.observation_workflow import ObservationWorkflow
 from ext.scf import (
     ACL_CLOSED_ALL_LIST,
-    ACL_MODELLFLY_KLUBB_LEDER,
-    ACL_MODELLFLY_ORS,
-    ACL_MODELLFLY_FSJ,
-    ACL_MODELLFLY_CLOSED,
-    ACL_SU_LEDER_ROLE,
-    ACL_SU_MEDLEM_ROLE
+    ACL_HPS_ORS as ACL_HPS_OBSREG,
+    ACL_HPS_FSJ,
+    ACL_HPS_CLOSED,
+    ACL_HPS_SU_LEDER as ACL_HPS_FAGUTVALG,
+    # ACL_HPS_SU_MEDLEM
 )
-
-ACL_MODELLFLY_OBSREG_ROLE = 202656
-ACL_FSJ_ROLE = 202659
-ACL_KLUBBLEDER_ROLE = 1
-
-ACL_MODELLFLY_OBSREG = {'activity': 236, 'org': 203027, 'role': ACL_MODELLFLY_OBSREG_ROLE}
-ACL_MODELLFLY_FSJ = {'activity': 236, 'org': 203027, 'role': ACL_FSJ_ROLE}
-ACL_KLUBBLEDER = {'activity': 236, 'org': -1, 'role': ACL_KLUBBLEDER_ROLE}
-ACL_MODELLFLY_FAGUTVALG = {'activity': 236, 'org': 203027, 'role': ACL_SU_MEDLEM_ROLE}
 
 
 def get_acl_init(person_id, discipline_id):
     acl = {
         'read': {
             'users': [person_id],
-            'roles': [ACL_MODELLFLY_OBSREG]
+            'roles': [ACL_HPS_OBSREG]
         },
         'execute': {
             'users': [person_id],
@@ -304,18 +244,18 @@ def get_acl_init(person_id, discipline_id):
     return acl
 
 
-class ModellflyObservationWorkflow(ObservationWorkflow):
+class HpsObservationWorkflow(ObservationWorkflow):
 
-    def __init__(self, object_id, user_id, activity='modellfly', initial_state=None, comment=None):
+    def __init__(self, object_id, user_id, activity='hps', initial_state=None, comment=None):
 
         super().__init__(
             object_id=object_id,
             user_id=user_id,
             activity=activity,
-            states=WF_MODELLFLY_STATES,
-            state_attrs=WF_MODELLFLY_ATTR,
-            transitions=WF_MODELLFLY_TRANSITIONS,
-            transitions_attrs=WF_MODELLFLY_TRANSITIONS_ATTR,
+            states=WF_HPS_STATES,
+            state_attrs=WF_HPS_ATTR,
+            transitions=WF_HPS_TRANSITIONS,
+            transitions_attrs=WF_HPS_TRANSITIONS_ATTR,
             initial_state=initial_state,
             comment=comment)
 
@@ -333,7 +273,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['write']['users'] = [reporter]
             acl['execute']['users'] = [reporter]
 
-            acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
+            acl['read']['roles'] += [ACL_HPS_OBSREG]
             acl['write']['roles'] = []
             acl['execute']['roles'] = []
 
@@ -354,11 +294,11 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['execute']['users'] = []
 
             if self.initial_state == 'closed':
-                acl['read']['roles'] = [ACL_MODELLFLY_OBSREG]
+                acl['read']['roles'] = [ACL_HPS_OBSREG]
             else:
-                acl['read']['roles'] += [ACL_MODELLFLY_OBSREG]
-            acl['write']['roles'] = [ACL_MODELLFLY_OBSREG]
-            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
+                acl['read']['roles'] += [ACL_HPS_OBSREG]
+            acl['write']['roles'] = [ACL_HPS_OBSREG]
+            acl['execute']['roles'] = [ACL_HPS_OBSREG]
 
         elif self.state == 'pending_review_fs':
             """ Owner, reporter, hi read, fsj read, write, execute """
@@ -366,30 +306,19 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] += [ACL_MODELLFLY_FSJ]
-            acl['write']['roles'] = [ACL_MODELLFLY_FSJ]
-            acl['execute']['roles'] = [ACL_MODELLFLY_FSJ]
+            acl['read']['roles'] += [ACL_HPS_FSJ]
+            acl['write']['roles'] = [ACL_HPS_FSJ]
+            acl['execute']['roles'] = [ACL_HPS_FSJ]
 
         elif self.state == 'pending_review_fagutvalg':
 
             acl['write']['users'] = []
             acl['execute']['users'] = []
 
-            acl['read']['roles'] += [ACL_MODELLFLY_FAGUTVALG]
-            acl['write']['roles'] = [ACL_MODELLFLY_FAGUTVALG]
-            acl['execute']['roles'] = [ACL_MODELLFLY_FAGUTVALG]
+            acl['read']['roles'] += [ACL_HPS_FAGUTVALG]
+            acl['write']['roles'] = [ACL_HPS_FAGUTVALG]
+            acl['execute']['roles'] = [ACL_HPS_FAGUTVALG]
 
-        elif self.state == 'pending_review_klubbleder':
-            """ Owner, reporter, hi read, fsj read, write, execute """
-
-            acl['write']['users'] = []
-            acl['execute']['users'] = []
-
-            klubbleder = ACL_MODELLFLY_KLUBB_LEDER.copy()
-            klubbleder['org'] = self.db_wf.get('club')
-            acl['read']['roles'] += [klubbleder]
-            acl['write']['roles'] = [klubbleder]
-            acl['execute']['roles'] = [klubbleder]
 
         elif self.state == 'closed':
             """ everybody read, su execute """
@@ -400,7 +329,7 @@ class ModellflyObservationWorkflow(ObservationWorkflow):
 
             acl['read']['roles'] += ACL_CLOSED_ALL_LIST
             acl['write']['roles'] = []
-            acl['execute']['roles'] = [ACL_MODELLFLY_OBSREG]
+            acl['execute']['roles'] = [ACL_HPS_OBSREG]
 
         # Sanity - should really do list comprehension...
         acl['read']['users'] = list(set(acl['read']['users']))

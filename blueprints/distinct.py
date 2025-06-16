@@ -15,7 +15,8 @@ COLLECTIONS_WHITELIST = [
     'fallskjerm_observations',
     'motorfly_observations',
     'sportsfly_observations',
-    'seilfly_observations'
+    'seilfly_observations',
+    'hps_observations'
 ]
 
 Distinct = Blueprint('List distinct field values from collection', __name__, )

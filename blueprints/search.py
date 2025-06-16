@@ -178,6 +178,11 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
                     '_default': True,
                     'type': 'boolean'
                 },
+                'involved.age': {
+                    'name': 'Alder',
+                    '_default': True,
+                    'type': 'number'
+                },
             }
         },
         'jump': {

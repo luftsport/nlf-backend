@@ -40,8 +40,7 @@ def before_aggregation(endpoint, pipeline):
 
         resource = pipeline[0].get('$match', {}).get('event_from')
 
-        if resource in ['fallskjerm_observations', 'seilfly_observations', 'sportsfly_observations',
-                        'motorfly_observations', 'modellfly_observations']:
+        if resource in ['fallskjerm_observations', 'seilfly_observations', 'sportsfly_observations','motorfly_observations', 'modellfly_observations', 'hps_observations']:
             # Get observation - if user has access!
             item, _date, etag, status = getitem_internal(resource, **{'_id': _id})
 
