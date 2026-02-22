@@ -42,7 +42,6 @@ from blueprints.motorfly_observation_workflow import OrsWorkflow as MotorflyOrsW
 from blueprints.sportsfly_observation_workflow import OrsWorkflow as SportsflyOrsWF
 from blueprints.seilfly_observation_workflow import OrsWorkflow as SeilflyOrsWF
 from blueprints.modellfly_observation_workflow import OrsWorkflow as ModellflyOrsWF
-from blueprints.hps_observation_workflow import OrsWorkflow as HpsOrsWF
 from blueprints.observation_watchers import OrsWatchers
 from blueprints.observation_share import OrsShare
 from blueprints.locations import Locations
@@ -62,8 +61,6 @@ from blueprints.ors import UserORS
 from blueprints.housekeeping import Housekeeping
 from blueprints.distinct import Distinct
 from blueprints.search import Search
-from blueprints.flightlog import Flightlog
-
 
 
 # Custom url mappings (for flask)
@@ -97,9 +94,6 @@ if not in_virtualenv():
 # Make sure gunicorn passes settings.py
 SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'settings.py')
 
-print(SETTINGS_PATH)
-
-
 # Start Eve (and flask)
 # Instantiate with custom auth
 # app = CustomEve(auth=TokenAuth, settings=SETTINGS_PATH)
@@ -121,7 +115,6 @@ app.url_map.converters['regex'] = RegexConverter
 
 # Register eve-docs blueprint 
 # app.register_blueprint(eve_docs,        url_prefix="%s/docs" % app.globals.get('prefix'))
-swagger = get_swagger_blueprint()
 app.register_blueprint(swagger)
 # You might want to simply update the eve settings module instead.
 
@@ -136,7 +129,6 @@ app.register_blueprint(MotorflyOrsWF, url_prefix="%s/motorfly/observations/workf
 app.register_blueprint(SportsflyOrsWF, url_prefix="%s/sportsfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
-app.register_blueprint(HpsOrsWF, url_prefix="%s/hps/observations/workflow" % app.globals.get('prefix'))
 
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
@@ -156,10 +148,9 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
-# E5X
+
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
-# Flightlog
-app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
+
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 
@@ -232,26 +223,7 @@ app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
 
-# ################
-# HPS OBSREG
-#
-app.on_insert_hps_observations += hook.hps.ors_before_insert
-app.on_inserted_hps_observations += hook.hps.ors_after_inserted
-# BEFORE GET
-app.on_pre_GET_hps_observations += hook.hps.ors_before_get
-app.on_pre_GET_hps_observations_user += hook.hps.ors_before_get_user
-app.on_pre_GET_hps_observations_todo += hook.hps.ors_before_get_todo
-# AFTER FETCHED (GET)
-app.on_fetched_resource_hps_observations += hook.hps.ors_after_fetched_list
-app.on_fetched_item_hps_observations += hook.hps.ors_after_fetched
-app.on_fetched_diffs_hps_observations += hook.hps.ors_after_fetched_diffs
-app.on_fetched_item_hps_observations_todo += hook.hps.ors_after_fetched
-# BEFORE PATCH/PUT
-app.on_pre_PATCH_hps_observations += hook.hps.ors_before_patch
-# BEFORE update db layer
-# app.on_update_hps_observations += hook.hps.ors_before_update
-# AFTER update db layer
-app.on_updated_hps_observations += hook.hps.ors_after_update
+
 
 # ################
 # MOTOR OBSREG
