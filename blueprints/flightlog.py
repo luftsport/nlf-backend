@@ -8,6 +8,7 @@ import base64
 from bs4 import BeautifulSoup
 from io import StringIO
 import re
+
 Flightlog = Blueprint('Flightlog Blueprint', __name__, )
 
 """
@@ -89,6 +90,18 @@ REQUESTS = {
 }
 
 
+def _GET(url, params=None):
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0'}
+    try:
+        r1 = requests.get('https://flightlog.org/', headers=headers)
+        r = requests.get(url, params=params, headers=headers, cookies=r1.cookies)
+        if r.status_code == 200:
+            return r
+    except Exception as e:
+        print('Error in GET request:', e)
+    return None
+
+
 def _verify_and_modify_flightlog_url(url, request_type='trip'):
     try:
         url = base64.b64decode(url).decode('utf-8')
@@ -104,13 +117,14 @@ def _verify_and_modify_flightlog_url(url, request_type='trip'):
         pass
     return None
 
+
 def _get_and_parse_flight_stats_regex(url) -> dict:
-    r = requests.get(base64.b64decode(url).decode('utf-8'))
+    r = _GET(base64.b64decode(url).decode('utf-8'))
     soup = BeautifulSoup(r.text, 'html.parser')
     pre = soup.find('pre')
     print(pre)
     stats = {}
-    if pre and len(pre)>0:
+    if pre and len(pre) > 0:
         lines = str(pre).strip().split('\n')[1:]  # Skip header
         patterns = {
             "date": r"Date\s+([\d-]+)",
@@ -137,6 +151,7 @@ def _get_and_parse_flight_stats_regex(url) -> dict:
         print(stats)
     return stats
 
+
 def _parse_coordinates(text) -> dict:
     regres = re.search(r"N\s*(\d+)°\s*(\d+)'?\s*(\d+)''\s*E\s*(\d+)°\s*(\d+)'?\s*(\d+)''", text)
     dms_string = "".join(regres[0].strip().split(" ")).replace('\xa0', '')
@@ -158,6 +173,8 @@ def _parse_coordinates(text) -> dict:
 
         # Convert to decimal degrees
         return {'lat': lat_deg + (lat_min / 60) + (lat_sec / 3600), 'lng': lon_deg + (lon_min / 60) + (lon_sec / 3600)}
+
+
 @Flightlog.route("/", methods=['GET'])
 @require_token()
 def test():
@@ -170,7 +187,7 @@ def get_kml():
     trip_url = _verify_and_modify_flightlog_url(url, 'kml')
     print(trip_url)
     if trip_url is not None:
-        r = requests.get(trip_url)
+        r = _GET(trip_url)
         return eve_response(kml2geojson.convert(StringIO(r.text)))
     eve_abort(400, 'Invalid URL')
 
@@ -182,7 +199,7 @@ def get_trip():
     trip_url = _verify_and_modify_flightlog_url(url, 'trip')
     print(trip_url)
     if trip_url is not None:
-        r = requests.get(trip_url)
+        r = _GET(trip_url)
         soup = BeautifulSoup(r.text, 'html.parser')
         # Find the table (assuming it's the only one or has a specific class/id)
         table = soup.find('table')
@@ -194,17 +211,17 @@ def get_trip():
         flight_dict = dict(zip(header, row))
 
         if 'description' in flight_dict and len(flight_dict['description']) > 0:
-
             flight_dict['flight_stats'] = _get_and_parse_flight_stats_regex(url)
 
         return eve_response(flight_dict)
 
     eve_abort(400, 'Invalid URL')
 
+
 @Flightlog.route("/start/<int:country_id>/<int:start_id>", methods=['GET'])
 @require_token()
 def get_start(country_id, start_id):
-    r = requests.get(f'https://flightlog.org/fl.html?l=1&a=22&country_id={country_id}&start_id={start_id}')
+    r = _GET(f'https://flightlog.org/fl.html?l=1&a=22&country_id={country_id}&start_id={start_id}')
     soup = BeautifulSoup(r.text, 'html.parser')
     tables = soup.findAll('table')
     table = tables[-1]
@@ -222,5 +239,4 @@ def get_start(country_id, start_id):
     if 'coordinates' in data:
         data['coordinates'] = _parse_coordinates(data['coordinates'])
 
-            
     return eve_response(data)
