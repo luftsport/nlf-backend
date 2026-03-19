@@ -132,6 +132,8 @@ def _get_and_parse_flight_stats_regex(url) -> dict:
             "duration": r"Duration\s+([\d\s:]+)",
             "pair": r"(\w+(?:\.\s\w+)?)\s*\((max/min|10s/60s)\)\s+([\d.-]+)\s*/\s*([\d.-]+)\s*(\w+)"
         }
+        """
+        # Python 3.8+ syntax for regex matching with assignment expressions (the walrus operator)
         for line in lines:
             line = line.strip()
             if match := re.match(patterns["date"], line):
@@ -148,6 +150,38 @@ def _get_and_parse_flight_stats_regex(url) -> dict:
                     stats[key] = {"max": float(val1), "min": float(val2), "unit": unit}
                 elif pair_type == "10s/60s":
                     stats[key] = {"10s": float(val1), "60s": float(val2), "unit": unit}
+        """
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            match = re.match(patterns["date"], line)
+            if match:
+                stats["date"] = match.group(1)
+                continue
+
+            match = re.match(patterns["start_finish"], line)
+            if match:
+                stats["start_time"] = match.group(1)
+                stats["finish_time"] = match.group(2)
+                continue
+
+            match = re.match(patterns["duration"], line)
+            if match:
+                stats["duration"] = match.group(1).replace(" : ", ":")
+                continue
+
+            match = re.match(patterns["pair"], line)
+            if match:
+                label, pair_type, val1, val2, unit = match.groups()
+                key = label.lower().replace(" ", "_").replace(".", "")
+
+                if pair_type == "max/min":
+                    stats[key] = {"max": float(val1), "min": float(val2), "unit": unit}
+                elif pair_type == "10s/60s":
+                    stats[key] = {"10s": float(val1), "60s": float(val2), "unit": unit}
+
         print(stats)
     return stats
 
