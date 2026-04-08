@@ -154,9 +154,10 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
-
+# E5X
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
-
+# Flightlog
+app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 
@@ -228,8 +229,6 @@ app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
 # app.on_update_modellfly_observations += hook.modellfly.ors_before_update
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
-
-
 
 # ################
 # MOTOR OBSREG

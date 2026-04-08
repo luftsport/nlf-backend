@@ -88,6 +88,7 @@ def eve_response(data={}, status=200):
         pass
     elif isinstance(data, list):
         data = {'_items': data}
+        data['_meta'] = {'page': 1, 'max_results': len(data['_items']), 'total': len(data['_items'])}
     elif isinstance(data, int):
         data = {'data': data}
     elif isinstance(data, str):
