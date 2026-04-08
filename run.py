@@ -134,8 +134,6 @@ app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflo
 app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(HpsOrsWF, url_prefix="%s/hps/observations/workflow" % app.globals.get('prefix'))
 
-app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
-
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
