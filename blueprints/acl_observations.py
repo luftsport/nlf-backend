@@ -29,7 +29,7 @@ def acl_toggle(activity, _id, right, person_id ):
     if person_id != g.user_id:
         # projection={'acl': 1}, right='read'
         status, acl, _ = get_acl('{}_observations'.format(activity), _id, projection={'acl': 1, 'reporter': 1}, right='execute')
-        print(status, acl)
+
         if status is True:
 
             if request.method == 'POST':

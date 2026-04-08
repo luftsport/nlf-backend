@@ -240,8 +240,9 @@ def get_user_permissions(_id, collection):
     :return:
     """
     try:
-        if collection not in ['fallskjerm_observations', 'motorfly_observations', 'seilfly_observations', 'sportsfly_observations', 'modellfly_observations', 'users']:
-            collection = 'fallskjerm_observations'
+        if collection not in ['fallskjerm_observations', 'motorfly_observations', 'seilfly_observations', 'sportsfly_observations', 'modellfly_observations', 'hps_observations', 'users']:
+            # collection = 'fallskjerm_observations'
+            raise Exception('Collection not supported')
 
         col = app.data.driver.db[collection]
 

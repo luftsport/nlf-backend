@@ -3,7 +3,7 @@ from bson import ObjectId
 from datetime import datetime
 from dateutil import tz
 from decimal import Decimal
-
+import pandas as pd
 LOCAL_TIMEZONE = 'UTC'
 
 class EveJSONEncoder(json.JSONEncoder):
@@ -22,6 +22,9 @@ class EveJSONEncoder(json.JSONEncoder):
 
         if isinstance(o, ObjectId):
             """ObjectId to string"""
+            return str(o)
+
+        if isinstance(o, pd.Timestamp):
             return str(o)
 
         if isinstance(o, datetime):

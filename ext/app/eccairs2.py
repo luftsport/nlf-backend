@@ -237,6 +237,7 @@ class ECCAIRS2:
                     action=None,
                     style='danger'
                 )
+                app.logger.exception(f'Error updating obsreg with eccairs2 result for {activity} report with id {obsreg_id} and eccairs2 id {eccairs2_id}')
 
             broadcast(
                 title=f'E5X fil konvertert for #{obsreg_id}',
@@ -245,6 +246,7 @@ class ECCAIRS2:
                 obsreg_id=obsreg_id,
                 room=str(user_id)
             )
+            app.logger.info(f'E5X file converted for {activity} report with id {obsreg_id} and eccairs2 id {eccairs2_id}')
 
         else:
             broadcast(
@@ -255,6 +257,7 @@ class ECCAIRS2:
                 room=str(user_id),
                 style='danger'
             )
+            app.logger.error(f'E5X file for {activity} with id {obsreg_id} failed to convert to ECCAIRS2 format with eccairs2 id {eccairs2_id}')
 
     def get_OR(self, eccairs2_id) -> (bool, dict):
         r = requests.get(f'{BASE_URL}{OCCURRENCE_GET_PATH}{eccairs2_id}', headers=self.HEADERS)

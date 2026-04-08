@@ -134,8 +134,6 @@ app.register_blueprint(SeilflyOrsWF, url_prefix="%s/seilfly/observations/workflo
 app.register_blueprint(ModellflyOrsWF, url_prefix="%s/modellfly/observations/workflow" % app.globals.get('prefix'))
 app.register_blueprint(HpsOrsWF, url_prefix="%s/hps/observations/workflow" % app.globals.get('prefix'))
 
-app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
-
 app.register_blueprint(OrsWatchers, url_prefix="%s/fallskjerm/observations/watchers" % app.globals.get('prefix'))
 
 app.register_blueprint(Locations, url_prefix="%s/locations" % app.globals.get('prefix'))
@@ -154,9 +152,10 @@ app.register_blueprint(Content, url_prefix="%s/content" % app.globals.get('prefi
 
 # Membership api blueprint
 app.register_blueprint(Lungo, url_prefix="%s/integration" % app.globals.get('prefix'))
-
+# E5X
 app.register_blueprint(E5X, url_prefix="%s/e5x" % app.globals.get('prefix'))
-
+# Flightlog
+app.register_blueprint(Flightlog, url_prefix="%s/flightlog" % app.globals.get('prefix'))
 # Heartbeat
 app.register_blueprint(Heartbeat, url_prefix="%s/heartbeat" % app.globals.get('prefix'))
 
@@ -228,8 +227,6 @@ app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
 # app.on_update_modellfly_observations += hook.modellfly.ors_before_update
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
-
-
 
 # ################
 # MOTOR OBSREG
@@ -330,6 +327,7 @@ app.on_pre_GET_notifications += hook.notifications.before_get
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
+app.on_post_GET_aircrafts += hook.aircrafts.after_GET
 
 
 # E5X delete
