@@ -330,6 +330,7 @@ app.on_pre_GET_notifications += hook.notifications.before_get
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
+app.on_post_GET_aircrafts += hook.aircrafts.after_GET
 
 
 # E5X delete
