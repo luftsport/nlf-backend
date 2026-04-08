@@ -33,7 +33,7 @@ from ext.app.lungo import get_person_from_role
 from datetime import datetime
 from ext.app.notifications import ors_save, ors_workflow, broadcast
 from flask import request, g, abort, current_app as app
-from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_FALLSKJERM_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
+from ext.scf import ACL_FALLSKJERM_HI, ACL_FALLSKJERM_HI_ROLE, ACL_SU_MEDLEM, ACL_FALLSKJERM_FSJ,ACL_FALLSKJERM_SU_MEDLEM_ROLE, ACL_FSJ_ROLE
 import json
 from ext.app.obsreg_formatter import format_ors
 from ext.app.eve_jsonencoder import EveJSONEncoder
