@@ -132,6 +132,16 @@ def ors_after_fetched_list(response):
         response['_items'][key] = _ors_after_fetched(item)
 
 
+def ors_after_GET(request, payload):
+    params = request.args.to_dict()
+    if 'export' in params:
+        d = payload.get_json()
+        if '_items' in d:
+            d['_export'] = format_ors(d['_items'], params['export'])
+            d['_items'] = []
+            payload.set_data(json.dumps(d, cls=EveJSONEncoder))
+
+
 def ors_after_fetched(response):
     """ Modify response after GETing an observation
     This hook checks if permission on each observation
@@ -191,10 +201,10 @@ def _ors_after_fetched(_response):
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
-        return eve_abort(500,'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
+        return eve_abort(500, 'Server experienced problems (keyerror) anonymousing the observation and aborted as a safety measure')
     except Exception as e:
         app.logger.info("Unexpected error: {}".format(e))
-        return eve_abort(500,'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
+        return eve_abort(500, 'Server experienced problems (unknown) anonymousing the observation and aborted as a safety measure')
 
     return _response
 

@@ -44,5 +44,42 @@ def my_orses(collection):
             ]
     except Exception as e:
         pass
-    
+
+    return eve_response(data, status)
+
+
+@UserORS.route("/<regex('(fallskjerm|motorfly|sportsfly|seilfly|hps)'):collection>/<int:person_id>", methods=['GET'])
+@require_token()
+def person_orses(collection, person_id):
+    data = []
+    status = 403
+    if any([acl in g.acl.get('roles', []) for acl in ACL_OBSREG_SEARCH_PERSONS]):
+        try:
+            collection = '{}_observations'.format(collection)
+
+            lookup = {
+                '$or':
+                    [
+                        {'involved.id': person_id},
+                        {'aircrafts.crew.person': person_id}
+                    ],
+                'workflow.state': {'$nin': ['withdrawn']}
+            }
+
+            response, _, _, status, _ = get_internal(collection, **lookup)
+            if status == 200:
+                data = [
+                    {
+                        'id': x['id'],
+                        'title': '/'.join(x['tags']),
+                        'discipline': x['discipline'],
+                        'state': x['workflow']['state'],
+                        'type': x['type'],
+                        'when': x.get('when', None),
+                        'rating': x.get('rating', {})
+                    } for x in response.get('_items', [])
+                ]
+        except Exception as e:
+            print('ERROR', e)
+
     return eve_response(data, status)

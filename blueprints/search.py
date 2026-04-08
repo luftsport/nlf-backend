@@ -378,288 +378,769 @@ SEARCH_DEFINITION['fallskjerm_observations'] = {
     }
 
 }
-_fields = {
-    # report root
-    'type': {
-        'name': 'Type',
-        'type': 'category',
-        '_resolve_name': {'type': 'config', 'path': 'fallskjerm.observation.types'},
-        '_default': True,
-        'options': []
-    },
-    'workflow.state': {
-        'name': 'Status',
-        'type': 'category',
-        '_resolve_name': {'type': 'config', 'path': 'fallskjerm.observation.state'},
-        '_default': True,
-        'options': []
-    },
-    'when': {
-        'name': 'Når',
-        'type': 'date',
-        '_default': True
-    },
-    'discipline': {
-        'name': 'Klubb',
-        'type': 'category',
-        '_resolve_name': {'type': 'lungo',
-                          'path': 'organizations',
-                          'label_field': 'name'},  # description
-        '_default': True,
-        'options': []
-    },
-    # FLAGS
-    'flags.insurance': {
-        'name': 'Forsikring flagget',
-        '_default': False,
-        'type': 'boolean'
-    },
-    'flags.aviation': {
-        'name': 'Fly involvert',
-        '_default': False,
-        'type': 'boolean'
-    },
-    # RATING
-    'rating.actual': {
-        'name': 'Faktisk alvorlighetsgrad',
-        'type': 'category',
-        '_resolve_name': {'type': 'config', 'path': 'fallskjerm.observation.rating'},
-        '_default': True,
-        'options': []
-    },
-    'rating.potential': {
-        'name': 'Potensiell alvorlighetsgrad',
-        'type': 'category',
-        '_resolve_name': {'type': 'config', 'path': 'fallskjerm.observation.rating'},
-        '_default': True,
-        'options': []
-    },
-    'rating._rating': {
-        'name': 'Kalkulert alvorlighetsgrad',
-        'type': 'number',
-        '_default': True
-    },
-    # WX
-    'weather.manual.clouds.base': {
-        'name': 'Skybase i fot',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.clouds.fog': {
-        'name': 'Tåke',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.clouds.hail': {
-        'name': 'Hagl',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.clouds.rain': {
-        'name': 'Regn',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.clouds.snow': {
-        'name': 'Snø',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.clouds.thunder': {
-        'name': 'Torden eller lyn',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.temp.altitude': {
-        'name': 'Temperatur i høyden',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.temp.ground': {
-        'name': 'Temperatur bakke',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.wind.avg': {
-        'name': 'Middelvind',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.wind.dir': {
-        'name': 'Vindretning',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.wind.max': {
-        'name': 'Vind gusting',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.wind.min': {
-        'name': 'Vind minimum',
-        'type': 'number',
-        '_default': True
-    },
-    'weather.manual.wind.turbulence': {
-        'name': 'Turbulens',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'weather.manual.wind.gusting': {
-        'name': 'Vind guster',
-        '_default': True,
-        'type': 'boolean'
-    },
-    # Involved
-    'involved.data.competences.type_id': {
-        'name': 'Kompetanser',
-        'type': 'category',
-        '_resolve_name': {'type': 'lungo',
-                          'path': 'competences/types',
-                          'label_field': 'title'},  # description
-        '_default': True,
-        'options': []
-    },
-    'involved.data.gear.harness': {
-        'name': 'Seletøy',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        'options': []
-    },
-    'involved.data.gear.harness_experience': {
-        'name': 'Seletøy erfaring ',
-        'type': 'number',
-        '_resolve_name': {'type': 'value'},
-        'options': []
-    },
-    'involved.data.gear.main_canopy': {
-        'name': 'Hovedskjerm',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        '_default': True,
-        'options': []
-    },
-    'involved.data.gear.main_canopy_experience': {
-        'name': 'Hovedskjerm erfaring',
-        'type': 'number',
-        '_default': True
-    },
-    'involved.data.gear.main_canopy_size': {
-        'name': 'Hoveskjerm størrelse',
-        'type': 'number',
-        '_default': True,
-    },
-    'involved.data.gear.reserve_canopy': {
-        'name': 'Reserve',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        '_default': False,
-        'options': []
-    },
-    'involved.data.gear.reserve_canopy_size': {
-        'name': 'Reserve størrelse',
-        'type': 'number',
-        '_default': False
-    },
-    'involved.data.gear.aad': {
-        'name': 'Nødåpner',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        '_default': False,
-        'options': []
-    },
-    'involved.fu': {
-        'name': 'Farlig ukontrollert',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'involved.ph': {
-        'name': 'Permanent hoppforbud',
-        '_default': True,
-        'type': 'boolean'
-    },
+SEARCH_DEFINITION['hps_observations'] = {
+    'sections': {
+        'observation': {
+            'label': 'Observasjon',
+            'fields': {
+                'type': {
+                    'name': 'Type',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.types'},
+                    '_default': True,
+                    'options': []
+                },
+                'workflow.state': {
+                    'name': 'Status',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.state'},
+                    '_default': True,
+                    'options': []
+                },
+                'when': {
+                    'name': 'Når',
+                    'type': 'date',
+                    '_default': True
+                },
+                'discipline': {
+                    'name': 'Klubb',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'organizations',
+                                      'label_field': 'name'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                # FLAGS
+                'flags.insurance': {
+                    'name': 'Forsikring flagget',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'flags.aviation': {
+                    'name': 'Fly involvert',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        },
+        'attributes': {
+            'label': 'Attributter',
+            'fields': {
+                'eccairs2.attributes.highestDamage.value': {
+                    '_resolve_name': {'type': 'e5x_choices', 'key': 'Occurrence.HighestDamage', 'label_field': 'label'},
+                    'name': 'Occurrence HighestDamage',
+                    '_default': True,
+                    'type': 'category',
+                    'options': []
+                },
+                'components.attributes.aad_fire': {
+                    'name': 'Nødåpner fyring',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.aad_rescue': {
+                    'name': 'Nødåpner redning',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.packing_error': {
+                    'name': 'Pakkefeil',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.gear_malfunction': {
+                    'name': 'Feilfunksjon',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.damage': {
+                    'name': 'Materiell skade',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.gear_failure': {
+                    'name': 'Utstyrssvikt',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.rigger_error': {
+                    'name': 'MK/MR feil',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.violation': {
+                    'name': 'Regelbrudd',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.willful_violation': {
+                    'name': 'Med vitende vilje',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.injury': {
+                    'name': 'Personskade',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.death': {
+                    'name': 'Død',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            },
+        },
+        'components': {
+            'label': 'Forløpet',
+            'fields': {
 
-    # Components -> flags som category??
-    'components.attributes.reserve_ride': {
-        'name': 'Reservetrekk',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.aad_fire': {
-        'name': 'Nødåpner fyring',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.aad_rescue': {
-        'name': 'Nødåpner redning',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.packing_error': {
-        'name': 'Pakkefeil',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.gear_malfunction': {
-        'name': 'Feilfunksjon',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.damage': {
-        'name': 'Materiell skade',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.gear_failure': {
-        'name': 'Utstyrssvikt',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.rigger_error': {
-        'name': 'MK/MR feil',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.violation': {
-        'name': 'Regelbrudd',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.willful_violation': {
-        'name': 'Med vitende vilje',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.injury': {
-        'name': 'Personskade',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.attributes.death': {
-        'name': 'Død',
-        '_default': True,
-        'type': 'boolean'
-    },
-    'components.what': {
-        'name': 'Hva skjedde',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        '_default': True,
-        'options': []
-    },
-    'components.where.at': {
-        'name': 'Hvor skjedde det',
-        'type': 'category',
-        '_resolve_name': {'type': 'value'},
-        '_default': True,
-        'options': []
-    },
-    'components.where.altitude': {
-        'name': 'I hvilken høyde skjedde det',
-        'type': 'number',
-        '_default': True
-    },
+                'components.what': {
+                    'name': 'Hva skjedde',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'components.where.at': {
+                    'name': 'Hvor skjedde det',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'components.where.altitude': {
+                    'name': 'I hvilken høyde skjedde det',
+                    'type': 'number',
+                    '_default': True
+                }
+            }
+        },
+        'involved': {
+            'label': 'Involverte',
+            'fields': {
+                'involved.data.competences.type_id': {
+                    'name': 'Kompetanser',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'competences/types',
+                                      'label_field': 'title'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                'involved.data.years_of_experience': {
+                    'name': 'Erfaring i år',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_flights': {
+                    'name': 'Totalt antall turer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_hours': {
+                    'name': 'Totalt antall timer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.age': {
+                    'name': 'Alder',
+                    '_default': True,
+                    'type': 'number'
+                },
+            }
+        },
+        'flight': {
+            'label': 'Flyturen',
+            'fields': {}
+        },
+        'equipment': {
+            'label': 'Utstyr',
+        },
+        'rating': {
+            'label': 'Alvorlighetsgrad',
+            'fields': {
+                'rating.actual': {
+                    'name': 'Faktisk alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating.potential': {
+                    'name': 'Potensiell alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating._rating': {
+                    'name': 'Kalkulert alvorlighetsgrad',
+                    'type': 'number',
+                    '_default': True
+                },
+            }
+        },
+        'weather': {
+            'label': 'Været',
+            'fields': {
+                'weather.manual.clouds.base': {
+                    'name': 'Skybase i fot',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.clouds.fog': {
+                    'name': 'Tåke',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.hail': {
+                    'name': 'Hagl',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.rain': {
+                    'name': 'Regn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.snow': {
+                    'name': 'Snø',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.thunder': {
+                    'name': 'Torden eller lyn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.temp.altitude': {
+                    'name': 'Temperatur i høyden',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.temp.ground': {
+                    'name': 'Temperatur bakke',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.avg': {
+                    'name': 'Middelvind',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.dir': {
+                    'name': 'Vindretning',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.max': {
+                    'name': 'Vind gusting',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.min': {
+                    'name': 'Vind minimum',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.turbulence': {
+                    'name': 'Turbulens',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.wind.gusting': {
+                    'name': 'Vind guster',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        }
 
+    }
+
+}
+
+SEARCH_DEFINITION['motorfly_observations'] = {
+    'sections': {
+        'observation': {
+            'label': 'Observasjon',
+            'fields': {
+                'type': {
+                    'name': 'Type',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'motorfly.observation.types'},
+                    '_default': True,
+                    'options': []
+                },
+                'workflow.state': {
+                    'name': 'Status',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'motorfly.observation.state'},
+                    '_default': True,
+                    'options': []
+                },
+                'when': {
+                    'name': 'Når',
+                    'type': 'date',
+                    '_default': True
+                },
+                'discipline': {
+                    'name': 'Klubb',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'organizations',
+                                      'label_field': 'name'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                # FLAGS
+                'flags.insurance': {
+                    'name': 'Forsikring flagget',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'flags.aviation': {
+                    'name': 'Fly involvert',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        },
+        'attributes': {
+            'label': 'Attributter',
+
+            'fields': {
+                'occurrence.attributes.occurrenceCategory.value': {
+                    '_resolve_name': {'type': 'e5x_choices', 'key': 'Occurrence.OccurrenceCategory', 'label_field': 'label'},
+                    'name': 'Occurrence Category',
+                    '_default': True,
+                    'type': 'category',
+                    'options': []
+                },
+                'components.attributes.violation': {
+                    'name': 'Regelbrudd',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.willful_violation': {
+                    'name': 'Med vitende vilje',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.injury': {
+                    'name': 'Personskade',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.death': {
+                    'name': 'Død',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            },
+        },
+        'components': {
+            'label': 'Forløpet',
+            'fields': {
+                'components.what': {
+                    'name': 'Hva skjedde',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'components.where.at': {
+                    'name': 'Hvor skjedde det',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'value'},
+                    '_default': True,
+                    'options': []
+                },
+                'components.where.altitude': {
+                    'name': 'I hvilken høyde skjedde det',
+                    'type': 'number',
+                    '_default': True
+                }
+            }
+        },
+        'involved': {
+            'label': 'Involverte',
+            'fields': {
+                'involved.data.competences.type_id': {
+                    'name': 'Kompetanser',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'competences/types',
+                                      'label_field': 'title'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                'involved.data.years_of_experience': {
+                    'name': 'Erfaring i år',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_flights': {
+                    'name': 'Totalt antall turer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_hours': {
+                    'name': 'Totalt antall timer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.age': {
+                    'name': 'Alder',
+                    '_default': True,
+                    'type': 'number'
+                },
+            }
+        },
+        'flight': {
+            'label': 'Flyturen',
+            'fields': {}
+        },
+        'equipment': {
+            'label': 'Utstyr',
+        },
+        'rating': {
+            'label': 'Alvorlighetsgrad',
+            'fields': {
+                'rating.actual': {
+                    'name': 'Faktisk alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'motorfly.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating.potential': {
+                    'name': 'Potensiell alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'motorfly.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating._rating': {
+                    'name': 'Kalkulert alvorlighetsgrad',
+                    'type': 'number',
+                    '_default': True
+                },
+            }
+        },
+        'weather': {
+            'label': 'Været',
+            'fields': {
+                'weather.manual.clouds.base': {
+                    'name': 'Skybase i fot',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.clouds.fog': {
+                    'name': 'Tåke',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.hail': {
+                    'name': 'Hagl',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.rain': {
+                    'name': 'Regn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.snow': {
+                    'name': 'Snø',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.thunder': {
+                    'name': 'Torden eller lyn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.temp.altitude': {
+                    'name': 'Temperatur i høyden',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.temp.ground': {
+                    'name': 'Temperatur bakke',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.avg': {
+                    'name': 'Middelvind',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.dir': {
+                    'name': 'Vindretning',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.max': {
+                    'name': 'Vind gusting',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.min': {
+                    'name': 'Vind minimum',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.turbulence': {
+                    'name': 'Turbulens',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.wind.gusting': {
+                    'name': 'Vind guster',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        }
+
+    }
+}
+
+SEARCH_DEFINITION['modellfly_observations'] = {
+    'sections': {
+        'observation': {
+            'label': 'Observasjon',
+            'fields': {
+                'type': {
+                    'name': 'Type',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'modellfly.observation.types'},
+                    '_default': True,
+                    'options': []
+                },
+                'workflow.state': {
+                    'name': 'Status',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'modellfly.observation.state'},
+                    '_default': True,
+                    'options': []
+                },
+                'when': {
+                    'name': 'Når',
+                    'type': 'date',
+                    '_default': True
+                },
+                'discipline': {
+                    'name': 'Klubb',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'organizations',
+                                      'label_field': 'name'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                # FLAGS
+                'flags.insurance': {
+                    'name': 'Forsikring flagget',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'flags.aviation': {
+                    'name': 'Fly involvert',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        },
+        'attributes': {
+            'label': 'Attributter',
+            'fields': {
+                'eccairs2.attributes.highestDamage.value': {
+                    '_resolve_name': {'type': 'e5x_choices', 'key': 'Occurrence.HighestDamage', 'label_field': 'label'},
+                    'name': 'Occurrence HighestDamage',
+                    '_default': True,
+                    'type': 'category',
+                    'options': []
+
+                },
+                'eccairs2.attributes.occurrenceCategory.value': {
+                    '_resolve_name': {'type': 'e5x_choices', 'key': 'Occurrence.OccurrenceCategory', 'label_field': 'label'},
+                    'name': 'Occurrence Category',
+                    '_default': True,
+                    'type': 'category',
+                    'options': []
+                },
+                'components.attributes.damage': {
+                    'name': 'Materiell skade',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.violation': {
+                    'name': 'Regelbrudd',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.willful_violation': {
+                    'name': 'Med vitende vilje',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.injury': {
+                    'name': 'Personskade',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'components.attributes.death': {
+                    'name': 'Død',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            },
+        },
+        'involved': {
+            'label': 'Involverte',
+            'fields': {
+                'involved.data.competences.type_id': {
+                    'name': 'Kompetanser',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'lungo',
+                                      'path': 'competences/types',
+                                      'label_field': 'title'},  # description
+                    '_default': True,
+                    'options': []
+                },
+                'involved.data.years_of_experience': {
+                    'name': 'Erfaring i år',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_flights': {
+                    'name': 'Totalt antall turer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.data.total_hours': {
+                    'name': 'Totalt antall timer',
+                    'type': 'number',
+                    '_default': True
+                },
+                'involved.age': {
+                    'name': 'Alder',
+                    '_default': True,
+                    'type': 'number'
+                },
+            }
+        },
+        'flight': {
+            'label': 'Flyturen',
+            'fields': {}
+        },
+        'equipment': {
+            'label': 'Utstyr',
+        },
+        'rating': {
+            'label': 'Alvorlighetsgrad',
+            'fields': {
+                'rating.actual': {
+                    'name': 'Faktisk alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating.potential': {
+                    'name': 'Potensiell alvorlighetsgrad',
+                    'type': 'category',
+                    '_resolve_name': {'type': 'config', 'path': 'hps.observation.rating'},
+                    '_default': True,
+                    'options': []
+                },
+                'rating._rating': {
+                    'name': 'Kalkulert alvorlighetsgrad',
+                    'type': 'number',
+                    '_default': True
+                },
+            }
+        },
+        'weather': {
+            'label': 'Været',
+            'fields': {
+                'weather.manual.clouds.base': {
+                    'name': 'Skybase i fot',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.clouds.fog': {
+                    'name': 'Tåke',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.hail': {
+                    'name': 'Hagl',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.rain': {
+                    'name': 'Regn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.snow': {
+                    'name': 'Snø',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.clouds.thunder': {
+                    'name': 'Torden eller lyn',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.temp.altitude': {
+                    'name': 'Temperatur i høyden',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.temp.ground': {
+                    'name': 'Temperatur bakke',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.avg': {
+                    'name': 'Middelvind',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.dir': {
+                    'name': 'Vindretning',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.max': {
+                    'name': 'Vind gusting',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.min': {
+                    'name': 'Vind minimum',
+                    'type': 'number',
+                    '_default': True
+                },
+                'weather.manual.wind.turbulence': {
+                    'name': 'Turbulens',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+                'weather.manual.wind.gusting': {
+                    'name': 'Vind guster',
+                    '_default': True,
+                    'type': 'boolean'
+                },
+            }
+        }
+
+    }
 }
 """
     # Flags
@@ -697,12 +1178,11 @@ def _get_value_by_dot_path(d, path):
     else:
         try:
             # default return key if not resolved!
-            print('Just err now', key, type(key), d)
-            # print('Dict', key, d.get(key, {}).get('label', 'Ukjent felt {}'.format(key)))
+            app.logger.debug(f'Just err now {key} {type(key)}, {d}')
+            # app.logger.debug('Dict', key, d.get(key, {}).get('label', 'Ukjent felt {}'.format(key)))
 
             if isinstance(d, list):
-                print('Lista', [x.get('label', path) for x in d if
-                                x.get('value', 0) == int(key) - 1])  # if x.get('value', None) == key])
+                app.logger.debug(f'Lista {[x.get('label', path) for x in d if x.get('value', 0) == int(key) - 1]}')  # if x.get('value', None) == key])
                 return [x.get('label', path) for x in d if x.get('value', 0) == int(key) - 1][0]
                 # if x.get('label', None) not in [None, ''] [x.get('label', path) for x in d if x.get('value', None) == key][0]
 
@@ -717,29 +1197,41 @@ def _get_options_from_config(path, values):
     options = []
     # get config!
     result, _, _, status, _ = get_internal('app_config', **{'environment': APP_INSTANCE})
-
+    app.logger.debug(f'CONFIG RESULT {result}, {status}')
     if status == 200 and '_items' in result and len(result['_items']) == 1:
         for value in values:
 
             if value not in [None, 'null']:
-                print('Value', value)
+                app.logger.debug(f'Value {value}')
                 options.append({
                     'name': _get_value_by_dot_path(result['_items'][0], '{}.{}'.format(path, value)),
                     'value': value
                 })
-        print(options)
+        app.logger.debug(options)
         return options
     return []
 
 
 def _get_options_from_collection(collection, query_field, name_field, values):
-    print('--->', collection, query_field, name_field, values)
+    app.logger.debug(f'---> {collection}, {query_field}, {name_field}, {values}')
     options = []
     for value in values:
         r, _, _, status, _ = get_internal(collection, **{query_field: value})
-        print('[[[[[[[[[[[]]]]]]]]]]]]]', r)
+        app.logger.debug(f'[[[[[[[[[[[]]]]]]]]]]]]] {r}')
         if status == 200:
             options.append({'name': r[name_field], 'value': value})
+
+    return options
+
+
+def _get_options_from_e5x_choices(key, values):
+    options = []
+    query = {'rit_version': '4.1.0.3', 'key': key, 'id': {'$in': values}}
+    r, _, _, status, _ = get_internal('e5x_choices', **query)
+    if status == 200:
+        app.logger.debug(r)
+        for item in r.get('_items', []):
+            options.append({'name': item['label'], 'value': item['id']})
 
     return options
 
@@ -752,7 +1244,7 @@ def _lungo_item(path, item_id, name_field):
     if resp.status_code == 200:
         return 200, resp.json()
     else:
-        print(resp.text)
+        app.logger.debug(resp.text)
     return resp.status_code, None
 
 
@@ -794,21 +1286,31 @@ def get_query_builder_definition(collection, section=None):
             else:
                 fields = SEARCH_DEFINITION[collection]['fields']
         except Exception as e:
-            print('ERROR', e)
+            app.logger.debug(f'ERROR {e}')
             abort(403)
 
         for field, definition in fields.items():
-            print('FIELD', field)
+            app.logger.debug(f'FIELD {field}')
             if definition['type'] == 'category' and '_resolve_name' in definition and len(definition['options']) == 0:
                 # Resolve from client config file by path
                 if definition['_resolve_name']['type'] == 'config':
+                    app.logger.debug('CONFIG!')
                     status, values = _get_field_contents(collection, field)
+                    app.logger.debug(f'[[[[ {collection}, {field}, {status}, {values}')
                     if status == 200:
                         fields[field]['options'] = _get_options_from_config(definition['_resolve_name']['path'], values)
                 # From resolving manually to a collection type
+                elif definition['_resolve_name']['type'] == 'e5x_choices':
+                    # '_resolve_name': {'type': 'e5x_choices', 'key': 'Occurrence.OccurrenceCategory', 'label_field': 'label'},
+                    # Get all values used in the collection for this field, then query the e5x_choices collection for each value to get the label
+                    status, values = _get_field_contents(collection, field)
+                    app.logger.debug(f'[[[[ E5X {collection}, {field}, {status}, {values}')
+                    if status == 200:
+                        values = [int(float(x)) for x in values]
+                        fields[field]['options'] = _get_options_from_e5x_choices(definition['_resolve_name']['key'], values)
                 elif definition['_resolve_name']['type'] == 'collection':
                     status, values = _get_field_contents(collection, field)
-                    print('[[[[', field, status, values)
+                    app.logger.debug(f'[[[[ {field}, {status}, {values}')
                     if status == 200:
                         fields[field]['options'] = _get_options_from_collection(
                             definition['_resolve_name']['collection'],
@@ -818,7 +1320,7 @@ def get_query_builder_definition(collection, section=None):
                         )
                 elif definition['_resolve_name']['type'] == 'lungo':
                     status, values = _get_field_contents(collection, field)
-                    print('[[[[', field, status, values)
+                    app.logger.debug(f'[[[[ {field}, {status}, {values}')
                     if status == 200:
                         fields[field]['options'] = _get_options_from_lungo(
                             definition['_resolve_name']['path'],
@@ -827,7 +1329,7 @@ def get_query_builder_definition(collection, section=None):
                             values
                         )
 
-                else:
+                else:  # definition['_resolve_name']['type'] == 'value':
                     status, values = _get_field_contents(collection, field)
                     if status == 200:
                         for value in values:

@@ -48,8 +48,6 @@ if APP_INSTANCE == 'prod':
     APP_PORT = 8080
     APP_INSTANCE_PEM = 'app-public.pem'
 
-
-
 elif APP_INSTANCE == 'beta':
     MONGO_HOST = 'localhost'
     MONGO_PORT = 27017

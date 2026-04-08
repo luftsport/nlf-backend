@@ -143,16 +143,63 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
     'allowed_filters': [
+
+        # Involverte
+        'involved.data.activity',
+        'involved.data.years_of_experience',
+        'involved.data.age',
+        'involved.data.competences._code',
+        'involved.data.competences.type_id',
+        # Ratings
+        'rating.potential',
+        'rating.actual',
+        'rating._rating',
+
+        # Flags
+        'flag.insurance',
+        'flag.aviation',
+
+        # Occurrence
+        'occurrence.attributes.occurrenceCategory.value',
+        # WX
+        'weather.manual.clouds.base',
+        'weather.manual.clouds.fog',
+        'weather.manual.clouds.hail',
+        'weather.manual.clouds.rain',
+        'weather.manual.clouds.snow',
+        'weather.manual.clouds.thunder',
+        'weather.manual.temp.altitude',
+        'weather.manual.temp.ground',
+        'weather.manual.wind.avg',
+        'weather.manual.wind.dir',
+        'weather.manual.wind.max',
+        'weather.manual.wind.min',
+        'weather.manual.wind.turbulence',
+        'weather.manual.wind.gusting',
+
+        # Workflow
         'workflow.state',
+        # Flags
+        'flags',
+        # Rating
+        'rating',
+        # Location
+        'location',
+        # Været,
+        'weather',
+        # Tiltak
+        'actions.local',
+        'actions.central',
+        # Root
         'id',
         '_id',
         'when',
         'club',
         'discipline',
         'tags',
-        'flags',
-        'rating',
+        'title',
         'type',
+
         # Anon no callsign 'aircrafts.aircraft',
         'aircrafts.aircraft.model',
         'aircrafts.aircraft.manufacturer',

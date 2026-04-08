@@ -149,6 +149,8 @@ definition = {
     # makes only user access those...
     # 'auth_field': 'owner',
     'allowed_filters': [
+        'eccairs2.attributes.occurrenceCategory.value',
+        'eccairs2.attributes.highestDamage.value',
         'workflow.state',
         'id',
         '_id',

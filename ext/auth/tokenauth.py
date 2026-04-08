@@ -13,8 +13,7 @@ from flask import g, current_app as app, request, Response, abort
 # from eve.methods.get import getitem as get_internal
 # from bson.objectid import ObjectId
 # TIME & DATE - better with arrow only?
-from datetime import datetime, timedelta
-import arrow
+from datetime import datetime, timedelta, timezone
 
 
 class TokenAuth(TokenAuth):
@@ -40,14 +39,16 @@ class TokenAuth(TokenAuth):
 
             self.person_id = u['id']
 
-            utc = arrow.utcnow()
             try:
-                now = utc.timestamp()
+                now = datetime.now(timezone.utc)
             except:
-                now = utc.timestamp
-            if now < arrow.get(u['auth']['valid']).timestamp():
+                import pytz
+                tz = pytz.timezone("Europe/Oslo")
+                now = tz.localize(datetime.now())
 
-                valid = datetime.utcnow() + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
+            if now < u['auth']['valid']:
+
+                valid = now + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
 
                 # If it fails, then token is not renewed
                 accounts.update_one({'_id': u['_id']}, {"$set": {"auth.valid": valid}})  # Arrow .datetime
