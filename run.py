@@ -26,7 +26,11 @@ from eve import Eve
 from flask import jsonify, request, abort, Response
 
 # Swagger docs
-from eve_swagger import swagger
+try:
+    from eve_swagger import get_swagger_blueprint
+    swagger_blueprint = get_swagger_blueprint()
+except Exception as e:
+    from eve_swagger import swagger as swagger_blueprint
 
 # from ext.app.eve_helper import eve_error_response
 
@@ -112,7 +116,7 @@ app.url_map.converters['regex'] = RegexConverter
 
 # Register eve-docs blueprint 
 # app.register_blueprint(eve_docs,        url_prefix="%s/docs" % app.globals.get('prefix'))
-app.register_blueprint(swagger)
+app.register_blueprint(swagger_blueprint, url_prefix=app.globals.get('prefix'))
 # You might want to simply update the eve settings module instead.
 
 
