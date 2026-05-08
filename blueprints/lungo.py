@@ -8,9 +8,9 @@
 import datetime
 
 from flask import Blueprint, request, current_app as app, g
-from ext.scf import LUNGO_HEADERS, LUNGO_URL
+from ext.scf import LUNGO_HEADERS, LUNGO_URL, LUNGO_ADDRESS
 from ext.app.eve_helper import eve_response, eve_abort
-from ext.app.decorators import require_token
+from ext.app.decorators import require_token, require_client_access_token
 import requests
 # from dateutil.relativedelta import relativedelta
 # from dateutil import parser
@@ -159,4 +159,25 @@ def persons(_id=''):
 
     return eve_abort(502, 'Unknown error')
 
+@Lungo.route("/persons/avatar/<int:person_id>", methods=['GET'])
+@require_client_access_token()
+def lungo_reverse_get_avatar(person_id):
+
+    try:
+        if str(request.remote_addr) != LUNGO_ADDRESS:
+            return eve_response(None, 403)
+
+        app.logger.info('Lungo is asking for avatar for person_id {}'.format(person_id))
+        users = app.data.driver.db['users']
+        result = users.find_one({'$or': [{'id': person_id}, {'last_person_id': person_id}, {'merged_from': {'$in': [person_id]}}]}, {'avatar': 1, 'last_user_id': 1})
+        if result is not None:
+            avatar = result.get('avatar', None)
+            last_user_id = result.get('last_user_id', person_id)
+            return eve_response({'person_id': last_user_id, 'avatar': avatar}, 200)
+        else:
+            return eve_response({'person_id': person_id, 'avatar': None}, 404)
+    except Exception as e:
+        app.logger.exception('Error fetching avatar for person_id {}'.format(person_id))
+
+    return eve_response({'person_id': person_id, 'avatar': None}, 500)
 
