@@ -22,6 +22,45 @@ class AuthenticationFailed(Exception):
 class AuthenticationNoToken(Exception):
     """Raise custom error"""
 
+def require_client_access_token(allowed_roles=None):
+    """ Custom decorator for token auth for client access tokens
+    Wraps the custom TokenAuth class used by Eve and sends it the required param
+    """
+    from ext.scf import ACCESS_TOKENS
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+
+            try:
+                # No authorization in request
+                # Let it raise an exception
+                try:
+                    authorization_token = request.authorization.get('username', None)
+                    print(authorization_token)
+                except Exception as e:
+                    raise AuthenticationFailed
+
+                client_token = [x['token_hex'] for x in ACCESS_TOKENS]
+                print(client_token)
+                if len(client_token) == 1:
+                        client_token = client_token[0]
+                else:
+                    raise AuthenticationFailed
+
+                if str(authorization_token) != str(client_token):
+                    raise AuthenticationFailed
+                print('Successful client access token authentication')
+            # Catch exceptions and handle correctly
+            except AuthenticationFailed as e:
+                return eve_abort(401, 'Please provide proper credentials')
+            except Exception as e:
+                return eve_abort(500, 'Server error')
+
+            return f(*args, **kwargs)
+
+        return wrapped
+
+    return decorator
 
 def require_token(allowed_roles=None):
     """ Custom decorator for token auth
