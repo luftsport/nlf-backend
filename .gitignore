@@ -10,6 +10,9 @@ resume.token
 #Custom files
 .*.md.html
 scf.py
+scf.py*
+*.orig
+*-orig
 *nlf-admin@fnlf
 #Python virtualenv
 bin/
