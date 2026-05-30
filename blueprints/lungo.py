@@ -164,8 +164,9 @@ def persons(_id=''):
 def lungo_reverse_get_avatar(person_id):
 
     try:
-        if str(request.remote_addr) != LUNGO_ADDRESS:
-            return eve_response(None, 403)
+        # Need proxy upstream address
+        # if str(request.remote_addr) != LUNGO_ADDRESS:
+        #    return eve_response(None, 403)
 
         app.logger.info('Lungo is asking for avatar for person_id {}'.format(person_id))
         users = app.data.driver.db['users']
