@@ -36,12 +36,10 @@ def require_client_access_token(allowed_roles=None):
                 # Let it raise an exception
                 try:
                     authorization_token = request.authorization.get('username', None)
-                    print(authorization_token)
                 except Exception as e:
                     raise AuthenticationFailed
 
                 client_token = [x['token_hex'] for x in ACCESS_TOKENS]
-                print(client_token)
                 if len(client_token) == 1:
                         client_token = client_token[0]
                 else:
@@ -49,7 +47,6 @@ def require_client_access_token(allowed_roles=None):
 
                 if str(authorization_token) != str(client_token):
                     raise AuthenticationFailed
-                print('Successful client access token authentication')
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
                 return eve_abort(401, 'Please provide proper credentials')
