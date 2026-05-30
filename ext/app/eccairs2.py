@@ -2,40 +2,34 @@
 Lungo functions defined here
 """
 import requests
-from ext.scf import ECCAIRS2_M2M
 from functools import wraps
 import inspect
 import os
 import time
 from ext.app.responseless_decorators import _async
 import socketio
-from ext.scf import SOCKET_IO_TOKEN, SOCKET_IO_PORT, SOCKET_IO_HOST
+from ext.scf import (
+    SOCKET_IO_TOKEN,
+    SOCKET_IO_PORT,
+    SOCKET_IO_HOST,
+    ECCAIRS2_M2M,
+    ECCAIRS2_TOKEN_PATH,
+    ECCAIRS2_FILE_UPLOAD_PATH,
+    ECCAIRS2_FILE_UPLOAD_RESULT_PATH,
+    ECCAIRS2_TAXONOMY_PATH,
+    ECCAIRS2_TAXANOMY_VALUE_LIST_PATH,
+    ECCAIRS2_TAXANOMY_VALUE_PATH,
+    ECCAIRS2_OCCURRENCE_GET_PATH,
+    ECCAIRS2_OCCURRENCE_ORIGINAL_REPORT_PATH,
+    ECCAIRS2_OCCURRENCE_READABLE_PATH,
+    ECCAIRS2_OCCURRENCE_READABLE_FIELD_PATH
+)
 from settings import E5X_WORKING_DIR
 from instance import APP_INSTANCE
 # To be able to use this standalone
 from flask import current_app as app, g
 
-try:
-    if app.config:
-        pass
-except:
-    app = {'config': {'REQUESTS_VERIFY': False}}
-
 BASE_URL = ECCAIRS2_M2M[APP_INSTANCE]['base_url']
-TOKEN_PATH = '/auth/api/token'
-FILE_UPLOAD_PATH = '/frontfile-api/files/migrate'
-FILE_UPLOAD_RESULT_PATH = '/frontfile-api/results/e5xresults'
-OCCURRENCE_GET_PATH = '/occurrences/get/'
-OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
-OCCURRENCE_ORIGINAL_REPORT_PATH = '/occurrences/reporter/original-report'
-OCCURRENCE_READABLE_PATH = '/occurrences/readable'
-OCCURRENCE_READABLE_FIELD_PATH = '/occurrences/readable/fields'
-TAXONOMY_PATH = '/taxonomy-service/released-taxonomy'
-TAXANOMY_VALUE_PATH = '/taxonomy-service/listofvalue/valuelist'
-TAXANOMY_VALUE_LIST_PATH = '/taxonomy/valueLists/public/'
-
-ECCAIRS2_NLF_ID = 2169
-
 SOCKET_MESSAGE_TEMPLATE = {'channel': '', }
 
 
@@ -92,14 +86,28 @@ class ECCAIRS2:
         pass
 
     def _authenticate(self) -> None:
-
-        if self.authenticated is False:
-            auth_url = f'{BASE_URL}{TOKEN_PATH}?grant_type=password&password={ECCAIRS2_M2M[APP_INSTANCE]["passwd"]}&username={ECCAIRS2_M2M[APP_INSTANCE]["user"]}'
-            r = requests.post(auth_url)
-            if r.status_code == 200:
-                result = r.json()
-                token = result['access_token']
-                self.HEADERS = {'Authorization': f'Bearer {token}'}
+        try:
+            if self.authenticated is False:
+                data = {
+                    'grant_type': 'client_credentials',
+                    'client_id': ECCAIRS2_M2M[APP_INSTANCE]['user'],
+                    'client_secret': ECCAIRS2_M2M[APP_INSTANCE]['passwd']
+                }
+                auth_url = f'{BASE_URL}{ECCAIRS2_TOKEN_PATH}'
+                r = requests.post(auth_url, data=data, headers={'Content-Type': 'application/x-www-form-urlencoded'}) #, verify=app.config.get('REQUESTS_VERIFY', True))
+                if r.status_code == 200:
+                    result = r.json()
+                    token = result.get('access_token', None)
+                    if token is not None:
+                        self.HEADERS = {'Authorization': f'Bearer {token}'}
+                        self.authenticated = True
+                    else:
+                        raise Exception(f'Authentication failed there were no token, status code {r.status_code} and response {r.text}')
+                else:
+                    raise Exception(f'Authentication failed with status code {r.status_code} and response {r.text}')
+        except Exception as e:
+            app.logger.exception('Error authenticating with ECCAIRS2')
+            abort(500, 'Error authenticating with ECCAIRS2')
 
     @authenticate
     def e5x_file_upload(self, activity, obsreg_id, version, file_name) -> (bool, int, dict):
@@ -132,7 +140,7 @@ class ECCAIRS2:
         """
 
         if os.path.exists:
-            resp = requests.post(f'{BASE_URL}{FILE_UPLOAD_PATH}', files=files, headers=self.HEADERS)
+            resp = requests.post(f'{BASE_URL}{ECCAIRS2_FILE_UPLOAD_PATH}', files=files, headers=self.HEADERS)
 
             if resp.status_code in [200, 201]:  # Note ECCAIRS2 uses 200 not 201!
                 try:
@@ -180,7 +188,7 @@ class ECCAIRS2:
             # Get results of file migration process:
 
             resp = requests.get(
-                f'{BASE_URL}{FILE_UPLOAD_RESULT_PATH}?format=json&idFile={eccairs2_id}&only-validation=false',
+                f'{BASE_URL}{ECCAIRS2_FILE_UPLOAD_RESULT_PATH}?format=json&idFile={eccairs2_id}&only-validation=false',
                 headers=self.HEADERS
             )
             if resp.status_code == 200 and resp.json().get('e5zE5xId', 0) > 0:
@@ -258,7 +266,7 @@ class ECCAIRS2:
             )
 
     def get_OR(self, eccairs2_id) -> (bool, dict):
-        r = requests.get(f'{BASE_URL}{OCCURRENCE_GET_PATH}{eccairs2_id}', headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_OCCURRENCE_GET_PATH}{eccairs2_id}', headers=self.HEADERS)
 
         if r.status_code == 200:
             return True, r.json()['data']
@@ -276,7 +284,7 @@ class ECCAIRS2:
                 "DELETED"
             ]
         }
-        r = requests.post(f'{BASE_URL}{OCCURRENCE_ORIGINAL_REPORT_PATH}', headers=self.HEADERS, params=params,
+        r = requests.post(f'{BASE_URL}{ECCAIRS2_OCCURRENCE_ORIGINAL_REPORT_PATH}', headers=self.HEADERS, params=params,
                           json=json)
 
         if r.status_code in [200, 201]:
@@ -295,7 +303,7 @@ class ECCAIRS2:
         :return: data (taxonomy)id|name|version
         """
 
-        r = requests.get(f'{BASE_URL}{TAXONOMY_PATH}', headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_TAXONOMY_PATH}', headers=self.HEADERS)
 
         if r.status_code == 200:
             return True, r.json['data']
@@ -304,7 +312,7 @@ class ECCAIRS2:
 
     def get_taxonomy_value_list(self, taxonomy_version=6) -> (bool, dict):
 
-        r = requests.get(f'{BASE_URL}{TAXANOMY_VALUE_LIST_PATH}{taxonomy_version}', headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_TAXANOMY_VALUE_LIST_PATH}{taxonomy_version}', headers=self.HEADERS)
         if r.status_code == 200:
             result = r.json()
             return True, {
@@ -320,7 +328,7 @@ class ECCAIRS2:
 
     def get_taxonomy_options(self, value_id, taxonomy_version) -> (bool, list):
 
-        r = requests.get(f'{BASE_URL}{TAXANOMY_VALUE_PATH}{value_id}/{taxonomy_version}', headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_TAXANOMY_VALUE_PATH}{value_id}/{taxonomy_version}', headers=self.HEADERS)
 
         if r.status_code == 200:
             result = r.json()
@@ -333,7 +341,7 @@ class ECCAIRS2:
 
     def get_readable_report(self, eccairs2_id) -> (bool, dict):
 
-        r = requests.get(f'{BASE_URL}{OCCURRENCE_READABLE_PATH}/{eccairs2_id}', headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_OCCURRENCE_READABLE_PATH}/{eccairs2_id}', headers=self.HEADERS)
         if r.status_code == 200:
             result = r.json()
             return True, result['data']
@@ -342,7 +350,7 @@ class ECCAIRS2:
 
     def get_readable_report_field(self, eccairs2_id, field_id) -> (bool, list):
         json = [field_id]
-        r = requests.get(f'{BASE_URL}{OCCURRENCE_READABLE_FIELD_PATH}/{eccairs2_id}', json=json, headers=self.HEADERS)
+        r = requests.get(f'{BASE_URL}{ECCAIRS2_OCCURRENCE_READABLE_FIELD_PATH}/{eccairs2_id}', json=json, headers=self.HEADERS)
         if r.status_code == 200:
             result = r.json()
             return True, result['data']
