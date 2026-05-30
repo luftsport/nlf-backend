@@ -131,9 +131,9 @@ def _remove_from_person_data(item):
     # memberships
     try:
         item['memberships'] = [
-            {
-                'club': d['club'],
-                'discipline': d['discipline'],
+            {   # Remove club and discipline as they can be traceable to a person, also anon payment details except year and type
+                # 'club': d['club'],
+                # 'discipline': d['discipline'],
                 'activity': d['activity'],
                 'from_date': d['from_date'],
                 'payment': _anon_membership_payment(d['payment'])
