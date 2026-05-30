@@ -303,6 +303,7 @@ def anonymize_ors(item):
                     except:
                         item['involved'][key]['data']['gear'].pop('rigger', None)
 
+            # Always remove functions, memberships and magazines as they can be traceable to a person
             item['involved'][key]['data']['memberships'] = []
             item['involved'][key]['data']['magazines'] = []
             item['involved'][key]['data']['functions'] = []

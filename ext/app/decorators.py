@@ -36,6 +36,7 @@ def require_client_access_token(allowed_roles=None):
                 # Let it raise an exception
                 try:
                     authorization_token = request.authorization.get('username', None)
+                    
                 except Exception as e:
                     raise AuthenticationFailed
 
@@ -48,6 +49,7 @@ def require_client_access_token(allowed_roles=None):
 
                 if str(authorization_token) != str(client_token):
                     raise AuthenticationFailed
+                
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
                 return eve_abort(401, 'Please provide proper credentials')
