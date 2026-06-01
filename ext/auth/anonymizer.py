@@ -227,7 +227,7 @@ def anonymize_ors(item):
 
                     macros[key]['data-id'] = anon.assign_pair({'id': int(macros[key].get('data-id', 0))}).get('id', 0)
 
-                    macros[key].string = '{} {}'.format(preamble, -1 * macros[key].get('data-id'))
+                    macros[key].string = '{} {}'.format(preamble, -1 * macros[key].get('data-id'))
 
                     for attr in list(macros[key].attrs.keys()):
                         if attr not in ['data-id', 'data-type']:
@@ -304,9 +304,13 @@ def anonymize_ors(item):
                         item['involved'][key]['data']['gear'].pop('rigger', None)
 
             # Always remove functions, memberships and magazines as they can be traceable to a person
-            item['involved'][key]['data']['memberships'] = []
-            item['involved'][key]['data']['magazines'] = []
-            item['involved'][key]['data']['functions'] = []
+            if 'data' in item['involved'][key]:
+                try:
+                    item['involved'][key]['data']['memberships'] = []
+                    item['involved'][key]['data']['magazines'] = []
+                    item['involved'][key]['data']['functions'] = []
+                except:
+                    pass
 
     # Involved in components
     for key, val in enumerate(item.get('components', [])):
