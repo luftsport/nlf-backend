@@ -78,7 +78,7 @@ if APP_INSTANCE == 'local':
     E5X_WORKING_DIR = 'path to local instance of E5X RIT'
     REQUESTS_VERIFY = False
 else:
-    E5X_WORKING_DIR = '/www/{}/e5x'.format(APP_INSTANCE)
+    E5X_WORKING_DIR = '/www/obsreg/{}/e5x'.format(APP_INSTANCE)
     # For requests, only local should be false
     REQUESTS_VERIFY = True
 
