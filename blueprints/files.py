@@ -12,7 +12,7 @@
 from flask import Blueprint, current_app as app, request, Response, abort, jsonify, send_file, abort, make_response
 
 from PIL import Image
-from pillow_heif import register_heif_opener
+import pillow_heif.HeifImagePlugin
 import io
 import mimetypes
 from gridfs import GridFS
@@ -68,6 +68,8 @@ def process_image_request(file_id, size):
     try:
         col = app.data.driver.db['files']
         image = col.find_one({'_id': ObjectId(file_id)})
+        if not image or 'file' not in image:
+            return eve_abort(404, 'Image record not found')
 
         grid_fs = GridFS(app.data.driver.db)
 
@@ -76,18 +78,19 @@ def process_image_request(file_id, size):
 
         im_stream = grid_fs.get_last_version(_id=image['file'])
 
-        register_heif_opener()
         im = Image.open(im_stream)
 
-        if size != 'original':
-            im.thumbnail(sizes[size], Image.LANCZOS)
+        if size != 'original' and size in sizes:
+            im.thumbnail(sizes[size], Image.Resampling.LANCZOS)
+        elif size != 'original':
+            return eve_abort(400, 'Invalid size parameter requested')
 
         img_io = io.BytesIO()
 
         im.save(img_io, 'PNG', quality=100)
         img_io.seek(0)
 
-        encoded_img = base64.b64encode(img_io.read())
+        encoded_img = base64.b64encode(img_io.read()).decode('utf-8')
 
         dict = {'mimetype': 'image/png',
                 'encoding': 'base64',
@@ -97,7 +100,8 @@ def process_image_request(file_id, size):
         # Jsonify the dictionary and return it
         return jsonify(**dict)
     except:
-        pass
+        app.logger.error(f"Error processing image {file_id}: {str(e)}")
+        return eve_abort(500, f'Internal processing error: {str(e)}')
 
     # Sends an image, flask
     # return send_file(img_io, mimetype='image/png')
@@ -119,9 +123,9 @@ def has_permission():
         auth = TokenAuth()
 
         if auth.check_auth(token=token.decode("utf-8"),
-                               method=request.method,
-                               resource=request.path[len(app.globals.get('prefix')):],
-                               allowed_roles=None) is True:
+                           method=request.method,
+                           resource=request.path[len(app.globals.get('prefix')):],
+                           allowed_roles=None) is True:
             return True
 
     except:
