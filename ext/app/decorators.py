@@ -8,7 +8,7 @@
 from flask import g, current_app as app, request, Response, abort
 from functools import wraps
 
-from ext.auth.tokenauth import TokenAuth
+from ext.auth.tokenauth import TokenAuth, extract_token
 from ext.scf import ACL_SUPERADMINS
 
 # Because of circular import in context
@@ -21,6 +21,7 @@ class AuthenticationFailed(Exception):
 
 class AuthenticationNoToken(Exception):
     """Raise custom error"""
+
 
 def require_client_access_token(allowed_roles=None):
     """ Custom decorator for token auth for client access tokens
@@ -35,21 +36,21 @@ def require_client_access_token(allowed_roles=None):
                 # No authorization in request
                 # Let it raise an exception
                 try:
-                    authorization_token = request.authorization.get('username', None)
-                    
+                    authorization_token = extract_token()
+
                 except Exception as e:
                     raise AuthenticationFailed
 
-                client_token = [x['token_hex'] for x in ACCESS_TOKENS]
+                client_token = [x['token_hex'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token]
 
                 if len(client_token) == 1:
-                        client_token = client_token[0]
+                    client_token = client_token[0]
                 else:
                     raise AuthenticationFailed
 
                 if str(authorization_token) != str(client_token):
                     raise AuthenticationFailed
-                
+
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
                 return eve_abort(401, 'Please provide proper credentials')
@@ -61,6 +62,7 @@ def require_client_access_token(allowed_roles=None):
         return wrapped
 
     return decorator
+
 
 def require_token(allowed_roles=None):
     """ Custom decorator for token auth
@@ -86,10 +88,10 @@ def require_token(allowed_roles=None):
                                               method=request.method,
                                               resource=request.path[len(app.globals.get('prefix')) + 1:],
                                               allowed_roles=allowed_roles)
-                
+
                 if auth_result is not True:
                     raise AuthenticationFailed
-                
+
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
                 return eve_abort(401, 'Please provide proper credentials')

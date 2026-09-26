@@ -314,7 +314,7 @@ def generate(activity, _id):
     cursor = col.find({'$and': [{'_etag': data.get('_etag', None), '_id': _id},
                                 {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
                                          {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
-    total_items = cursor.count()
+    # total_items = cursorcount_documents() # Need query!
 
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
     _items = list(cursor)

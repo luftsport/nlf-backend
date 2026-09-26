@@ -15,6 +15,47 @@ from flask import g, current_app as app, request, Response, abort
 # TIME & DATE - better with arrow only?
 from datetime import datetime, timedelta
 import arrow
+import base64
+import binascii
+
+def extract_token() -> str | None:
+    """Supports both:
+       Authorization: Bearer <token>
+       Authorization: Basic <base64(token:)>   (Eve-style)
+    """
+    auth = request.authorization
+
+    # Modern Authorization object
+    if auth is not None:
+        if auth.type and auth.type.lower() == "basic" and auth.username:
+            return auth.username
+        if auth.token:  # Bearer / Token / etc.
+            return auth.token
+
+    # Fallback – parse the raw header manually
+    header = request.headers.get("Authorization", "").strip()
+    if not header:
+        return None
+
+    parts = header.split(None, 1)
+    if len(parts) != 2:
+        return None
+
+    scheme, credentials = parts[0].lower(), parts[1]
+
+    if scheme in ("bearer", "token"):
+        return credentials
+
+    if scheme == "basic":
+        try:
+            decoded = base64.b64decode(credentials, validate=True).decode()
+            # Eve convention: token is the part before the colon
+            token = decoded.partition(":")[0]
+            return token or None
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+            return None
+
+    return None
 
 
 class TokenAuth(TokenAuth):
@@ -41,7 +82,7 @@ class TokenAuth(TokenAuth):
             self.person_id = u['id']
 
             utc = arrow.utcnow()
-            if utc.timestamp < arrow.get(u['auth']['valid']).timestamp:
+            if utc.timestamp() < arrow.get(u['auth']['valid']).timestamp():
 
                 valid = datetime.utcnow() + timedelta(seconds=app.config['AUTH_SESSION_LENGHT'])
 
