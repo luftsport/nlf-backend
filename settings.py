@@ -63,7 +63,7 @@ elif APP_INSTANCE == 'beta':
     APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
 
 elif APP_INSTANCE in ['dev', 'local']:
-    MONGO_HOST = 'localhost'
+    MONGO_HOST = '127.0.0.1'
     MONGO_PORT = 27017
     MONGO_USERNAME = ''
     MONGO_PASSWORD = ''
@@ -73,7 +73,9 @@ elif APP_INSTANCE in ['dev', 'local']:
     APP_HOST = '127.0.0.1'
     APP_PORT = 8082
     APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
-
+    MONGO_OPTIONS = {
+        'directConnection': True
+    }
 if APP_INSTANCE == 'local':
     E5X_WORKING_DIR = 'path to local instance of E5X RIT'
     REQUESTS_VERIFY = False
