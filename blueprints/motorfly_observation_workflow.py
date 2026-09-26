@@ -78,11 +78,12 @@ def get_observations():
 
     col = app.data.driver.db[RESOURCE_COLLECTION]
     # db.companies.find().skip(NUMBER_OF_ITEMS * (PAGE_NUMBER - 1)).limit(NUMBER_OF_ITEMS )
-    cursor = col.find({'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
-                                {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
-                                         {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]})
+    query = {'$and': [{'workflow.state': {'$nin': ['closed', 'withdrawn']}},
+                      {'$or': [{'acl.execute.users': {'$in': [g.user_id]}},
+                               {'acl.execute.roles': {'$in': g.acl.get('roles', [])}}]}]}
 
-    total_items = cursor.count()
+    cursor = col.find(query)
+    total_items = cursor.count_documents(query)
 
     # _items = list(cursor.sort(sort['field'], sort['direction']).skip(max_results * (page - 1)).limit(max_results))
     _items = list(cursor.sort('id', 1).skip(max_results * (page - 1)).limit(max_results))
