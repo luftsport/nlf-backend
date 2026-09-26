@@ -147,7 +147,9 @@ def _ors_after_fetched(_response):
                     ) is False:
                         # _response[key]['acl_user'] = user_persmissions(_response[key]['acl'], 'closed')
                         _response[key] = anon.anonymize_ors(_response[key])
-
+                else:
+                    if ACL_SPORTSFLY_ORS not in g.acl.get('roles', []):
+                        _response[key] = anon.anonymize_ors(_response[key])
 
         elif isinstance(_response, dict):
             # _response['acl_user'] = user_persmissions(_response['acl'], _response['workflow']['state'])
@@ -165,6 +167,10 @@ def _ors_after_fetched(_response):
                             org=_response.get('discipline', 0)
                     ) is False:
                         _response = anon.anonymize_ors(_response)
+                else:
+                    if ACL_SPORTSFLY_ORS not in g.acl.get('roles', []):
+                        _response = anon.anonymize_ors(_response)
+
 
     except KeyError as e:
         app.logger.info("Keyerror in hook error: {}".format(e))
