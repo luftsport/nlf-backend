@@ -60,12 +60,18 @@ def execute(cmdArray, workingDir):
 
     try:
         try:
-            process = subprocess.Popen(cmdArray, cwd=workingDir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       bufsize=1)
+            process = subprocess.Popen(
+                cmdArray,
+                cwd=workingDir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                bufsize=1,
+                text=True
+            )
         except OSError:
             return [False, '', 'ERROR : command(' + ' '.join(cmdArray) + ') could not get executed!']
 
-        for line in iter(process.stdout.readline, b''):
+        for line in iter(process.stdout.readline, ''):
 
             try:
                 echo_line = line.decode("utf-8")
@@ -74,7 +80,7 @@ def execute(cmdArray, workingDir):
 
             stdout += echo_line
 
-        for line in iter(process.stderr.readline, b''):
+        for line in iter(process.stderr.readline, ''):
 
             try:
                 echo_line = line.decode("utf-8")
@@ -91,8 +97,8 @@ def execute(cmdArray, workingDir):
     return_code = process.wait()
     if return_code != 0 or stderr != '':
         return [False, stdout, stderr]
-    else:
-        return [True, stdout, stderr]
+
+    return [True, stdout, stderr]
 
 
 def generate_structure(activity, ors_id, version):
