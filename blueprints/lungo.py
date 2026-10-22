@@ -370,63 +370,86 @@ def fix_camelcase(s):
 def resolve_e5x_taxonomy(obsreg):
     try:
         if 'occurrence' in obsreg:
-            obsreg['occurrence']['attributes'] = clean_e5x_object(obsreg['occurrence']['attributes'])
-            obsreg['occurrence']['entities'] = clean_e5x_object(obsreg['occurrence']['entities'])
+            try:
+                obsreg['occurrence']['attributes'] = clean_e5x_object(obsreg['occurrence']['attributes'])
+                obsreg['occurrence']['entities'] = clean_e5x_object(obsreg['occurrence']['entities'])
 
-            obsreg['occurrence']['attributes'] = resolve_e5x_payload('E5X.Occurrence', obsreg['occurrence']['attributes'])
+                obsreg['occurrence']['attributes'] = resolve_e5x_payload('E5X.Occurrence', obsreg['occurrence']['attributes'])
 
-            for key, entity in obsreg['occurrence']['entities'].items():
-                if isinstance(obsreg['occurrence']['entities'][key], list):
-                    for idx, entity in enumerate(obsreg['occurrence']['entities'][key]):
-                        obsreg['occurrence']['entities'][key][idx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', entity['attributes'])
-                else:
-                    obsreg['occurrence']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', obsreg['occurrence']['entities'][key]['attributes'])
+                for key, entity in obsreg['occurrence']['entities'].items():
+                    if isinstance(obsreg['occurrence']['entities'][key], list):
+                        for idx, entity in enumerate(obsreg['occurrence']['entities'][key]):
+                            obsreg['occurrence']['entities'][key][idx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', entity['attributes'])
+                    else:
+                        obsreg['occurrence']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', obsreg['occurrence']['entities'][key]['attributes'])
+            except Exception as e:
+                app.logger.exception('Error resolving E5X taxonomy for occurrence in obsreg {}'.format(obsreg.get('_id', 'unknown')))
+                pass
+
         if 'aircrafts' in obsreg:
+
             for idx, aircraft in enumerate(obsreg['aircrafts']):
-                obsreg['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(obsreg['aircrafts'][idx]['aircraft'].get('e5x', {}))
-                # Attributes
-                for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('attributes', {}).items():
-                    obsreg['aircrafts'][idx]['aircraft']['e5x']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
-                # Entities
-                for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('entities', {}).items():
-                    if isinstance(item, list):
-                        for eidx, entity in enumerate(item):
-                            obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', entity['attributes'])
-                    else:
-                        obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', item['attributes'])
+                try:
+                    obsreg['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(obsreg['aircrafts'][idx]['aircraft'].get('e5x', {}))
+                    # Attributes
+                    for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('attributes', {}).items():
+                        obsreg['aircrafts'][idx]['aircraft']['e5x']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
+                    # Entities
+                    for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('entities', {}).items():
+                        if isinstance(item, list):
+                            for eidx, entity in enumerate(item):
+                                obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', entity['attributes'])
+                        else:
+                            obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', item['attributes'])
+                except Exception as e:
+                    app.logger.exception('Error resolving E5X taxonomy for aircraft in obsreg {}'.format(obsreg.get('_id', 'unknown')))
+                    pass
+            try:
+                if 'airspace' in obsreg['aircrafts'][idx]:
+                    obsreg['aircrafts'][idx]['airspace'] = clean_e5x_object(obsreg['aircrafts'][idx]['airspace'])
+                    # Attributes
+                    for key, item in obsreg['aircrafts'][idx]['airspace'].get('attributes', {}).items():
+                        obsreg['aircrafts'][idx]['airspace']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', {key: item})
+                    # Entities
+                    for key, item in obsreg['aircrafts'][idx]['airspace'].get('entities', {}).items():
+                        if isinstance(eitem, list):
+                            for eidx, entity in enumerate(eitem):
+                                obsreg['aircrafts'][idx]['airspace']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', entity['attributes'])
+                        else:
+                            obsreg['aircrafts'][idx]['airspace']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', item['attributes'])
+            except Exception as e:
+                app.logger.exception('Error resolving E5X taxonomy for airspace in obsreg {}'.format(obsreg.get('_id', 'unknown')))
+                pass
 
-            if 'airspace' in obsreg['aircrafts'][idx]:
-                obsreg['aircrafts'][idx]['airspace'] = clean_e5x_object(obsreg['aircrafts'][idx]['airspace'])
-                # Attributes
-                for key, item in obsreg['aircrafts'][idx]['airspace'].get('attributes', {}).items():
-                    obsreg['aircrafts'][idx]['airspace']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', {key: item})
-                # Entities
-                for key, item in obsreg['aircrafts'][idx]['airspace'].get('entities', {}).items():
-                    if isinstance(eitem, list):
-                        for eidx, entity in enumerate(eitem):
-                            obsreg['aircrafts'][idx]['airspace']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', entity['attributes'])
-                    else:
-                        obsreg['aircrafts'][idx]['airspace']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', item['attributes'])
+            try:
+                if 'aerodrome' in obsreg['aircrafts'][idx]:
+                    obsreg['aircrafts'][idx]['aerodrome'] = clean_e5x_object(obsreg['aircrafts'][idx]['aerodrome'])
+                    # Attributes
+                    for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('attributes', {}).items():
+                        obsreg['aircrafts'][idx]['aerodrome']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', {key: item})
+                    # Entities
+                    for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
+                        if isinstance(eitem, list):
+                            for eidx, entity in enumerate(eitem):
+                                obsreg['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
+                        else:
+                            obsreg['aircrafts'][idx]['aerodrome']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', item['attributes'])
 
-            if 'aerodrome' in obsreg['aircrafts'][idx]:
-                obsreg['aircrafts'][idx]['aerodrome'] = clean_e5x_object(obsreg['aircrafts'][idx]['aerodrome'])
-                # Attributes
-                for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('attributes', {}).items():
-                    obsreg['aircrafts'][idx]['aerodrome']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', {key: item})
-                # Entities
-                for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
-                    if isinstance(eitem, list):
-                        for eidx, entity in enumerate(eitem):
-                            obsreg['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
-                    else:
-                        obsreg['aircrafts'][idx]['aerodrome']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', item['attributes'])
+                    # for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('aerodrome', {}).items():
+                    #    obsreg['aircrafts'][idx]['aircraft']['e5x']['aerodrome'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft.{key}', {key: item})
+            except Exception as e:
+                app.logger.exception('Error resolving E5X taxonomy for aerodrome in obsreg {}'.format(obsreg.get('_id', 'unknown')))
+                pass
 
-                # for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('aerodrome', {}).items():
-                #    obsreg['aircrafts'][idx]['aircraft']['e5x']['aerodrome'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft.{key}', {key: item})
-            if 'occurrence' in obsreg['aircrafts'][idx]:
-                obsreg['aircrafts'][idx]['occurrence'] = clean_e5x_object(obsreg['aircrafts'][idx]['occurrence'])
-                for key, item in obsreg['aircrafts'][idx].get('occurrence', {}).items():
-                    obsreg['aircrafts'][idx]['occurrence'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
+            try:
+                if 'occurrence' in obsreg['aircrafts'][idx]:
+                    obsreg['aircrafts'][idx]['occurrence'] = clean_e5x_object(obsreg['aircrafts'][idx]['occurrence'])
+                    for key, item in obsreg['aircrafts'][idx].get('occurrence', {}).items():
+                        obsreg['aircrafts'][idx]['occurrence'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
+            except Exception as e:
+                app.logger.exception('Error resolving E5X taxonomy for occurrence in obsreg {}'.format(obsreg.get('_id', 'unknown')))
+                pass
+
     except Exception as e:
         app.logger.exception('Error resolving E5X taxonomy for obsreg {}'.format(obsreg.get('_id', 'unknown')))
         obsreg['error'] = 'Error resolving E5X taxonomy: {}'.format(str(e))
