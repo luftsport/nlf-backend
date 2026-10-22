@@ -503,8 +503,6 @@ def reverse_get_obsregs(activity):
             else:
                 r.append(anonymize_ors(item))
 
-            return eve_response(r, 200)
-
         return eve_response(r, 200)
 
     except Exception as e:
