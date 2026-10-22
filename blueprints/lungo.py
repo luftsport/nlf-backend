@@ -383,7 +383,7 @@ def resolve_e5x_taxonomy(obsreg):
                     obsreg['occurrence']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', obsreg['occurrence']['entities'][key]['attributes'])
         if 'aircrafts' in obsreg:
             for idx, aircraft in enumerate(obsreg['aircrafts']):
-                obsreg['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(obsreg['aircrafts'][idx]['aircraft']['e5x'])
+                obsreg['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(obsreg['aircrafts'][idx]['aircraft'].get('e5x', {}))
                 # Attributes
                 for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('attributes', {}).items():
                     obsreg['aircrafts'][idx]['aircraft']['e5x']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
