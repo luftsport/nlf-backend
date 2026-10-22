@@ -412,8 +412,8 @@ def resolve_e5x_taxonomy(obsreg):
                         obsreg['aircrafts'][idx]['airspace']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', {key: item})
                     # Entities
                     for key, item in obsreg['aircrafts'][idx]['airspace'].get('entities', {}).items():
-                        if isinstance(eitem, list):
-                            for eidx, entity in enumerate(eitem):
+                        if isinstance(item, list):
+                            for eidx, entity in enumerate(item):
                                 obsreg['aircrafts'][idx]['airspace']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', entity['attributes'])
                         else:
                             obsreg['aircrafts'][idx]['airspace']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', item['attributes'])
@@ -430,7 +430,7 @@ def resolve_e5x_taxonomy(obsreg):
                     # Entities
                     for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
                         if isinstance(item, list):
-                            for eidx, entity in enumerate(eitem):
+                            for eidx, entity in enumerate(item):
                                 obsreg['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
                         else:
                             obsreg['aircrafts'][idx]['aerodrome']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', item['attributes'])
@@ -468,7 +468,7 @@ def reverse_get_obsreg(activity, obsreg_id):
             return abort(404, description="Activity not found or allowed")
         app.logger.info('Lungo is asking for obsreg for activity {} and obsreg_id {}'.format(activity, obsreg_id))
         obsregs = app.data.driver.db[f'{activity}_observations']
-        result = obsregs.find_one({'id': obsreg_id})
+        result = obsregs.find_one({'id': obsreg_id, 'workflow.state': {'$nin': ['draft', 'withdrawn']}})
 
         if result is not None:
             if activity in ['motorfly', 'sportsfly', 'seilfly']:
@@ -493,6 +493,10 @@ def reverse_get_obsregs(activity):
             return abort(404, description="Activity not found or allowed")
 
         parsed = parse_request(resource=f'{activity}_observations', is_blueprint=False, trigger_hooks=False)
+        if 'where' not in parsed:
+            parsed['where'] = {}
+        parsed['where']['workflow.state'] = {'$nin': ['draft', 'withdrawn']}
+        print(parsed)
         results, count, skip, limit = execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed)
 
         r = []
