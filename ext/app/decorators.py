@@ -45,6 +45,7 @@ def require_client_access_token(allowed_roles=None):
 
                 if len(client_token) == 1:
                     client_token = client_token[0]
+                    g.user_id = -1
                 else:
                     raise AuthenticationFailed
 
