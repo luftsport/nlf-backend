@@ -464,7 +464,7 @@ def reverse_get_obsreg(activity, obsreg_id):
     try:
         driver = app.data.driver
         col = driver.db[f'{activity}_observations']
-        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly']:
+        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly', 'modellfly']:
             return abort(404, description="Activity not found or allowed")
         app.logger.info('Lungo is asking for obsreg for activity {} and obsreg_id {}'.format(activity, obsreg_id))
         obsregs = app.data.driver.db[f'{activity}_observations']
@@ -489,7 +489,7 @@ def reverse_get_obsregs(activity):
     driver = app.data.driver
     col = driver.db[f'{activity}_observations']
     try:
-        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly']:
+        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly', 'modellfly']:
             return abort(404, description="Activity not found or allowed")
 
         parsed = parse_request(resource=f'{activity}_observations', is_blueprint=False, trigger_hooks=False)
