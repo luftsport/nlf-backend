@@ -19,6 +19,7 @@ import requests
 # Supress insecre warning
 import urllib3
 import re
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 Lungo = Blueprint('Lungo passthrough', __name__, )
@@ -28,6 +29,8 @@ Lungo = Blueprint('Lungo passthrough', __name__, )
 from typing import Any, Dict, Union, List, Optional
 
 RIT_VERSION = "4.1.0.3"
+
+
 class E5XDirectDbResolver:
     """Resolves E5X taxonomy attributes and choice values using native PyMongo."""
 
@@ -94,16 +97,16 @@ def resolve_e5x_payload(path, payload):
     ]
     """
     resolver = E5XDirectDbResolver()
-    path = '.'.join(word[0].capitalize()+word[1:] for word in path.split('.'))
+    path = '.'.join(word[0].capitalize() + word[1:] for word in path.split('.'))
 
     for key, item in payload.items():
         try:
             raw_value = item.get('value')
         except AttributeError as e:
             raw_value = item
-        _path = f'{path}.{key[0].capitalize()+key[1:]}'
+        _path = f'{path}.{key[0].capitalize() + key[1:]}'
         _path = _path.replace('Atm', 'ATM').replace('Ecr', 'ERCS')
-        resolved = resolver.resolve_item(f'{path}.{key[0].capitalize()+key[1:]}', raw_value)
+        resolved = resolver.resolve_item(f'{path}.{key[0].capitalize() + key[1:]}', raw_value)
 
         payload[key] = {
             "path": path,
@@ -114,6 +117,7 @@ def resolve_e5x_payload(path, payload):
 
     return payload
 
+
 def resolve_e5x_payload_list(path, values):
     for key, value in values:
         resolved = resolver.resolve_item(f"{path}.{key}", value)
@@ -122,6 +126,8 @@ def resolve_e5x_payload_list(path, values):
             "label": resolved["label"],
             "values": resolved["values"]
         })
+
+
 def clean_e5x_object(obj):
     try:
         # Check if the input is a dictionary
@@ -184,6 +190,7 @@ def e5x_parse_label(path: str) -> str:
         return label.strip().capitalize()
     except Exception:
         return ''
+
 
 @Lungo.route("/syncdaemon/workers/start", methods=["POST"])
 @require_token()
@@ -351,29 +358,6 @@ def reverse_get_avatar(person_id):
     return eve_response({'person_id': person_id, 'avatar': None}, 500)
 
 
-@Lungo.route("/obsreg/<string:activity>", methods=['GET'])
-@require_client_access_token()
-def reverse_get_obsregs(activity):
-    driver = app.data.driver
-    col = driver.db[f'{activity}_observations']
-    try:
-        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly']:
-            return abort(404, description="Activity not found or allowed")
-
-        parsed = parse_request(resource=f'{activity}_observations', is_blueprint=False, trigger_hooks=False)
-        results = list(execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed))
-
-        r = []
-        for idx, item in enumerate(results):
-            r.append(anonymize_ors(item))
-
-        return eve_response(r, 200)
-
-    except Exception as e:
-        app.logger.exception('Error fetching obsregs for activity {}'.format(activity))
-
-    return eve_response({'activity': activity, 'obsreg': None}, 500)
-
 def fix_camelcase(s):
     if 'atm' or 'Atm' in s:
         return s.replace('atm', 'ATM').replace('Atm', 'ATM')
@@ -381,6 +365,75 @@ def fix_camelcase(s):
         return s.replace('ecr', 'ERCS').replace('Ecr', 'ERCS')
 
     return s
+
+
+def resolve_e5x_taxonomy(obsreg):
+    try:
+        if 'occurrence' in obsreg:
+            obsreg['occurrence']['attributes'] = clean_e5x_object(obsreg['occurrence']['attributes'])
+            obsreg['occurrence']['entities'] = clean_e5x_object(obsreg['occurrence']['entities'])
+
+            obsreg['occurrence']['attributes'] = resolve_e5x_payload('E5X.Occurrence', obsreg['occurrence']['attributes'])
+
+            for key, entity in obsreg['occurrence']['entities'].items():
+                if isinstance(obsreg['occurrence']['entities'][key], list):
+                    for idx, entity in enumerate(obsreg['occurrence']['entities'][key]):
+                        obsreg['occurrence']['entities'][key][idx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', entity['attributes'])
+                else:
+                    obsreg['occurrence']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', obsreg['occurrence']['entities'][key]['attributes'])
+        if 'aircrafts' in obsreg:
+            for idx, aircraft in enumerate(obsreg['aircrafts']):
+                obsreg['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(obsreg['aircrafts'][idx]['aircraft']['e5x'])
+                # Attributes
+                for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('attributes', {}).items():
+                    obsreg['aircrafts'][idx]['aircraft']['e5x']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
+                # Entities
+                for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('entities', {}).items():
+                    if isinstance(item, list):
+                        for eidx, entity in enumerate(item):
+                            obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', entity['attributes'])
+                    else:
+                        obsreg['aircrafts'][idx]['aircraft']['e5x']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', item['attributes'])
+
+            if 'airspace' in obsreg['aircrafts'][idx]:
+                obsreg['aircrafts'][idx]['airspace'] = clean_e5x_object(obsreg['aircrafts'][idx]['airspace'])
+                # Attributes
+                for key, item in obsreg['aircrafts'][idx]['airspace'].get('attributes', {}).items():
+                    obsreg['aircrafts'][idx]['airspace']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', {key: item})
+                # Entities
+                for key, item in obsreg['aircrafts'][idx]['airspace'].get('entities', {}).items():
+                    if isinstance(eitem, list):
+                        for eidx, entity in enumerate(eitem):
+                            obsreg['aircrafts'][idx]['airspace']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', entity['attributes'])
+                    else:
+                        obsreg['aircrafts'][idx]['airspace']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', item['attributes'])
+
+            if 'aerodrome' in obsreg['aircrafts'][idx]:
+                obsreg['aircrafts'][idx]['aerodrome'] = clean_e5x_object(obsreg['aircrafts'][idx]['aerodrome'])
+                # Attributes
+                for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('attributes', {}).items():
+                    obsreg['aircrafts'][idx]['aerodrome']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', {key: item})
+                # Entities
+                for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
+                    if isinstance(eitem, list):
+                        for eidx, entity in enumerate(eitem):
+                            obsreg['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
+                    else:
+                        obsreg['aircrafts'][idx]['aerodrome']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', item['attributes'])
+
+                # for key, item in obsreg['aircrafts'][idx]['aircraft']['e5x'].get('aerodrome', {}).items():
+                #    obsreg['aircrafts'][idx]['aircraft']['e5x']['aerodrome'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft.{key}', {key: item})
+            if 'occurrence' in obsreg['aircrafts'][idx]:
+                obsreg['aircrafts'][idx]['occurrence'] = clean_e5x_object(obsreg['aircrafts'][idx]['occurrence'])
+                for key, item in obsreg['aircrafts'][idx].get('occurrence', {}).items():
+                    obsreg['aircrafts'][idx]['occurrence'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
+    except Exception as e:
+        app.logger.exception('Error resolving E5X taxonomy for obsreg {}'.format(obsreg.get('_id', 'unknown')))
+        obsreg['error'] = 'Error resolving E5X taxonomy: {}'.format(str(e))
+
+    obsreg['_id'] = str(obsreg['_id'])
+    return obsreg
+
 
 @Lungo.route("/obsreg/<string:activity>/<int:obsreg_id>", methods=['GET'])
 @require_client_access_token()
@@ -395,67 +448,8 @@ def reverse_get_obsreg(activity, obsreg_id):
         result = obsregs.find_one({'id': obsreg_id})
 
         if result is not None:
-            if 'occurrence' in result:
-                result['occurrence']['attributes'] = clean_e5x_object(result['occurrence']['attributes'])
-                result['occurrence']['entities'] = clean_e5x_object(result['occurrence']['entities'])
-
-                result['occurrence']['attributes'] = resolve_e5x_payload('E5X.Occurrence', result['occurrence']['attributes'])
-
-                for key, entity in result['occurrence']['entities'].items():
-                    if isinstance(result['occurrence']['entities'][key], list):
-                        for idx, entity in enumerate(result['occurrence']['entities'][key]):
-
-                            result['occurrence']['entities'][key][idx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', entity['attributes'])
-                    else:
-                        result['occurrence']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.{fix_camelcase(key)}', result['occurrence']['entities'][key]['attributes'])
-            if 'aircrafts' in result:
-                for idx, aircraft in enumerate(result['aircrafts']):
-                    result['aircrafts'][idx]['aircraft']['e5x'] = aircraft = clean_e5x_object(result['aircrafts'][idx]['aircraft']['e5x'])
-                    # Attributes
-                    for key, item in result['aircrafts'][idx]['aircraft']['e5x'].get('attributes', {}).items():
-                        result['aircrafts'][idx]['aircraft']['e5x']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
-                    # Entities
-                    for key, item in result['aircrafts'][idx]['aircraft']['e5x'].get('entities', {}).items():
-                        if isinstance(eitem, list):
-                            for eidx, entity in enumerate(eitem):
-                                result['aircrafts'][idx]['aircraft']['e5x']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', entity['attributes'])
-                        else:
-                            result['aircrafts'][idx]['aircraft']['e5x']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', item['attributes'])
-
-                if 'airspace' in result['aircrafts'][idx]:
-                    result['aircrafts'][idx]['airspace'] = clean_e5x_object(result['aircrafts'][idx]['airspace'])
-                    # Attributes
-                    for key, item in result['aircrafts'][idx]['airspace'].get('attributes', {}).items():
-                        result['aircrafts'][idx]['airspace']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', {key: item})
-                    # Entities
-                    for key, item in result['aircrafts'][idx]['airspace'].get('entities', {}).items():
-                        if isinstance(eitem, list):
-                            for eidx, entity in enumerate(eitem):
-                                result['aircrafts'][idx]['airspace']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', entity['attributes'])
-                        else:
-                            result['aircrafts'][idx]['airspace']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.AirSpace', item['attributes'])
-
-                if 'aerodrome' in result['aircrafts'][idx]:
-                    result['aircrafts'][idx]['aerodrome'] = clean_e5x_object(result['aircrafts'][idx]['aerodrome'])
-                    # Attributes
-                    for key, item in result['aircrafts'][idx]['aerodrome'].get('attributes', {}).items():
-                        result['aircrafts'][idx]['aerodrome']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', {key: item})
-                    # Entities
-                    for key, item in result['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
-                        if isinstance(eitem, list):
-                            for eidx, entity in enumerate(eitem):
-                                result['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
-                        else:
-                            result['aircrafts'][idx]['aerodrome']['entities'][key]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', item['attributes'])
-
-                    #for key, item in result['aircrafts'][idx]['aircraft']['e5x'].get('aerodrome', {}).items():
-                    #    result['aircrafts'][idx]['aircraft']['e5x']['aerodrome'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft.{key}', {key: item})
-                if 'occurrence' in result['aircrafts'][idx]:
-                    result['aircrafts'][idx]['occurrence'] = clean_e5x_object(result['aircrafts'][idx]['occurrence'])
-                    for key, item in result['aircrafts'][idx].get('occurrence', {}).items():
-                        result['aircrafts'][idx]['occurrence'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aircraft', {key: item})
-            result['_id'] = str(result['_id'])
-
+            if activity in ['motorfly', 'sportsfly', 'seilfly']:
+                return eve_response(resolve_e5x_taxonomy(result), 200)
             return eve_response(result, 200)
         else:
             return eve_response({'activity': activity, 'obsreg_id': obsreg_id, 'obsreg': None}, 404)
@@ -464,6 +458,36 @@ def reverse_get_obsreg(activity, obsreg_id):
         app.logger.exception('Error fetching obsreg for activity {} and obsreg_id {}'.format(activity, obsreg_id))
 
     return eve_response({'activity': activity, 'obsreg_id': obsreg_id, 'obsreg': None}, 500)
+
+
+@Lungo.route("/obsreg/<string:activity>", methods=['GET'])
+@require_client_access_token()
+def reverse_get_obsregs(activity):
+    driver = app.data.driver
+    col = driver.db[f'{activity}_observations']
+    try:
+        if activity not in ['fallskjerm', 'motorfly', 'sportsfly', 'seilfly']:
+            return abort(404, description="Activity not found or allowed")
+
+        parsed = parse_request(resource=f'{activity}_observations', is_blueprint=False, trigger_hooks=False)
+        results = list(execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed))
+
+        r = []
+        for idx, item in enumerate(results):
+
+            if activity in ['motorfly', 'sportsfly', 'seilfly']:
+                r.append(resolve_e5x_taxonomy(anonymize_ors(item)))
+            else:
+                r.append(anonymize_ors(item))
+
+            return eve_response(r, 200)
+
+        return eve_response(r, 200)
+
+    except Exception as e:
+        app.logger.exception('Error fetching obsregs for activity {}'.format(activity))
+
+    return eve_response({'activity': activity, 'obsreg': None}, 500)
 
 
 @Lungo.route("/obsreg/e5x/attributes", methods=['GET'])
