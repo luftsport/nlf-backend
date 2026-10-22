@@ -333,7 +333,7 @@ def parsed_to_pymongo(
 def execute_parsed_query(collection, parsed: dict, **extra_find_kwargs):
     query, sort, proj, skip, limit = parsed_to_pymongo(parsed)
     print(f"Executing query: {query}, sort: {sort}, projection: {proj}, skip: {skip}, limit: {limit}")
-    return collection.find(
+    result = collection.find(
         filter=query,
         projection=proj,
         sort=sort,
@@ -341,6 +341,9 @@ def execute_parsed_query(collection, parsed: dict, **extra_find_kwargs):
         limit=limit,
         **extra_find_kwargs
     )
+
+    count = collection.count_documents(query)
+    return list(result), count, skip, limit
 
 
 def format_response(items: Union[List[Dict], Dict], total: Optional[int] = None, resource: str = None,

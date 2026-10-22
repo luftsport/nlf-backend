@@ -429,7 +429,7 @@ def resolve_e5x_taxonomy(obsreg):
                         obsreg['aircrafts'][idx]['aerodrome']['attributes'][key] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', {key: item})
                     # Entities
                     for key, item in obsreg['aircrafts'][idx]['aerodrome'].get('entities', {}).items():
-                        if isinstance(eitem, list):
+                        if isinstance(item, list):
                             for eidx, entity in enumerate(eitem):
                                 obsreg['aircrafts'][idx]['aerodrome']['entities'][key][eidx]['attributes'] = resolve_e5x_payload(f'E5X.Occurrence.Aerodrome', entity['attributes'])
                         else:
@@ -493,7 +493,7 @@ def reverse_get_obsregs(activity):
             return abort(404, description="Activity not found or allowed")
 
         parsed = parse_request(resource=f'{activity}_observations', is_blueprint=False, trigger_hooks=False)
-        results = list(execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed))
+        results, count, skip, limit = execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed)
 
         r = []
         for idx, item in enumerate(results):
@@ -502,8 +502,12 @@ def reverse_get_obsregs(activity):
                 r.append(resolve_e5x_taxonomy(anonymize_ors(item)))
             else:
                 r.append(anonymize_ors(item))
-
-        return eve_response(r, 200)
+        #"_meta": {
+        # "page": 1,
+        # "max_results": 25,
+        # "total": 467534
+        # }
+        return eve_response({'_items': r, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}} , 200)
 
     except Exception as e:
         app.logger.exception('Error fetching obsregs for activity {}'.format(activity))
@@ -521,9 +525,9 @@ def reverse_get_e5x_attributes():
         if 'where' not in parsed:
             parsed['where'] = {}
         parsed['where']['rit_version'] = RIT_VERSION
-        results = list(execute_parsed_query(collection=get_data_driver(collection_name='e5x_attributes'), parsed=parsed))
+        results, count, skip, limit = execute_parsed_query(collection=get_data_driver(collection_name='e5x_attributes'), parsed=parsed)
 
-        return eve_response(results, 200)
+        return eve_response({'_items': results, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}}, 200)
 
     except Exception as e:
         app.logger.exception('Error fetching attributes')
@@ -541,9 +545,9 @@ def reverse_get_e5x_choices():
         if 'where' not in parsed:
             parsed['where'] = {}
         parsed['where']['rit_version'] = RIT_VERSION
-        results = list(execute_parsed_query(collection=get_data_driver(collection_name='e5x_choices'), parsed=parsed))
+        results, count, skip, limit = execute_parsed_query(collection=get_data_driver(collection_name='e5x_choices'), parsed=parsed)
 
-        return eve_response(results, 200)
+        return eve_response({'_items': results, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}}, 200)
 
     except Exception as e:
         app.logger.exception('Error fetching choices')
@@ -561,9 +565,9 @@ def reverse_get_e5x_choice():
         if 'where' not in parsed:
             parsed['where'] = {}
         parsed['where']['rit_version'] = RIT_VERSION
-        results = list(execute_parsed_query(collection=get_data_driver(collection_name='e5x_choices'), parsed=parsed))
+        results, count, skip, limit = execute_parsed_query(collection=get_data_driver(collection_name='e5x_choices'), parsed=parsed)
 
-        return eve_response(results, 200)
+        return eve_response({'_items': results, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}}, 200)
 
     except Exception as e:
         app.logger.exception('Error fetching choices')
