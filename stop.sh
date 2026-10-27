@@ -11,7 +11,7 @@ echo "DIR IS '$DIR'"
 cd $DIR
 
 APP_INSTANCE=$(python3 -c "import instance; print(instance.APP_INSTANCE)")
-PID_FILE="/var/run/obsreg_${APP_INSTANCE}.pid"
+PID_FILE="/var/local/run/obsreg_${APP_INSTANCE}/obsreg_${APP_INSTANCE}.pid"
 
 echo `pwd`
 if [ ! -f gunicorn.pid ];then
@@ -22,3 +22,10 @@ else
         # Should wait and recheck and if still pid, then kill -9
 fi
 
+# Check if notification service is running
+SERVICE="obsreg_notifications.service"
+if systemctl is-active --quiet "$SERVICE"; then
+    echo "$SERVICE is running."
+else
+    echo "$SERVICE is stopped or failed."
+fi
