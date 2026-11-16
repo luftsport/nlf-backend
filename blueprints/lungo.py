@@ -265,6 +265,28 @@ def lungo(path):
 """
 
 
+@Lungo.route("/persons/avatar/<int:person_id>", methods=['GET'])
+@require_client_access_token()
+def reverse_get_avatar(person_id):
+    try:
+        # Need proxy upstream address
+        # if str(request.remote_addr) != LUNGO_ADDRESS:
+        #    return eve_response(None, 403)
+        app.logger.info('Lungo is asking for avatar for person_id {}'.format(person_id))
+        users = app.data.driver.db['users']
+        result = users.find_one({'$or': [{'id': person_id}, {'last_person_id': person_id}, {'merged_from': {'$in': [person_id]}}]}, {'avatar': 1, 'last_user_id': 1})
+        if result is not None:
+            avatar = result.get('avatar', None)
+            last_user_id = result.get('last_user_id', person_id)
+            return eve_response({'person_id': last_user_id, 'avatar': avatar}, 200)
+        else:
+            return eve_response({'person_id': person_id, 'avatar': None}, 404)
+    except Exception as e:
+        app.logger.exception('Error fetching avatar for person_id {}'.format(person_id))
+
+    return eve_response({'person_id': person_id, 'avatar': None}, 500)
+
+
 @Lungo.route("/persons", defaults={"path": ""}, methods=['GET'])
 @Lungo.route("/persons/", methods=['GET'])
 @Lungo.route("/persons/<objectid:_id>", methods=['GET'])
@@ -333,29 +355,6 @@ def persons(_id=''):
         app.logger.error(resp.text)
 
     return eve_abort(502, 'Unknown error')
-
-
-@Lungo.route("/persons/avatar/<int:person_id>", methods=['GET'])
-@require_client_access_token()
-def reverse_get_avatar(person_id):
-    try:
-        # Need proxy upstream address
-        # if str(request.remote_addr) != LUNGO_ADDRESS:
-        #    return eve_response(None, 403)
-
-        app.logger.info('Lungo is asking for avatar for person_id {}'.format(person_id))
-        users = app.data.driver.db['users']
-        result = users.find_one({'$or': [{'id': person_id}, {'last_person_id': person_id}, {'merged_from': {'$in': [person_id]}}]}, {'avatar': 1, 'last_user_id': 1})
-        if result is not None:
-            avatar = result.get('avatar', None)
-            last_user_id = result.get('last_user_id', person_id)
-            return eve_response({'person_id': last_user_id, 'avatar': avatar}, 200)
-        else:
-            return eve_response({'person_id': person_id, 'avatar': None}, 404)
-    except Exception as e:
-        app.logger.exception('Error fetching avatar for person_id {}'.format(person_id))
-
-    return eve_response({'person_id': person_id, 'avatar': None}, 500)
 
 
 def fix_camelcase(s):
@@ -506,12 +505,12 @@ def reverse_get_obsregs(activity):
                 r.append(resolve_e5x_taxonomy(anonymize_ors(item)))
             else:
                 r.append(anonymize_ors(item))
-        #"_meta": {
+        # "_meta": {
         # "page": 1,
         # "max_results": 25,
         # "total": 467534
         # }
-        return eve_response({'_items': r, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}} , 200)
+        return eve_response({'_items': r, '_meta': {'page': parsed.get('page', skip), 'max_results': limit, 'total': count}}, 200)
 
     except Exception as e:
         app.logger.exception('Error fetching obsregs for activity {}'.format(activity))

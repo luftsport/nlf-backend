@@ -4,7 +4,6 @@
 
     Global Eve configuration settings
 """
-
 import os, sys
 from datetime import datetime
 from sys import exit
@@ -68,14 +67,14 @@ elif APP_INSTANCE in ['dev', 'local']:
     MONGO_USERNAME = ''
     MONGO_PASSWORD = ''
     MONGO_DBNAME = 'nlf-dev'
-    # Use default 30s?
     MONGO_CONNECT_TIMEOUT_MS = 200
-    APP_HOST = '127.0.0.1'
-    APP_PORT = 8082
-    APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
     MONGO_OPTIONS = {
         'directConnection': True
     }
+    APP_HOST = '127.0.0.1'
+    APP_PORT = 8082
+    APP_INSTANCE_PEM = 'fnlfbeta-public.pem'
+
 if APP_INSTANCE == 'local':
     E5X_WORKING_DIR = 'path to local instance of E5X RIT'
     REQUESTS_VERIFY = False
@@ -92,7 +91,7 @@ URL_PREFIX = 'api'
 API_VERSION = 'v1'
 
 # Pagination settings
-PAGINATION_LIMIT = 1000000
+PAGINATION_LIMIT = 25
 PAGINATION_DEFAULT = 25
 
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
@@ -141,13 +140,13 @@ X_HEADERS = ['Content-Type', 'If-Match']  # Needed for the "Try it out" buttons
 
 """
 
-OPLOG = False  # Set it to True to enable the Operations Log. Defaults to False.
+OPLOG = True  # Set it to True to enable the Operations Log. Defaults to False.
 OPLOG_NAME = 'oplog'  # This is the name of the database collection where the Operations Log is stored. Defaults to oplog.
-OPLOG_METHODS = ['DELETE', 'POST', 'PATCH',
-                 'PUT']  # List of HTTP methods which operations should be logged in the Operations Log.
-OPLOG_ENDPOINT = None  # 'oplog'  # Name of the Operations Log endpoint. If the endpoint is enabled it can be configured like any other API endpoint. Set it to None to disable the endpoint. Defaults to None.
+OPLOG_METHODS = ['DELETE', 'POST', 'PATCH', 'PUT', 'GET', 'HEAD']  # List of HTTP methods which operations should be logged in the Operations Log.
+OPLOG_CHANGE_METHODS = ['DELETE', 'PATCH', 'PUT']
+OPLOG_ENDPOINT = 'oplog'  # 'oplog'  # Name of the Operations Log endpoint. If the endpoint is enabled it can be configured like any other API endpoint. Set it to None to disable the endpoint. Defaults to None.
 OPLOG_AUDIT = True  # Set it to True to enable the audit feature. When audit is enabled client IP and document changes are also logged to the Operations Log. Defaults to True.
-# OPLOG_CUSTOM_FIELDS = {'u': None}
+OPLOG_RETURN_EXTRA_FIELD = True
 
 SWAGGER_INFO = {
     'title': 'NLF API',

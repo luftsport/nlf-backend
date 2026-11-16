@@ -34,7 +34,8 @@ umask 0022
 if [[ "$APP_INSTANCE" == "prod" ]]
 then
   echo "Starting PROD instance"
-  $GUNICORN -w 5 -b localhost:8081 run:app --log-level=debug --log-file=unicorn.log --pid "$PID_FILE" --capture-output --enable-stdio-inheritance --daemon
+  echo "PID file ${PID_FILE}"
+  $GUNICORN -w 5 -b localhost:8080 run:app --log-level=debug --log-file=unicorn.log --pid "$PID_FILE" --capture-output --enable-stdio-inheritance --daemon
 fi
 
 # DEV

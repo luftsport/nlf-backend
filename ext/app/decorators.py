@@ -23,39 +23,52 @@ class AuthenticationNoToken(Exception):
     """Raise custom error"""
 
 
+def _require_client_access_token(allowed_roles=None):
+    # No authorization in request
+    # Let it raise an exception
+    from ext.scf import ACCESS_TOKENS
+    try:
+        authorization_token = extract_token()
+        print(f"Authorization token extracted: {authorization_token}")
+
+    except Exception as e:
+        raise AuthenticationFailed
+
+    client_token = [x['token_hex'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token]
+    print(f"Client token found: {client_token}")
+    if len(client_token) == 1:
+        client_token = client_token[0]
+        if str(authorization_token) == str(client_token):
+            g.id = [x['client_id'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token][0]
+            g.user_id = g.id  # Legacy
+            print(f"Client access token validated: {client_token}")
+            return True
+    else:
+        raise AuthenticationFailed
+
+    if str(authorization_token) != str(client_token):
+        print(f"Authorization token does not match client token: {authorization_token} != {client_token}")
+        raise AuthenticationFailed
+
+    return False
 def require_client_access_token(allowed_roles=None):
     """ Custom decorator for token auth for client access tokens
     Wraps the custom TokenAuth class used by Eve and sends it the required param
     """
-    from ext.scf import ACCESS_TOKENS
+
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
 
             try:
-                # No authorization in request
-                # Let it raise an exception
-                try:
-                    authorization_token = extract_token()
-
-                except Exception as e:
-                    raise AuthenticationFailed
-
-                client_token = [x['token_hex'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token]
-
-                if len(client_token) == 1:
-                    client_token = client_token[0]
-                    g.user_id = -1
-                else:
-                    raise AuthenticationFailed
-
-                if str(authorization_token) != str(client_token):
-                    raise AuthenticationFailed
+                _ = _require_client_access_token(allowed_roles=allowed_roles)
 
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
+                print(f"Authentication failed: {str(e)}")
                 return eve_abort(401, 'Please provide proper credentials')
             except Exception as e:
+                print(f"Unexpected error during authentication: {str(e)}")
                 return eve_abort(500, 'Server error')
 
             return f(*args, **kwargs)
@@ -63,6 +76,27 @@ def require_client_access_token(allowed_roles=None):
         return wrapped
 
     return decorator
+
+
+def _require_token(allowed_roles=None):
+    # No authorization in request
+    # Let it raise an exception
+    try:
+        authorization_token = request.authorization.get('username', None)
+    except Exception as e:
+        raise AuthenticationFailed
+
+    # Do the authentication
+    # Need to remove prefix + / for request.path
+    auth = TokenAuth()
+    auth_result = auth.check_auth(token=authorization_token,  # Token
+                                  method=request.method,
+                                  resource=request.path[len(app.globals.get('prefix')) + 1:],
+                                  allowed_roles=allowed_roles)
+    if auth_result is True:
+        return True
+
+    raise AuthenticationFailed
 
 
 def require_token(allowed_roles=None):
@@ -75,23 +109,7 @@ def require_token(allowed_roles=None):
         def wrapped(*args, **kwargs):
 
             try:
-                # No authorization in request
-                # Let it raise an exception
-                try:
-                    authorization_token = request.authorization.get('username', None)
-                except Exception as e:
-                    raise AuthenticationFailed
-
-                # Do the authentication
-                # Need to remove prefix + / for request.path
-                auth = TokenAuth()
-                auth_result = auth.check_auth(token=authorization_token,  # Token
-                                              method=request.method,
-                                              resource=request.path[len(app.globals.get('prefix')) + 1:],
-                                              allowed_roles=allowed_roles)
-
-                if auth_result is not True:
-                    raise AuthenticationFailed
+                _ = _require_token(allowed_roles=allowed_roles)
 
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:

@@ -12,9 +12,9 @@ cd $DIR
 
 APP_INSTANCE=$(python3 -c "import instance; print(instance.APP_INSTANCE)")
 PID_FILE="/var/local/run/obsreg_${APP_INSTANCE}/obsreg_${APP_INSTANCE}.pid"
-
+echo "PID FILE: ${PID_FILE}"
 echo `pwd`
-if [ ! -f gunicorn.pid ];then
+if [ ! -f "$PID_FILE" ];then
         echo "No pid file, exiting"
 else
         kill -15 `cat ${PID_FILE}`

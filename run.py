@@ -20,14 +20,17 @@
 import os, sys
 # from ext.app.custom_eve import CustomEve
 from eve import Eve
-
+from eve.methods.common import oplog_push
 # We need the json serializer from flask.jsonify (faster than "".json())
 # flask.request for custom flask routes (no need for schemas, database or anything else)
-from flask import jsonify, request, abort, Response
+from flask import jsonify, request, abort, Response, g
+from flask_limiter import Limiter
+from ext.auth.rate_limiter_utils import get_user_or_ip, dynamic_rate_limit, issue_penalty, is_exempt_user, MAX_STRIKES
 
 # Swagger docs
 try:
     from eve_swagger import get_swagger_blueprint
+
     swagger_blueprint = get_swagger_blueprint()
 except Exception as e:
     from eve_swagger import swagger as swagger_blueprint
@@ -63,7 +66,6 @@ from blueprints.housekeeping import Housekeeping
 from blueprints.distinct import Distinct
 from blueprints.search import Search
 
-
 # Custom url mappings (for flask)
 from ext.app.url_maps import ObjectIDConverter, RegexConverter
 
@@ -72,6 +74,7 @@ from ext.auth.tokenauth import TokenAuth
 
 # From notfication
 import ext.hooks.notifications as notifications
+
 
 # Verify startup inside virtualenv
 def in_virtualenv():
@@ -224,8 +227,6 @@ app.on_pre_PATCH_modellfly_observations += hook.modellfly.ors_before_patch
 # AFTER update db layer
 app.on_updated_modellfly_observations += hook.modellfly.ors_after_update
 
-
-
 # ################
 # MOTOR OBSREG
 #
@@ -292,7 +293,6 @@ app.on_update_sportsfly_observations += hook.sportsfly.ors_before_update
 # AFTER update db layer
 app.on_updated_sportsfly_observations += hook.sportsfly.ors_after_update
 
-
 ###############
 # Notifications
 app.on_pre_GET_notifications += hook.notifications.before_get
@@ -301,7 +301,6 @@ app.on_pre_GET_notifications += hook.notifications.before_get
 # Aircrafts
 app.on_insert_aircrafts += hook.aircrafts.on_insert
 app.on_update_aircrafts += hook.aircrafts.on_update
-
 
 # E5X delete
 app.on_pre_DELETE_e5x_attributes += hook.e5x.add_delete_filters
@@ -343,15 +342,60 @@ app.on_pre_DELETE_search += hook.search.before_remove
 app.on_pre_GET_search += hook.search.before_get
 app.on_pre_PATCH_search += hook.search.before_patch
 
-# TEST
+
+# OPLOG
+def oplog_all_gets(resource, request, payload):
+    # Skip requests to the oplog endpoint itself
+    if resource == app.config.get('OPLOG_ENDPOINT'):
+        return
+
+    # Only log successful responses
+    if payload.status_code != 200:
+        return
+
+    # Extract item ID if present in URL routing (None for collection requests)
+    id_field = app.config.get('ID_FIELD', '_id')
+    doc_id = request.view_args.get(id_field) if request.view_args else None
+
+    # Include query string in the logged changes/extra info if present
+    query = request.query_string.decode('utf-8')
+    updates = {'query': query} if query else {}
+
+    oplog_push(resource, updates, 'GET', id=doc_id)
+
+
+def enrich_oplog_with_url(resource, entries):
+    # request.full_path gives the relative path + query string (e.g. "/api/users?where=%7B...%7D&page=2")
+    # If there is no query string, Flask appends a trailing '?', so rstrip('?') cleans it up
+    relative_url = request.full_path.rstrip('?')
+
+    # Parsed query parameters as a dictionary (e.g. {'where': '{"active": true}', 'page': '2'})
+    query_params = request.args.to_dict(flat=False)
+
+    for entry in entries:
+        entry['url'] = relative_url
+        if query_params:
+            entry['query_params'] = query_params
+
+def before_GET_oplog(request, lookup):
+    from ext.scf import OP_LOG_ACCESS
+    if g.id not in OP_LOG_ACCESS['users'] and g.id not in OP_LOG_ACCESS['clients']:
+        abort(403, description="You do not have permission to access the oplog.")
+
+app.on_pre_GET_oplog += before_GET_oplog # Check permissions before accessing oplog
+app.on_oplog_push += enrich_oplog_with_url # Enrich oplog entries with the full URL and query parameters
+app.on_post_GET += oplog_all_gets # Handle all GET requests for oplogging
+
+
+# AGGREGATIONS
 def _aggregation(endpoint, pipeline):
     """All aggregation endpoints ends up here"""
     if endpoint == 'notifications_events':
         notifications.before_aggregation(endpoint, pipeline)
 
-
 # Before any aggregation run this
 app.before_aggregation += _aggregation
+
 
 # App error hooks
 @app.errorhandler(401)
@@ -375,6 +419,31 @@ def http_501(e):
     # app.logger.exception('Error 501 handler')
     return jsonify(error=str(e)), 501
 
+### Limiter
+limiter = Limiter(
+    key_func=get_user_or_ip,
+    app=app,
+    default_limits=[dynamic_rate_limit],
+    storage_uri=f"mongodb://{app.config['MONGO_HOST']}:{app.config['MONGO_PORT']}/{app.config['MONGO_DBNAME']}?directConnection=true",
+    headers_enabled=True
+)
+limiter.request_filter(is_exempt_user)
+@app.errorhandler(429)
+def handle_rate_limit_exceeded(e):
+    strikes, current_tier, expires_at = issue_penalty(seconds=86400, reason="exceeded_rate_limit")
+
+    if strikes >= MAX_STRIKES:
+        msg = f"Rate limit exceeded (Strike {strikes}). Account/IP locked out until {expires_at.isoformat()}."
+    else:
+        msg = f"Rate limit exceeded (Strike {strikes}/{MAX_STRIKES}). Restricted to {current_tier}"
+
+    return {
+        "_status": "ERR",
+        "_error": {
+            "code": 429,
+            "message": msg
+        }
+    }, 429
 
 """ A simple python logger setup
 Use app.logger.<level>(<message>) for manual logging
@@ -401,6 +470,7 @@ if 1 == 1 or not app.debug:
             HOUSEKEEPING_SECOND_CHORE_DAYS_GRACE,
             HOUSEKEEPING_ACTION_CHORE_DAYS_GRACE
         )
+
         app.logger.info('[E5X] Send files to LT\t {}'.format(E5X_SEND_TO_LT))
         app.logger.info('[EMAIL] Send email notifications\t {}'.format(NOTIFICATION_SEND_EMAIL))
         app.logger.info('[HOUSEKEEPING] Enabled:\t {}'.format(HOUSEKEEPING))
@@ -414,9 +484,9 @@ if 1 == 1 or not app.debug:
 # Run only once
 if app.debug and not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
 
-
     try:
         import pkg_resources
+
         print(" App:         %s" % app.config['APP_VERSION'])
         print(" Eve:         %s" % pkg_resources.get_distribution("eve").version)
         print(" Werkzeug:    %s" % pkg_resources.get_distribution("werkzeug").version)
