@@ -495,7 +495,6 @@ def reverse_get_obsregs(activity):
         if 'where' not in parsed:
             parsed['where'] = {}
         parsed['where']['workflow.state'] = {'$nin': ['draft', 'withdrawn']}
-        print(parsed)
         results, count, skip, limit = execute_parsed_query(collection=get_data_driver(f'{activity}_observations'), parsed=parsed)
 
         r = []

@@ -29,25 +29,21 @@ def _require_client_access_token(allowed_roles=None):
     from ext.scf import ACCESS_TOKENS
     try:
         authorization_token = extract_token()
-        print(f"Authorization token extracted: {authorization_token}")
 
     except Exception as e:
         raise AuthenticationFailed
 
     client_token = [x['token_hex'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token]
-    print(f"Client token found: {client_token}")
     if len(client_token) == 1:
         client_token = client_token[0]
         if str(authorization_token) == str(client_token):
             g.id = [x['client_id'] for x in ACCESS_TOKENS if x['token_hex'] == authorization_token][0]
             g.user_id = g.id  # Legacy
-            print(f"Client access token validated: {client_token}")
             return True
     else:
         raise AuthenticationFailed
 
     if str(authorization_token) != str(client_token):
-        print(f"Authorization token does not match client token: {authorization_token} != {client_token}")
         raise AuthenticationFailed
 
     return False
@@ -65,10 +61,8 @@ def require_client_access_token(allowed_roles=None):
 
             # Catch exceptions and handle correctly
             except AuthenticationFailed as e:
-                print(f"Authentication failed: {str(e)}")
                 return eve_abort(401, 'Please provide proper credentials')
             except Exception as e:
-                print(f"Unexpected error during authentication: {str(e)}")
                 return eve_abort(500, 'Server error')
 
             return f(*args, **kwargs)
