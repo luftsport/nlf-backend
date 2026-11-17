@@ -37,7 +37,7 @@ definition = {
         'source': RESOURCE_COLLECTION,
         # 'projection': {'file': 1}
     },
-    'resource_methods': ['GET', 'POST'],
+    'resource_methods': ['POST'],
     'item_methods': ['GET', 'PATCH'],
     'versioning': False,
     'mongo_indexes': {'name': ([('slug', 1)], {'background': True}),

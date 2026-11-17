@@ -273,6 +273,38 @@ def get_user_permissions(_id, collection):
 
     return result
 
+def has_obsreg_file_permission(file_id, ref_id, activity, permission_type):
+    """ Checks if current user has type (execute, read, write, delete) permissions on an collection or not
+    @note: checks on list comprehension and returns number of intersects in list => len(list) > 0 == True
+    @bug: Possible bug if user comparison is int vs float!
+    """
+    ref_acl = get_user_permissions(ref_id, f'{activity}_observations')
+
+    # Always allow x all
+    if ref_acl.get('x', False) is True:
+        return True
+
+    col = app.data.driver.db[f'{activity}_observations']
+    acl = col.find_one({'_id': ObjectId(ref_id)}, {'acl': 1, 'files': 1, 'workflow.state': 1, 'reporter': 1})
+
+    # Always allow reporter to read
+    if g.id == acl.get('reporter', 0):
+        return True
+
+    try:
+        if _has_permission(acl.get('acl', {}), permission_type) is True:
+            for f in acl.get('files', []):
+                if str(f.get('file_id')) == str(file_id):
+                    if acl.get('workflow', {}).get('state', None) == 'closed' and permission_type == 'read':
+                         if f.get('r', True) is False:
+                             return True
+                    elif acl.get('workflow', {}).get('state', None) != 'closed':
+                        if has_nanon_permission(acl.get('acl', {}), permission_type, acl.get('workflow', {}).get('state', None), activity, org=0) is True:
+                            return True
+    except:
+        return False
+
+    return False
 
 def user_persmissions(resource_acl, state):
     permissions = {

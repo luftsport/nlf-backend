@@ -320,8 +320,10 @@ app.on_update_legacy_clubs += hook.common.on_update_set_owner
 
 #############
 # FILES
+# POST
+app.on_insert_files += hook.files.before_insert_item
 # AFTER FETCHED (GET)
-app.on_fetched_resource_files += hook.files.after_fetched_list
+app.on_fetched_resource_files += hook.files.after_fetched_list # Not allowed in domain
 app.on_fetched_item_files += hook.files.after_fetched_item
 
 #############
