@@ -36,13 +36,16 @@ AUTH_SESSION_LENGHT = 3600  # Seconds
 APP_INSTANCES = ['local', 'dev', 'beta', 'prod']
 
 if APP_INSTANCE == 'prod':
-    MONGO_HOST = 'localhost'
+    MONGO_HOST = '127.0.0.1'
     MONGO_PORT = 27017
     MONGO_USERNAME = ''
     MONGO_PASSWORD = ''
     MONGO_DBNAME = 'nlf-prod'
     # Use default 30s?
     MONGO_CONNECT_TIMEOUT_MS = 200
+    MONGO_OPTIONS = {
+        'directConnection': True
+    }
     APP_HOST = '127.0.0.1'
     APP_PORT = 8080
     APP_INSTANCE_PEM = 'app-public.pem'
