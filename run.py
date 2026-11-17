@@ -24,6 +24,7 @@ from eve.methods.common import oplog_push
 # We need the json serializer from flask.jsonify (faster than "".json())
 # flask.request for custom flask routes (no need for schemas, database or anything else)
 from flask import jsonify, request, abort, Response, g
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_limiter import Limiter
 from ext.auth.rate_limiter_utils import get_user_or_ip, dynamic_rate_limit, issue_penalty, is_exempt_user, MAX_STRIKES
 
@@ -104,6 +105,8 @@ SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'settin
 # app = Eve(settings=SETTINGS_PATH)
 app = Eve(auth=TokenAuth, settings=SETTINGS_PATH)
 
+# Fix for reverse proxy (nginx) - see https://flask.palletsprojects.com/en/2.3.x/deploying/wsgi-standalone/#behind-a-proxy
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 """ Define global settings
 These settings are mirrored from Eve, but should not be!
 @todo: use app.config instead
@@ -181,6 +184,10 @@ def dump_request(request):
     except Exception as e:
         pass
 
+# Users
+# app.pre_GET_users += hook.users.before_get
+app.pre_PATCH_users += hook.users.before_patch
+app.on_fetched_item_users += hook.users.after_fetch
 
 # ##############
 # FALLSKJERM OBSREG

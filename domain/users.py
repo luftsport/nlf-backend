@@ -28,21 +28,10 @@ _schema = {
     'settings': {'type': 'dict',
                  'default': {}},
     'avatar': {'type': 'string'}, #{'type': 'media', },
-
-    # Extra info, worktype, material status, interests...
     'info': {'type': 'dict', },
-
     # Generated information, better as an internal one?
     'statistics': {'type': 'dict',
                    'readonly': True},
-
-    # Should these be here or seperate?
-    # 'notes': {'type': 'dict',},
-    # 'flags': {'type': 'dict',},
-    # 'verdicts': {'type': 'dict',},
-
-    # 'melwin_id': {'type': 'integer'}
-
 }
 
 definition = {
@@ -52,7 +41,7 @@ definition = {
                    'default_sort': [('id', 1)],
                    },
     'extra_response_fields': ['id'],
-    'resource_methods': ['GET'],  # No post, only internal!!
+    'resource_methods': [],  # No post, only internal!!
     'item_methods': ['GET', 'PATCH'],
     'auth_field': 'id',  # This will limit only users who has
     'versioning': True,
