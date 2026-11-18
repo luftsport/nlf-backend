@@ -13,7 +13,7 @@ def after_fetch(response):
     """
 
     # If the user is not a superadmin, then they can only get their own account
-    if g.id != response['id'] and g.id not in ACL_SUPERADMINS:
+    if g.id != response.get('id', None) and g.id not in ACL_SUPERADMINS:
         response.pop('settings', None)
         response.pop('acl', None)
         response.pop('default', None)
