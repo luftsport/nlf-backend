@@ -26,7 +26,8 @@ from eve.methods.common import oplog_push
 from flask import jsonify, request, abort, Response, g
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_limiter import Limiter
-from ext.auth.rate_limiter_utils import get_user_or_ip, dynamic_rate_limit, issue_penalty, is_exempt_user, MAX_STRIKES
+from ext.auth.rate_limiter_utils import get_user_or_ip, dynamic_rate_limit, issue_penalty, is_exempt_user
+from ext.scf import RATE_LIMITER_MAX_STRIKES
 
 # Swagger docs
 try:
@@ -441,10 +442,10 @@ limiter.request_filter(is_exempt_user)
 def handle_rate_limit_exceeded(e):
     strikes, current_tier, expires_at = issue_penalty(seconds=86400, reason="exceeded_rate_limit")
 
-    if strikes >= MAX_STRIKES:
+    if strikes >= RATE_LIMITER_MAX_STRIKES:
         msg = f"Rate limit exceeded (Strike {strikes}). Account/IP locked out until {expires_at.isoformat()}."
     else:
-        msg = f"Rate limit exceeded (Strike {strikes}/{MAX_STRIKES}). Restricted to {current_tier}"
+        msg = f"Rate limit exceeded (Strike {strikes}/{RATE_LIMITER_MAX_STRIKES}). Restricted to {current_tier}"
 
     return {
         "_status": "ERR",
