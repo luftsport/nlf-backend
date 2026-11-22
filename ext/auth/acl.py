@@ -273,6 +273,7 @@ def get_user_permissions(_id, collection):
 
     return result
 
+
 def has_obsreg_file_permission(file_id, ref_id, activity, permission_type):
     """ Checks if current user has type (execute, read, write, delete) permissions on an collection or not
     @note: checks on list comprehension and returns number of intersects in list => len(list) > 0 == True
@@ -294,10 +295,10 @@ def has_obsreg_file_permission(file_id, ref_id, activity, permission_type):
     try:
         if _has_permission(acl.get('acl', {}), permission_type) is True:
             for f in acl.get('files', []):
-                if str(f.get('file_id')) == str(file_id):
+                if str(f.get('f')) == str(file_id):
                     if acl.get('workflow', {}).get('state', None) == 'closed' and permission_type == 'read':
-                         if f.get('r', True) is False:
-                             return True
+                        if f.get('r', True) is False:
+                            return True
                     elif acl.get('workflow', {}).get('state', None) != 'closed':
                         if has_nanon_permission(acl.get('acl', {}), permission_type, acl.get('workflow', {}).get('state', None), activity, org=0) is True:
                             return True
@@ -305,6 +306,7 @@ def has_obsreg_file_permission(file_id, ref_id, activity, permission_type):
         pass
 
     return False
+
 
 def user_persmissions(resource_acl, state):
     permissions = {
