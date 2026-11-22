@@ -302,7 +302,7 @@ def has_obsreg_file_permission(file_id, ref_id, activity, permission_type):
                         if has_nanon_permission(acl.get('acl', {}), permission_type, acl.get('workflow', {}).get('state', None), activity, org=0) is True:
                             return True
     except:
-        return False
+        pass
 
     return False
 

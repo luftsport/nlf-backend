@@ -23,36 +23,43 @@ import base64
 
 from ext.app.decorators import *
 from ext.auth.tokenauth import TokenAuth
+from ext.auth.acl import has_obsreg_file_permission
 from ext.app.eve_helper import eve_abort
 
 Files = Blueprint('Custom files resource', __name__, )
 
 
 @Files.route("/<objectid:file_id>", methods=['GET'])
-# @require_token()
+@require_token()
 def process_request(file_id):
-    """ This is the router actually for processing
+    """ This is the router for processing
     """
 
-    if has_permission():
-        col = app.data.driver.db['files']
-        file = col.find_one({'_id': ObjectId(file_id)})
+    # if has_permission(): - use require_token insted
+    col = app.data.driver.db['files']
+    file = col.find_one({'_id': ObjectId(file_id)})
 
-        if not file:
+    if not file:
+        return eve_abort(404, 'No file found')
+
+    if 'observations' in file.get('ref', ''):
+        if has_obsreg_file_permission(file['_id'], file['ref_id'], file.get('activity', 'fallskjerm'), 'read') is False:
+            return eve_abort(403, 'You do not have permission to access this file')
+
+    try:
+        grid_fs = GridFS(app.data.driver.db)
+        if not grid_fs.exists(_id=file['file']):
             return eve_abort(404, 'No file found')
 
-        try:
-            grid_fs = GridFS(app.data.driver.db)
-            if not grid_fs.exists(_id=file['file']):
-                return eve_abort(404, 'No file found')
+        stream = grid_fs.get_last_version(_id=file['file'])
 
-            stream = grid_fs.get_last_version(_id=file['file'])
+        response = make_response(stream.read())
+        response.mimetype = stream.content_type
+        return response
+    except NoFile:
+        return eve_abort(404, 'No file found')
 
-            response = make_response(stream.read())
-            response.mimetype = stream.content_type
-            return response
-        except NoFile:
-            return eve_abort(404, 'No file found')
+    return eve_abort(500, 'Internal processing error')
 
 
 @Files.route("/image/<objectid:file_id>", defaults={'size': None}, methods=['GET'])
@@ -70,6 +77,10 @@ def process_image_request(file_id, size):
         image = col.find_one({'_id': ObjectId(file_id)})
         if not image or 'file' not in image:
             return eve_abort(404, 'Image record not found')
+
+        if 'observations' in image.get('ref', ''):
+            if has_obsreg_file_permission(image['_id'], image['ref_id'], image.get('activity', 'fallskjerm'), 'read') is False:
+                return eve_abort(403, 'You do not have permission to access this image')
 
         grid_fs = GridFS(app.data.driver.db)
 
